@@ -12,6 +12,8 @@ import { CORES } from '../../tema/cores';
 import { ESPACO, RAIO } from '../../tema/medidas';
 import { FONTES, TEXTO } from '../../tema/tipografia';
 
+export const ATRASO_DA_BUSCA_MS = 300;
+
 /** Passo 1 do cadastro: achar a espécie no catálogo pelo nome. */
 export function TelaBuscarEspecie() {
   const { container } = useAplicativo();
@@ -22,13 +24,22 @@ export function TelaBuscarEspecie() {
   const [resultados, definirResultados] = useState<readonly EspecieVegetal[] | null>(null);
 
   useEffect(() => {
-    // Só a busca do termo atual vale: uma resposta atrasada (termo já trocado, tela já fechada) é ignorada.
     let atual = true;
-    void container.pesquisarEspecies.executar(termo).then((lista) => {
-      if (atual) definirResultados(lista);
-    });
+
+    const buscar = () => {
+      void container.pesquisarEspecies.executar(termo).then((lista) => {
+        // Só a busca do termo atual vale: respostas atrasadas e telas fechadas são ignoradas.
+        if (atual) definirResultados(lista);
+      });
+    };
+
+    // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
+    const temporizador = termo.trim() === '' ? null : setTimeout(buscar, ATRASO_DA_BUSCA_MS);
+    if (temporizador === null) buscar();
+
     return () => {
       atual = false;
+      if (temporizador !== null) clearTimeout(temporizador);
     };
   }, [container, termo]);
 
