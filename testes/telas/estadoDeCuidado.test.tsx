@@ -10,7 +10,7 @@ test('o vaso na estante repassa o estado de cuidado ao desenho', () => {
   const estado: EstadoVisual = { tipo: 'sem-dados' };
   render(
     <VasoNaEstante
-      item={{ planta: plantaDeTeste(), especie: null }}
+      item={{ planta: plantaDeTeste(), especie: null, status: 'sem-dados' }}
       fase={0}
       inclinacao="esquerda"
       aoTocar={() => {}}
@@ -22,7 +22,12 @@ test('o vaso na estante repassa o estado de cuidado ao desenho', () => {
 
 test('sem estado informado, o vaso usa "sem dados"', () => {
   render(
-    <VasoNaEstante item={{ planta: plantaDeTeste(), especie: null }} fase={0} inclinacao="esquerda" aoTocar={() => {}} />,
+    <VasoNaEstante
+      item={{ planta: plantaDeTeste(), especie: null, status: 'sem-dados' }}
+      fase={0}
+      inclinacao="esquerda"
+      aoTocar={() => {}}
+    />,
   );
   expect(screen.UNSAFE_getByType(DesenhoDaPlanta).props.estado).toBe(SEM_DADOS);
 });

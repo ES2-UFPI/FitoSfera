@@ -10,7 +10,7 @@ test('voltar do detalhe devolve o jardim com a mesma estante, sem remontar', asy
   renderizarApp({ plantas: variasPlantas(9) });
   const estanteAntes = await screen.findByTestId('estante');
 
-  fireEvent.press(screen.getByLabelText('Planta 8. Toque para ver os detalhes.'));
+  fireEvent.press(screen.getByLabelText('Planta 8. Sem dados. Toque para ver os detalhes.'));
   expect(await screen.findByRole('header', { name: 'Planta 8' })).toBeTruthy();
   fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
@@ -23,5 +23,5 @@ test('"Voltar" no detalhe aberto direto pelo link leva ao jardim', async () => {
   await screen.findByRole('header', { name: 'Tomatinho' });
   fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
   expect(screen).toHavePathname('/');
-  expect(await screen.findByLabelText('Tomatinho. Toque para ver os detalhes.')).toBeTruthy();
+  expect(await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
 });
