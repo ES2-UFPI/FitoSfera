@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "web": "FITOSFERA_PREVIEW_WEB=1 expo start --web",
     "test": "jest",
-    "verificar-tipos": "tsc --noEmit && tsc --noEmit -p testes"
+    "typecheck": "tsc --noEmit && tsc --noEmit -p testes",
+    "verificar-tipos": "npm run typecheck",
+    "validar-catalogo": "jest --selectProjects unidade --testPathPattern=catalogoDePlantas"
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",

@@ -5,12 +5,15 @@ import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardi
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/GeradorDeIdentificadorAleatorio';
+import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
+import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { Container } from './Container';
 
 /** Raiz de composição: o único lugar do app que escolhe as implementações concretas. */
 export function criarContainer(): Container {
-  const plantas = new RepositorioDePlantasAsyncStorage(AsyncStorage);
+  const armazenamento = new ArmazenamentoComMigracao(AsyncStorage, new MigradorDoArmazenamento(AsyncStorage));
+  const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
 
   return {
