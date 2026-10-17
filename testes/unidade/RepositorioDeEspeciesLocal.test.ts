@@ -1,17 +1,10 @@
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
+import { ESPECIES_DE_TESTE, especieDeTeste } from '../apoio/especiesDeTeste';
 
 const lista: EspecieVegetal[] = [
-  { id: 'tomate', nomeComum: 'Tomate', nomeCientifico: 'Solanum lycopersicum', nomesAlternativos: ['Tomateiro'] },
-  { id: 'jiboia', nomeComum: 'Jiboia', nomeCientifico: 'Epipremnum aureum', nomesAlternativos: ['Pothos'] },
-  {
-    id: 'espada-de-sao-jorge',
-    nomeComum: 'Espada-de-são-jorge',
-    nomeCientifico: 'Dracaena trifasciata',
-    nomesAlternativos: ['Sansevieria'],
-  },
-  { id: 'alface', nomeComum: 'Alface', nomeCientifico: 'Lactuca sativa', nomesAlternativos: [] },
-  { id: 'ebano-de-teste', nomeComum: 'Ébano-de-teste', nomeCientifico: 'Diospyros ficticia', nomesAlternativos: [] },
+  ...ESPECIES_DE_TESTE.filter((especie) => especie.id !== 'lavanda'),
+  especieDeTeste({ id: 'ebano-de-teste', nomeComum: 'Ébano-de-teste', nomeCientifico: 'Diospyros ficticia', nomesAlternativos: [] }),
 ];
 const repo = new RepositorioDeEspeciesLocal(lista);
 const ids = (especies: readonly EspecieVegetal[]) => especies.map((e) => e.id);

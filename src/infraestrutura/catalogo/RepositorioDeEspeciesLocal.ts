@@ -1,6 +1,6 @@
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
-import catalogo from './especies.json';
+import catalogo from './catalogo-plantas.json';
 import { normalizarTexto } from './NormalizadorDeTexto';
 
 interface EspecieIndexada {
@@ -9,11 +9,14 @@ interface EspecieIndexada {
   readonly nomesBuscaveis: readonly string[];
 }
 
+/** Conferido por validarCatalogo nos testes; o JSON só não tem como dizer que o nível é uma das três opções. */
+const CATALOGO = catalogo as readonly EspecieVegetal[];
+
 /** Catálogo embutido no app. Ordena e busca sem depender do suporte a Intl do motor JavaScript. */
 export class RepositorioDeEspeciesLocal implements RepositorioDeEspecies {
   private readonly indice: readonly EspecieIndexada[];
 
-  constructor(especies: readonly EspecieVegetal[] = catalogo) {
+  constructor(especies: readonly EspecieVegetal[] = CATALOGO) {
     this.indice = especies
       .map((especie) => ({
         especie,

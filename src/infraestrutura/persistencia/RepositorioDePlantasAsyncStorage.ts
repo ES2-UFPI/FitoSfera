@@ -1,11 +1,8 @@
 import { Planta } from '@/dominio/modelos/Planta';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { ArmazenamentoChaveValor } from './ArmazenamentoChaveValor';
+import { CHAVES } from './chaves';
 import { deRegistro, paraRegistro } from './MapeadorDePlanta';
-
-export const CHAVE_DAS_PLANTAS = '@fitosfera/plantas';
-/** Onde vai parar um conteúdo que não deu para ler, antes de a chave principal ser sobrescrita. */
-export const CHAVE_DO_CONTEUDO_ILEGIVEL = `${CHAVE_DAS_PLANTAS}:ilegivel`;
 
 type Leitura = { tipo: 'vazia' } | { tipo: 'lista'; registros: unknown[] } | { tipo: 'ilegivel'; bruto: string };
 
@@ -29,13 +26,13 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
    */
   async adicionar(planta: Planta): Promise<void> {
     const leitura = await this.ler();
-    if (leitura.tipo === 'ilegivel') await this.armazenamento.setItem(CHAVE_DO_CONTEUDO_ILEGIVEL, leitura.bruto);
+    if (leitura.tipo === 'ilegivel') await this.armazenamento.setItem(CHAVES.plantasIlegiveis, leitura.bruto);
     const registros = leitura.tipo === 'lista' ? leitura.registros : [];
-    await this.armazenamento.setItem(CHAVE_DAS_PLANTAS, JSON.stringify([...registros, paraRegistro(planta)]));
+    await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify([...registros, paraRegistro(planta)]));
   }
 
   private async ler(): Promise<Leitura> {
-    const bruto = await this.armazenamento.getItem(CHAVE_DAS_PLANTAS);
+    const bruto = await this.armazenamento.getItem(CHAVES.plantas);
     if (bruto === null) return { tipo: 'vazia' };
     try {
       const conteudo: unknown = JSON.parse(bruto);
