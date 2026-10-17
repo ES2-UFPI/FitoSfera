@@ -25,8 +25,8 @@ const PREVIA_DO_PAINEL: EstadoDoPainel = {
 const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
 
 /**
- * Detalhe provisório: a planta grande, o apelido e a espécie. O detalhamento de verdade é a issue #20,
- * que substitui esta tela.
+ * Detalhe provisório: a planta grande, o apelido, a espécie e a prévia do painel. A navegação até aqui
+ * (#20) está pronta; o conteúdo completo do detalhamento é a US06 (#6), que substitui esta tela.
  */
 export function TelaDetalheProvisorio({ id }: { id: string }) {
   const { container } = useAplicativo();
