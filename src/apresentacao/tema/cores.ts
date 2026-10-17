@@ -32,4 +32,8 @@ export const CORES = {
   superficie: '#FFFCF5',
   bordaSuave: '#EAD9BF',
   erro: '#A4472E',
+
+  statusOk: '#4D7A43',
+  statusAtencao: '#B45309',
+  statusSemDados: '#8A7A68',
 } as const;

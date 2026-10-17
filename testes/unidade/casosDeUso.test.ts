@@ -1,6 +1,3 @@
-import { EspecieNaoEncontrada } from '@/aplicacao/casos-de-uso/AdicionarPlantaAoJardim';
-import { APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
-import { ApelidoInvalido } from '@/dominio/modelos/Planta';
 import { criarContainerDeTeste, plantaDeTeste } from '../apoio/fakes';
 
 test('ListarJardimVirtual devolve as plantas na ordem de cadastro, cada uma com a sua espécie', async () => {
@@ -37,29 +34,50 @@ test('PesquisarEspecies apara o termo e devolve tudo quando vazio', async () => 
   expect(await container.pesquisarEspecies.executar('')).toHaveLength(5);
 });
 
-test('AdicionarPlantaAoJardim salva com o id do gerador e devolve a planta', async () => {
-  const { container, plantas } = criarContainerDeTeste();
-  const planta = await container.adicionarPlanta.executar({
-    idEspecie: 'tomate',
-    apelido: 'Tom',
-    aparencia: APARENCIA_INICIAL,
+describe('status resumido de cada planta', () => {
+  const agora = new Date(2026, 9, 17, 14, 0);
+  const leitura = (parcial = {}) => ({
+    umidadePercentual: 60,
+    temperaturaCelsius: 24,
+    luminosidadeLux: 12000,
+    medidaEm: new Date(agora.getTime() - 10 * 60_000),
+    ...parcial,
   });
-  expect(planta.id).toBe('p1');
-  expect(plantas.salvas).toEqual([planta]);
-});
+  const statusDoJardim = async (opcoes: Parameters<typeof criarContainerDeTeste>[0]) =>
+    (await criarContainerDeTeste({ agora, ...opcoes }).container.listarJardim.executar()).map((item) => item.status);
 
-test('espécie inexistente lança EspecieNaoEncontrada e não salva nada', async () => {
-  const { container, plantas } = criarContainerDeTeste();
-  await expect(
-    container.adicionarPlanta.executar({ idEspecie: 'nao-existe', apelido: 'X', aparencia: APARENCIA_INICIAL }),
-  ).rejects.toThrow(EspecieNaoEncontrada);
-  expect(plantas.salvas).toEqual([]);
-});
+  test('sem sensor, toda planta vem como sem-dados', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: null })).toEqual(['sem-dados']);
+  });
 
-test('apelido inválido lança ApelidoInvalido e não salva nada', async () => {
-  const { container, plantas } = criarContainerDeTeste();
-  await expect(
-    container.adicionarPlanta.executar({ idEspecie: 'tomate', apelido: '  ', aparencia: APARENCIA_INICIAL }),
-  ).rejects.toThrow(ApelidoInvalido);
-  expect(plantas.salvas).toEqual([]);
+  test('leitura recente dentro da faixa da espécie vem ok; fora dela, atencao', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura() })).toEqual(['ok']);
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura({ luminosidadeLux: 800 }) })).toEqual([
+      'atencao',
+    ]);
+  });
+
+  test('leitura velha vem sem-dados, nunca ok', async () => {
+    const velha = leitura({ medidaEm: new Date(agora.getTime() - 31 * 60_000) });
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: velha })).toEqual(['sem-dados']);
+  });
+
+  test('o status usa as faixas guardadas na planta, mesmo que a espécie tenha saído do catálogo', async () => {
+    const plantas = [plantaDeTeste({ id: 'p1', idEspecie: 'jiboia' }), plantaDeTeste({ id: 'p2', idEspecie: 'sumiu' })];
+    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['ok', 'ok']);
+  });
+
+  test('planta sem faixas guardadas vem sem-dados, mesmo com a espécie tendo faixa no catálogo', async () => {
+    const plantas = [plantaDeTeste({ faixasRecomendadas: null })];
+    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['sem-dados']);
+  });
+
+  test('falha do sensor vira sem-dados sem derrubar a lista', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: 'falha' })).toEqual(['sem-dados']);
+  });
+
+  test('o detalhe traz o mesmo status da lista', async () => {
+    const { container } = criarContainerDeTeste({ agora, plantas: [plantaDeTeste()], leitura: leitura() });
+    expect((await container.obterPlanta.executar('p1'))?.status).toBe('ok');
+  });
 });

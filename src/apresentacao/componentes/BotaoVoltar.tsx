@@ -8,7 +8,8 @@ export function BotaoVoltar() {
   const navegador = useRouter();
   return (
     <Pressable
-      onPress={() => navegador.back()}
+      // Aberto direto por um link não há tela anterior: aí "voltar" é ir para o jardim.
+      onPress={() => (navegador.canGoBack() ? navegador.back() : navegador.replace('/'))}
       accessibilityRole="button"
       accessibilityLabel="Voltar"
       hitSlop={8}

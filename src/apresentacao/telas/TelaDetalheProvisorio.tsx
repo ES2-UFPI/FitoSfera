@@ -4,7 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
-import { EstadoDoPainel, PainelDeCondicoes } from '../componentes/PainelDeCondicoes';
+import {
+  EstadoDoPainel,
+  FaixasRecomendadasDoPainel,
+  PainelDeCondicoes,
+} from '../componentes/PainelDeCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
@@ -12,27 +16,45 @@ import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
-const PREVIA_DO_PAINEL: EstadoDoPainel = {
+const PREVIA_DO_PAINEL = {
   tipo: 'leitura',
   demonstracao: true,
   leitura: {
     umidadePercentual: 58,
     temperaturaCelsius: 24,
     luminosidadeLux: 720,
+    medidaEm: new Date(),
   },
-  // Referências fictícias apenas para avaliar a apresentação enquanto a issue #23 não está pronta.
-  faixasRecomendadas: {
-    umidadePercentual: { minimo: 60, maximo: 80 },
-    temperaturaCelsius: { minimo: 18, maximo: 26 },
-    luminosidadeLux: { minimo: 500, maximo: 1000 },
-  },
-};
+} satisfies EstadoDoPainel;
 
 const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
 
+function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
+  const faixas = item.planta.faixasRecomendadas;
+  if (faixas === null) return undefined;
+  return {
+    umidadePercentual: faixas.umidadeDoAr,
+    temperaturaCelsius: faixas.temperatura,
+    luminosidadeLux: faixas.luminosidade,
+  };
+}
+
+function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
+  const faixasRecomendadas = faixasDoPainel(item);
+  if (item.ultimaLeitura !== null) {
+    return {
+      tipo: 'leitura',
+      leitura: item.ultimaLeitura,
+      desatualizada: item.leituraDesatualizada,
+      faixasRecomendadas,
+    };
+  }
+  return __DEV__ ? { ...PREVIA_DO_PAINEL, faixasRecomendadas } : SENSOR_INDISPONIVEL;
+}
+
 /**
- * Detalhe provisório: a planta grande, o apelido e a espécie. O detalhamento de verdade é a issue #20,
- * que substitui esta tela.
+ * Detalhe provisório: a planta grande, o apelido, a espécie e a prévia do painel. A navegação até aqui
+ * (#20) está pronta; o conteúdo completo do detalhamento é a US06 (#6), que substitui esta tela.
  */
 export function TelaDetalheProvisorio({ id }: { id: string }) {
   const { container } = useAplicativo();
@@ -83,7 +105,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
             </Text>
             <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
           </View>
-          <PainelDeCondicoes estado={__DEV__ ? PREVIA_DO_PAINEL : SENSOR_INDISPONIVEL} />
+          <PainelDeCondicoes estado={estadoDoPainel(item)} />
         </ScrollView>
       ) : null}
     </FundoAconchegante>
