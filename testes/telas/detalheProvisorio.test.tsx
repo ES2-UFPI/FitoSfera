@@ -4,7 +4,7 @@ import { renderizarApp } from './apoio/renderizarApp';
 
 test('tocar no vaso abre o detalhe com apelido, espécie e a prévia do painel', async () => {
   renderizarApp({ plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomatinho' })] });
-  fireEvent.press(await screen.findByLabelText('Tomatinho. Toque para ver os detalhes.'));
+  fireEvent.press(await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.'));
   expect(screen).toHavePathname('/planta/p1');
   expect(await screen.findByRole('header', { name: 'Tomatinho' })).toBeTruthy();
   expect(screen.getByText('Tomate')).toBeTruthy();
