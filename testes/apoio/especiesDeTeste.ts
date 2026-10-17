@@ -1,4 +1,12 @@
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
+
+/** As faixas de toda espécie de teste, sem a fonte: é o que a planta guarda no cadastro. */
+export const FAIXAS_DE_TESTE: FaixasRecomendadas = {
+  umidadeDoAr: { minimo: 40, maximo: 70 },
+  temperatura: { minimo: 18, maximo: 28 },
+  luminosidade: { minimo: 5000, maximo: 20000 },
+};
 
 /** Espécie válida com valores neutros; cada teste informa só os nomes que importam para ele. */
 export function especieDeTeste(
@@ -9,9 +17,9 @@ export function especieDeTeste(
     ...nomes,
     foto: null,
     faixasIdeais: {
-      umidadeDoAr: { minimo: 40, maximo: 70, fonte },
-      temperatura: { minimo: 18, maximo: 28, fonte },
-      luminosidade: { minimo: 5000, maximo: 20000, fonte },
+      umidadeDoAr: { ...FAIXAS_DE_TESTE.umidadeDoAr, fonte },
+      temperatura: { ...FAIXAS_DE_TESTE.temperatura, fonte },
+      luminosidade: { ...FAIXAS_DE_TESTE.luminosidade, fonte },
     },
     intervaloDeRegaEmDias: 3,
     nivelDeDificuldade: 'facil',

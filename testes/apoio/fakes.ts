@@ -5,6 +5,7 @@ import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
 import { Planta } from '@/dominio/modelos/Planta';
 import { FonteDeLeituras } from '@/dominio/portas/FonteDeLeituras';
@@ -12,7 +13,7 @@ import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador'
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
-import { ESPECIES_DE_TESTE } from './especiesDeTeste';
+import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
 export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
   readonly salvas: Planta[];
@@ -72,13 +73,20 @@ export class GeradorSequencial implements GeradorDeIdentificador {
 }
 
 export function plantaDeTeste(
-  parcial: Partial<{ id: string; idEspecie: string; apelido: string; aparencia: Aparencia }> = {},
+  parcial: Partial<{
+    id: string;
+    idEspecie: string;
+    apelido: string;
+    aparencia: Aparencia;
+    faixasRecomendadas: FaixasRecomendadas | null;
+  }> = {},
 ): Planta {
   return Planta.criar({
     id: 'p1',
     idEspecie: 'tomate',
     apelido: 'Tomatinho',
     aparencia: APARENCIA_INICIAL,
+    faixasRecomendadas: FAIXAS_DE_TESTE,
     ...parcial,
   });
 }

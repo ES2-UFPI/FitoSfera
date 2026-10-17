@@ -62,9 +62,14 @@ describe('status resumido de cada planta', () => {
     expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: velha })).toEqual(['sem-dados']);
   });
 
-  test('espécie que saiu do catálogo vem sem-dados mesmo com leitura', async () => {
+  test('o status usa as faixas guardadas na planta, mesmo que a espécie tenha saído do catálogo', async () => {
     const plantas = [plantaDeTeste({ id: 'p1', idEspecie: 'jiboia' }), plantaDeTeste({ id: 'p2', idEspecie: 'sumiu' })];
-    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['ok', 'sem-dados']);
+    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['ok', 'ok']);
+  });
+
+  test('planta sem faixas guardadas vem sem-dados, mesmo com a espécie tendo faixa no catálogo', async () => {
+    const plantas = [plantaDeTeste({ faixasRecomendadas: null })];
+    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['sem-dados']);
   });
 
   test('falha do sensor vira sem-dados sem derrubar a lista', async () => {
