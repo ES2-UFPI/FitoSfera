@@ -10,7 +10,13 @@ test('o vaso na estante repassa o estado de cuidado ao desenho', () => {
   const estado: EstadoVisual = { tipo: 'sem-dados' };
   render(
     <VasoNaEstante
-      item={{ planta: plantaDeTeste(), especie: null, status: 'sem-dados' }}
+      item={{
+        planta: plantaDeTeste(),
+        especie: null,
+        status: 'sem-dados',
+        ultimaLeitura: null,
+        leituraDesatualizada: false,
+      }}
       fase={0}
       inclinacao="esquerda"
       aoTocar={() => {}}
@@ -23,7 +29,13 @@ test('o vaso na estante repassa o estado de cuidado ao desenho', () => {
 test('sem estado informado, o vaso usa "sem dados"', () => {
   render(
     <VasoNaEstante
-      item={{ planta: plantaDeTeste(), especie: null, status: 'sem-dados' }}
+      item={{
+        planta: plantaDeTeste(),
+        especie: null,
+        status: 'sem-dados',
+        ultimaLeitura: null,
+        leituraDesatualizada: false,
+      }}
       fase={0}
       inclinacao="esquerda"
       aoTocar={() => {}}

@@ -5,6 +5,7 @@ const leitura = {
   umidadePercentual: 58,
   temperaturaCelsius: 24.5,
   luminosidadeLux: 720,
+  medidaEm: new Date(2026, 9, 17, 14, 5),
 };
 
 test('mostra as três grandezas com suas unidades e identifica dados de demonstração', () => {
@@ -12,6 +13,7 @@ test('mostra as três grandezas com suas unidades e identifica dados de demonstr
 
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
+  expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
   expect(screen.getByLabelText('Temperatura: 24,5 graus Celsius.')).toBeTruthy();
   expect(screen.getByLabelText('Luz: 720 lux.')).toBeTruthy();
@@ -25,6 +27,7 @@ test('avisa por texto quando a leitura está desatualizada', () => {
 
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
   expect(screen.getByLabelText('Temperatura: 24,5 graus Celsius.')).toBeTruthy();
   expect(screen.getByLabelText('Luz: 720 lux.')).toBeTruthy();
@@ -35,6 +38,7 @@ test('mostra o estado de carregamento sem inventar valores', () => {
 
   expect(screen.getByText('Buscando as condições da planta…')).toBeTruthy();
   expect(screen.queryByText('UMIDADE')).toBeNull();
+  expect(screen.queryByText(/Última leitura às/)).toBeNull();
 });
 
 test('explica quando o sensor está indisponível', () => {

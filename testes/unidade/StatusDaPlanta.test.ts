@@ -1,6 +1,10 @@
 import { FaixasIdeais } from '@/dominio/modelos/EspecieVegetal';
 import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
-import { avaliarStatus, VALIDADE_DA_LEITURA_MS } from '@/dominio/regras/StatusDaPlanta';
+import {
+  avaliarStatus,
+  leituraEstaDesatualizada,
+  VALIDADE_DA_LEITURA_MS,
+} from '@/dominio/regras/StatusDaPlanta';
 
 const agora = new Date(2026, 9, 17, 14, 0);
 const fonte = 'Fonte de teste';
@@ -29,6 +33,12 @@ test('leitura mais velha que a validade fica "sem-dados", nunca "ok"', () => {
 test('leitura exatamente no limite da validade ainda vale', () => {
   const noLimite = leitura({ medidaEm: new Date(agora.getTime() - VALIDADE_DA_LEITURA_MS) });
   expect(avaliarStatus({ leitura: noLimite, faixas, agora })).toBe('ok');
+  expect(leituraEstaDesatualizada(noLimite, agora)).toBe(false);
+});
+
+test('leitura fica desatualizada um milissegundo depois do limite', () => {
+  const antiga = leitura({ medidaEm: new Date(agora.getTime() - VALIDADE_DA_LEITURA_MS - 1) });
+  expect(leituraEstaDesatualizada(antiga, agora)).toBe(true);
 });
 
 test('a validade é de 30 minutos', () => {
