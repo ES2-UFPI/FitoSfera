@@ -5,9 +5,11 @@ import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/Repositori
 import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
+import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
+import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
-import { ESPECIES_DE_TESTE } from '../apoio/especiesDeTeste';
-import { GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
+import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
+import { FonteDeLeiturasFixa, GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
 
 const agora = new Date('2026-10-17T14:00:00.000Z');
 const pedido = (apelido = 'Tomatinho') => ({ idEspecie: 'tomate', apelido, aparencia: APARENCIA_INICIAL });
@@ -72,4 +74,62 @@ test('a planta continua no jardim depois de fechar e reabrir o app', async () =>
     ['p1', 'Tomatinho', agora],
     ['p2', 'Tomatão', agora],
   ]);
+});
+
+describe('faixas recomendadas', () => {
+  const tomateDoCatalogo = ESPECIES_DE_TESTE.find((especie) => especie.id === 'tomate') as EspecieVegetal;
+
+  test('a planta cadastrada guarda uma cópia das faixas da espécie, sem a fonte', async () => {
+    const { cadastrar } = montar();
+    expect((await cadastrar.executar(pedido())).faixasRecomendadas).toEqual(FAIXAS_DE_TESTE);
+  });
+
+  test('alterar o catálogo depois não altera plantas já cadastradas', async () => {
+    const aparelho = new ArmazenamentoEmMemoria();
+    const abrirApp = () =>
+      new RepositorioDePlantasAsyncStorage(new ArmazenamentoComMigracao(aparelho, new MigradorDoArmazenamento(aparelho)));
+    await new CadastrarPlanta(
+      abrirApp(),
+      new RepositorioDeEspeciesLocal(ESPECIES_DE_TESTE),
+      new GeradorSequencial(),
+      new RelogioParado(agora),
+    ).executar(pedido());
+
+    // Uma versão nova do app passa a pedir muito mais luz para o tomate.
+    const fonte = 'Catálogo revisado';
+    const tomateRevisado: EspecieVegetal = {
+      ...tomateDoCatalogo,
+      faixasIdeais: {
+        umidadeDoAr: { minimo: 60, maximo: 80, fonte },
+        temperatura: { minimo: 22, maximo: 30, fonte },
+        luminosidade: { minimo: 30000, maximo: 90000, fonte },
+      },
+    };
+    const leitura = { umidadePercentual: 50, temperaturaCelsius: 20, luminosidadeLux: 12000, medidaEm: agora };
+    const jardim = await new ListarJardimVirtual(
+      abrirApp(),
+      new RepositorioDeEspeciesLocal([tomateRevisado]),
+      new FonteDeLeiturasFixa(leitura),
+      new RelogioParado(agora),
+    ).executar();
+
+    expect(jardim[0].planta.faixasRecomendadas).toEqual(FAIXAS_DE_TESTE);
+    // A leitura está dentro das faixas guardadas e fora das novas: vale a da planta.
+    expect(jardim[0].status).toBe('ok');
+  });
+
+  test('espécie sem faixa no catálogo não impede o cadastro', async () => {
+    const semFaixa: EspecieVegetal = { ...tomateDoCatalogo, faixasIdeais: null };
+    const plantas = new RepositorioDePlantasEmMemoria();
+    const cadastrar = new CadastrarPlanta(
+      plantas,
+      new RepositorioDeEspeciesLocal([semFaixa]),
+      new GeradorSequencial(),
+      new RelogioParado(agora),
+    );
+
+    const planta = await cadastrar.executar(pedido());
+    expect(planta.faixasRecomendadas).toBeNull();
+    expect(await plantas.listar()).toEqual([planta]);
+  });
 });

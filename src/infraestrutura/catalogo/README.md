@@ -58,6 +58,16 @@ O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/E
 
 Se a espécie tiver foto, coloque a imagem em `assets/especies/<id>.jpg` e preencha `foto` com esse caminho.
 
+## Faixas e plantas já cadastradas
+
+No cadastro, a planta guarda uma **cópia** das faixas da espécie, e o status dela é calculado com essa cópia.
+Por isso, mudar uma faixa aqui só vale para plantas cadastradas depois; as que já existem continuam com as
+faixas da época do cadastro.
+
+O catálogo embutido sempre tem as três faixas, porque a validação exige. Ainda assim, o domínio aceita uma
+espécie sem faixas (`faixasIdeais: null`): o cadastro acontece normalmente e a planta fica sem faixas, aparecendo
+como "sem dados".
+
 ## Sobre os valores atuais
 
 As faixas da primeira versão são valores de referência para cultivo doméstico, compilados a partir das fontes

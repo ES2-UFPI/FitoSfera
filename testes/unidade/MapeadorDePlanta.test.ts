@@ -1,6 +1,7 @@
 import { APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { Planta } from '@/dominio/modelos/Planta';
 import { deRegistro, paraRegistro } from '@/infraestrutura/persistencia/MapeadorDePlanta';
+import { FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
 
 test('ida e volta preserva todos os campos', () => {
   const planta = Planta.criar({
@@ -9,8 +10,21 @@ test('ida e volta preserva todos os campos', () => {
     apelido: 'Tom',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
     cadastradaEm: new Date('2026-10-17T14:00:00.000Z'),
+    faixasRecomendadas: FAIXAS_DE_TESTE,
   });
   expect(deRegistro(JSON.parse(JSON.stringify(paraRegistro(planta))))).toEqual(planta);
+});
+
+test.each([
+  ['ausentes', undefined],
+  ['nulas', null],
+  ['sem uma das grandezas', { umidadeDoAr: { minimo: 40, maximo: 70 }, temperatura: { minimo: 18, maximo: 28 } }],
+  ['com mínimo maior que o máximo', { ...FAIXAS_DE_TESTE, temperatura: { minimo: 30, maximo: 18 } }],
+  ['com texto no lugar de número', { ...FAIXAS_DE_TESTE, luminosidade: { minimo: 'pouca', maximo: 20000 } }],
+])('faixas %s não derrubam o registro: a planta fica sem faixas', (_, faixas) => {
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', faixasRecomendadas: faixas });
+  expect(planta?.apelido).toBe('Tom');
+  expect(planta?.faixasRecomendadas).toBeNull();
 });
 
 test('a data de cadastro é gravada como texto ISO', () => {

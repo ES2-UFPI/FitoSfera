@@ -26,7 +26,8 @@ export class AvaliadorDoJardim {
   async avaliar(planta: Planta, leitura: LeituraAmbiental | null): Promise<PlantaNoJardim> {
     const especie = await this.especies.obterPorId(planta.idEspecie);
     const agora = this.relogio.agora();
-    const status = avaliarStatus({ leitura, faixas: especie?.faixasIdeais ?? null, agora });
+    // Vale a faixa guardada na planta, não a do catálogo: revisar o catálogo não muda plantas já cadastradas.
+    const status = avaliarStatus({ leitura, faixas: planta.faixasRecomendadas, agora });
     return {
       planta,
       especie,

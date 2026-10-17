@@ -1,4 +1,5 @@
 import { Aparencia } from '@/dominio/modelos/Aparencia';
+import { copiarFaixas } from '@/dominio/modelos/FaixaRecomendada';
 import { Planta } from '@/dominio/modelos/Planta';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { Relogio } from '@/dominio/portas/Relogio';
@@ -14,7 +15,7 @@ export class EspecieNaoEncontrada extends Error {
 
 /**
  * Grava no jardim a espécie escolhida na busca. Cada cadastro ganha um identificador novo, então a mesma
- * espécie cadastrada duas vezes vira duas plantas distintas.
+ * espécie cadastrada duas vezes vira duas plantas distintas. A planta leva uma cópia das faixas da espécie.
  */
 export class CadastrarPlanta {
   constructor(
@@ -25,10 +26,14 @@ export class CadastrarPlanta {
   ) {}
 
   async executar(pedido: { idEspecie: string; apelido: string; aparencia: Aparencia }): Promise<Planta> {
-    if ((await this.especies.obterPorId(pedido.idEspecie)) === null) {
-      throw new EspecieNaoEncontrada(pedido.idEspecie);
-    }
-    const planta = Planta.criar({ id: this.gerador.gerar(), cadastradaEm: this.relogio.agora(), ...pedido });
+    const especie = await this.especies.obterPorId(pedido.idEspecie);
+    if (especie === null) throw new EspecieNaoEncontrada(pedido.idEspecie);
+    const planta = Planta.criar({
+      ...pedido,
+      id: this.gerador.gerar(),
+      cadastradaEm: this.relogio.agora(),
+      faixasRecomendadas: copiarFaixas(especie.faixasIdeais),
+    });
     await this.plantas.adicionar(planta);
     return planta;
   }

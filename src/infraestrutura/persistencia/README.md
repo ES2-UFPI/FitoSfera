@@ -9,19 +9,24 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 
 | Chave | Conteúdo | Quem usa |
 | --- | --- | --- |
-| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"1"`). | `MigradorDoArmazenamento` |
-| `fitosfera:v1:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
-| `fitosfera:v1:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v1:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"2"`). | `MigradorDoArmazenamento` |
+| `fitosfera:v2:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v2:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v2:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
 
 Chaves reservadas para as próximas histórias, ainda sem código:
 
 | Chave | Conteúdo previsto |
 | --- | --- |
-| `fitosfera:v1:regas` | Histórico de regas por planta (US08). |
-| `fitosfera:v1:preferencias` | Preferências da pessoa, como notificações. |
+| `fitosfera:v2:regas` | Histórico de regas por planta (US08). |
+| `fitosfera:v2:preferencias` | Preferências da pessoa, como notificações. |
 
-Chaves da versão 0, que só a migração lê: `@fitosfera/plantas` e `@fitosfera/plantas:ilegivel`. Elas não são
-apagadas depois da migração e ficam como cópia de segurança.
+Chaves de versões anteriores, que só a migração lê. Elas não são apagadas depois da migração e ficam como cópia
+de segurança:
+
+| Versão | Chaves |
+| --- | --- |
+| 0 | `@fitosfera/plantas`, `@fitosfera/plantas:ilegivel` |
+| 1 | `fitosfera:v1:plantas`, `fitosfera:v1:plantas:ilegivel` |
 
 ### Formato de uma planta (`RegistroDePlanta`)
 
@@ -31,13 +36,24 @@ apagadas depois da migração e ficam como cópia de segurança.
   "idEspecie": "tomate",
   "apelido": "Tomatinho",
   "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
-  "cadastradaEm": "2026-10-17T14:00:00.000Z"
+  "cadastradaEm": "2026-10-17T14:00:00.000Z",
+  "faixasRecomendadas": {
+    "umidadeDoAr": { "minimo": 50, "maximo": 70 },
+    "temperatura": { "minimo": 20, "maximo": 28 },
+    "luminosidade": { "minimo": 25000, "maximo": 80000 }
+  }
 }
 ```
 
 `cadastradaEm` é a data e hora do cadastro em ISO 8601. Registros gravados antes de esse campo existir, ou com
 uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não
 exigiu uma nova versão do schema.
+
+`faixasRecomendadas` é uma cópia das faixas da espécie, feita no cadastro (umidade do ar em %, temperatura em
+°C e luminosidade em lux, sem a fonte). O status da planta é calculado com essa cópia, então revisar o catálogo
+depois não muda plantas já cadastradas. Fica `null` quando a espécie não tinha faixa: o cadastro acontece
+normalmente e a planta aparece como "sem dados". Faixas malformadas também são lidas como `null`, sem perder a
+planta.
 
 A conversão entre o modelo `Planta` do domínio e esse JSON fica em [`MapeadorDePlanta.ts`](MapeadorDePlanta.ts).
 O domínio não conhece o formato gravado.
@@ -51,11 +67,17 @@ O domínio não conhece o formato gravado.
 - Sem versão gravada, os dados são tratados como versão 0. Uma versão ilegível também vira 0.
 - Dados de uma versão mais nova que a do app, por exemplo depois de um downgrade, ficam como estão.
 
+| Migração | O que faz |
+| --- | --- |
+| 0 → 1 | Move as plantas de `@fitosfera/plantas` para `fitosfera:v1:plantas`, com os registros intactos. |
+| 1 → 2 | Move as plantas para `fitosfera:v2:plantas` e dá a cada uma, se ainda não tiver, uma cópia das faixas que a espécie tem no catálogo naquele momento (`null` se a espécie saiu do catálogo). |
+
 ### Como mudar o formato
 
-1. Crie em `chaves.ts` as chaves `fitosfera:v2:...` e aumente `VERSAO_ATUAL_DO_ARMAZENAMENTO`.
-2. Escreva em `migracoes.ts` uma `Migracao` com `paraVersao: 2`, que leia o formato antigo e grave o novo, e
-   acrescente essa migração a `MIGRACOES`.
+1. Mova as chaves atuais de `CHAVES` para um `CHAVES_DA_VERSAO_<n>`, crie em `CHAVES` as chaves
+   `fitosfera:v<n+1>:...` e aumente `VERSAO_ATUAL_DO_ARMAZENAMENTO`.
+2. Escreva em `migracoes.ts` uma `Migracao` com `paraVersao: <n+1>`, que leia o formato antigo e grave o novo,
+   e acrescente essa migração a `MIGRACOES`. As migrações antigas continuam gravando nas chaves da sua versão.
 3. A migração precisa poder rodar de novo sem estrago, porque o app pode fechar no meio dela.
 4. Não apague as chaves antigas na mesma versão em que os dados mudam de lugar.
 5. Cubra a migração em `testes/unidade/MigradorDoArmazenamento.test.ts`, com dados no formato antigo.

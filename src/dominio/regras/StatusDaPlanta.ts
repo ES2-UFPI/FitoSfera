@@ -1,4 +1,4 @@
-import { FaixaIdeal, FaixasIdeais } from '../modelos/EspecieVegetal';
+import { FaixaRecomendada, FaixasRecomendadas } from '../modelos/FaixaRecomendada';
 import { LeituraAmbiental } from '../modelos/LeituraAmbiental';
 
 /** O resumo que a estante mostra: está tudo bem, precisa de atenção, ou não dá para saber. */
@@ -13,17 +13,17 @@ export function leituraEstaDesatualizada(leitura: Pick<LeituraAmbiental, 'medida
 }
 
 /** Intervalo fechado: os dois limites contam como dentro. */
-export function estaNaFaixa(valor: number, faixa: Pick<FaixaIdeal, 'minimo' | 'maximo'>): boolean {
+export function estaNaFaixa(valor: number, faixa: FaixaRecomendada): boolean {
   return valor >= faixa.minimo && valor <= faixa.maximo;
 }
 
 /**
- * Compara a última leitura com a faixa recomendada da espécie. Sem leitura recente, ou sem faixa,
+ * Compara a última leitura com as faixas recomendadas guardadas na planta. Sem leitura recente, ou sem faixa,
  * a resposta é "sem-dados" — nunca "ok", para não tranquilizar a pessoa sem motivo.
  */
 export function avaliarStatus(entrada: {
   leitura: LeituraAmbiental | null;
-  faixas: FaixasIdeais | null;
+  faixas: FaixasRecomendadas | null;
   agora: Date;
 }): StatusDaPlanta {
   const { leitura, faixas, agora } = entrada;
