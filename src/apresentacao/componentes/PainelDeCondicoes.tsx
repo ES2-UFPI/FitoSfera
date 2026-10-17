@@ -14,6 +14,7 @@ export interface LeituraDoPainel {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
   readonly luminosidadeLux: number;
+  readonly medidaEm: Date;
 }
 
 export type EstadoDoPainel =
@@ -34,6 +35,12 @@ interface Props {
 
 function formatarNumero(valor: number): string {
   return String(valor).replace('.', ',');
+}
+
+export function formatarHorarioDaLeitura(instante: Date): string {
+  const horas = String(instante.getHours()).padStart(2, '0');
+  const minutos = String(instante.getMinutes()).padStart(2, '0');
+  return `${horas}:${minutos}`;
 }
 
 function Indicador({
@@ -102,6 +109,9 @@ export function PainelDeCondicoes({ estado }: Props) {
 
       {estado.tipo === 'leitura' ? (
         <>
+          <Text style={estilos.horarioDaLeitura}>
+            Última leitura às {formatarHorarioDaLeitura(estado.leitura.medidaEm)}
+          </Text>
           {estado.atualizando ? (
             <View style={estilos.atualizando} accessible accessibilityLiveRegion="polite">
               <ActivityIndicator size="small" color={CORES.acao} />
@@ -174,6 +184,10 @@ const estilos = StyleSheet.create({
   },
   mensagem: {
     paddingVertical: ESPACO.pequeno,
+  },
+  horarioDaLeitura: {
+    ...TEXTO.apoio,
+    alignSelf: 'flex-start',
   },
   aviso: {
     alignSelf: 'flex-start',

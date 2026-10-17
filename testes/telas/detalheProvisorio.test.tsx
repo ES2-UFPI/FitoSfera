@@ -28,3 +28,36 @@ test('id inexistente mostra "Planta não encontrada"', async () => {
   renderizarApp({ url: '/planta/p9' });
   expect(await screen.findByText('Planta não encontrada')).toBeTruthy();
 });
+
+test('uma leitura real mostra o horário medido e substitui os dados de demonstração', async () => {
+  const medidaEm = new Date(2026, 9, 17, 13, 55);
+  renderizarApp({
+    plantas: [plantaDeTeste()],
+    url: '/planta/p1',
+    agora: new Date(2026, 9, 17, 14, 0),
+    leitura: { umidadePercentual: 61, temperaturaCelsius: 25, luminosidadeLux: 9000, medidaEm },
+  });
+
+  expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
+  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.getByLabelText('Umidade: 61 por cento.')).toBeTruthy();
+});
+
+test('leitura mais antiga que 30 minutos continua visível e aparece como desatualizada', async () => {
+  renderizarApp({
+    plantas: [plantaDeTeste()],
+    url: '/planta/p1',
+    agora: new Date(2026, 9, 17, 14, 0),
+    leitura: {
+      umidadePercentual: 58,
+      temperaturaCelsius: 24,
+      luminosidadeLux: 720,
+      medidaEm: new Date(2026, 9, 17, 13, 29),
+    },
+  });
+
+  expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
+});
