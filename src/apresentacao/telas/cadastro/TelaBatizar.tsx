@@ -36,7 +36,7 @@ export function TelaBatizar() {
     definirSalvando(true);
     definirErro(null);
     try {
-      await container.adicionarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
+      await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
       await recarregarJardim();
       navegador.dismissTo('/');
     } catch (falha) {
