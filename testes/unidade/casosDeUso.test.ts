@@ -80,4 +80,14 @@ describe('status resumido de cada planta', () => {
     const { container } = criarContainerDeTeste({ agora, plantas: [plantaDeTeste()], leitura: leitura() });
     expect((await container.obterPlanta.executar('p1'))?.status).toBe('ok');
   });
+
+  test('o detalhe traz a situação de cada grandeza para a apresentação', async () => {
+    const medicao = leitura({ umidadePercentual: 39, temperaturaCelsius: 24, luminosidadeLux: 30001 });
+    const { container } = criarContainerDeTeste({ agora, plantas: [plantaDeTeste()], leitura: medicao });
+    expect((await container.obterPlanta.executar('p1'))?.situacoes).toEqual({
+      umidadeDoAr: 'abaixo',
+      temperatura: 'ideal',
+      luminosidade: 'acima',
+    });
+  });
 });
