@@ -1,11 +1,21 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { StatusDaPlanta } from '@/dominio/regras/StatusDaPlanta';
 import { CORES } from '../tema/cores';
 import { FONTES } from '../tema/tipografia';
+import { APRESENTACAO_DO_STATUS } from './textosDoStatus';
 
 export type Inclinacao = 'esquerda' | 'direita';
 
-/** Etiqueta de papel kraft pendurada por um fio, levemente torta. */
-export function EtiquetaDePapel({ texto, inclinacao }: { texto: string; inclinacao: Inclinacao }) {
+/** Etiqueta de papel kraft pendurada por um fio, levemente torta. Com status, ganha uma segunda linha. */
+export function EtiquetaDePapel({
+  texto,
+  inclinacao,
+  status,
+}: {
+  texto: string;
+  inclinacao: Inclinacao;
+  status?: StatusDaPlanta;
+}) {
   return (
     <View style={estilos.etiqueta}>
       <View style={estilos.fio} />
@@ -13,6 +23,12 @@ export function EtiquetaDePapel({ texto, inclinacao }: { texto: string; inclinac
         <Text style={estilos.texto} numberOfLines={1}>
           {texto}
         </Text>
+        {status ? (
+          <View style={estilos.status}>
+            <View style={[estilos.ponto, { backgroundColor: APRESENTACAO_DO_STATUS[status].cor }]} />
+            <Text style={estilos.textoDoStatus}>{APRESENTACAO_DO_STATUS[status].curto}</Text>
+          </View>
+        ) : null}
       </View>
     </View>
   );
@@ -38,4 +54,7 @@ const estilos = StyleSheet.create({
     elevation: 1,
   },
   texto: { fontFamily: FONTES.forte, fontSize: 10.5, color: CORES.textoDoPapel },
+  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 1 },
+  ponto: { width: 7, height: 7, borderRadius: 3.5 },
+  textoDoStatus: { fontFamily: FONTES.texto, fontSize: 9.5, color: CORES.textoDoPapel },
 });

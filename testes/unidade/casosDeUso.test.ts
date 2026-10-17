@@ -63,3 +63,46 @@ test('apelido inválido lança ApelidoInvalido e não salva nada', async () => {
   ).rejects.toThrow(ApelidoInvalido);
   expect(plantas.salvas).toEqual([]);
 });
+
+describe('status resumido de cada planta', () => {
+  const agora = new Date(2026, 9, 17, 14, 0);
+  const leitura = (parcial = {}) => ({
+    umidadePercentual: 60,
+    temperaturaCelsius: 24,
+    luminosidadeLux: 12000,
+    medidaEm: new Date(agora.getTime() - 10 * 60_000),
+    ...parcial,
+  });
+  const statusDoJardim = async (opcoes: Parameters<typeof criarContainerDeTeste>[0]) =>
+    (await criarContainerDeTeste({ agora, ...opcoes }).container.listarJardim.executar()).map((item) => item.status);
+
+  test('sem sensor, toda planta vem como sem-dados', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: null })).toEqual(['sem-dados']);
+  });
+
+  test('leitura recente dentro da faixa da espécie vem ok; fora dela, atencao', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura() })).toEqual(['ok']);
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura({ luminosidadeLux: 800 }) })).toEqual([
+      'atencao',
+    ]);
+  });
+
+  test('leitura velha vem sem-dados, nunca ok', async () => {
+    const velha = leitura({ medidaEm: new Date(agora.getTime() - 31 * 60_000) });
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: velha })).toEqual(['sem-dados']);
+  });
+
+  test('espécie que saiu do catálogo vem sem-dados mesmo com leitura', async () => {
+    const plantas = [plantaDeTeste({ id: 'p1', idEspecie: 'jiboia' }), plantaDeTeste({ id: 'p2', idEspecie: 'sumiu' })];
+    expect(await statusDoJardim({ plantas, leitura: leitura() })).toEqual(['ok', 'sem-dados']);
+  });
+
+  test('falha do sensor vira sem-dados sem derrubar a lista', async () => {
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: 'falha' })).toEqual(['sem-dados']);
+  });
+
+  test('o detalhe traz o mesmo status da lista', async () => {
+    const { container } = criarContainerDeTeste({ agora, plantas: [plantaDeTeste()], leitura: leitura() });
+    expect((await container.obterPlanta.executar('p1'))?.status).toBe('ok');
+  });
+});

@@ -27,7 +27,8 @@ export const ALTURA_DA_AREA_DOS_VASOS = Math.ceil(LARGURA_DO_VASO * 1.7);
 export const ALTURA_DA_MADEIRA = 13;
 export const ALTURA_DA_BORDA_DA_MADEIRA = 5;
 export const ALTURA_DA_TABUA = ALTURA_DA_MADEIRA + ALTURA_DA_BORDA_DA_MADEIRA;
-export const ALTURA_DA_ETIQUETA = 34;
+/** Fio + papel com o apelido e a linha do status. */
+export const ALTURA_DA_ETIQUETA = 50;
 export const ESPACO_ENTRE_PRATELEIRAS = 12;
 export const ALTURA_DA_PRATELEIRA =
   ALTURA_DA_AREA_DOS_VASOS + ALTURA_DA_TABUA + ALTURA_DA_ETIQUETA + ESPACO_ENTRE_PRATELEIRAS;
