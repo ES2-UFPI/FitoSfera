@@ -1,15 +1,28 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { EstadoDoPainel, PainelDeCondicoes } from '../componentes/PainelDeCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
 import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
+
+const PREVIA_DO_PAINEL: EstadoDoPainel = {
+  tipo: 'leitura',
+  demonstracao: true,
+  leitura: {
+    umidadePercentual: 58,
+    temperaturaCelsius: 24,
+    luminosidadeLux: 720,
+  },
+};
+
+const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
 
 /**
  * Detalhe provisório: a planta grande, o apelido e a espécie. O detalhamento de verdade é a issue #20,
@@ -55,15 +68,17 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
         </View>
       ) : null}
       {item && item !== 'falhou' ? (
-        <View style={estilos.centro}>
-          <DesenhoDaPlanta aparencia={item.planta.aparencia} largura={150} respirando />
-          <TabuaDeMadeira estilo={estilos.tabua} />
-          <Text style={[TEXTO.titulo, estilos.apelido]} accessibilityRole="header">
-            {item.planta.apelido}
-          </Text>
-          <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
-          <Text style={[TEXTO.corpo, estilos.texto]}>Os detalhes desta planta chegam em breve.</Text>
-        </View>
+        <ScrollView contentContainerStyle={estilos.conteudo}>
+          <View style={estilos.planta}>
+            <DesenhoDaPlanta aparencia={item.planta.aparencia} largura={150} respirando />
+            <TabuaDeMadeira estilo={estilos.tabua} />
+            <Text style={[TEXTO.titulo, estilos.apelido]} accessibilityRole="header">
+              {item.planta.apelido}
+            </Text>
+            <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
+          </View>
+          <PainelDeCondicoes estado={__DEV__ ? PREVIA_DO_PAINEL : SENSOR_INDISPONIVEL} />
+        </ScrollView>
       ) : null}
     </FundoAconchegante>
   );
@@ -72,6 +87,15 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
 const estilos = StyleSheet.create({
   topo: { paddingHorizontal: ESPACO.grande },
   centro: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: ESPACO.folgado * 3, gap: 4 },
+  conteudo: {
+    flexGrow: 1,
+    alignItems: 'center',
+    paddingHorizontal: ESPACO.grande,
+    paddingTop: ESPACO.medio,
+    paddingBottom: ESPACO.folgado,
+    gap: ESPACO.folgado,
+  },
+  planta: { alignItems: 'center', gap: ESPACO.minimo },
   tabua: { alignSelf: 'stretch', marginHorizontal: ESPACO.folgado * 2, marginBottom: ESPACO.amplo },
   apelido: { textAlign: 'center', paddingHorizontal: ESPACO.amplo },
   especie: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
