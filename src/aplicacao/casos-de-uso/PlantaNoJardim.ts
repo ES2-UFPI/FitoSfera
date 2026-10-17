@@ -1,4 +1,5 @@
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
 import { Planta } from '@/dominio/modelos/Planta';
 import { StatusDaPlanta } from '@/dominio/regras/StatusDaPlanta';
 
@@ -8,4 +9,6 @@ export interface PlantaNoJardim {
   /** Null se a espécie tiver saído do catálogo. */
   readonly especie: EspecieVegetal | null;
   readonly status: StatusDaPlanta;
+  readonly ultimaLeitura: LeituraAmbiental | null;
+  readonly leituraDesatualizada: boolean;
 }

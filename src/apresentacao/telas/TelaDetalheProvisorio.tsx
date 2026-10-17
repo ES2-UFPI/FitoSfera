@@ -19,10 +19,22 @@ const PREVIA_DO_PAINEL: EstadoDoPainel = {
     umidadePercentual: 58,
     temperaturaCelsius: 24,
     luminosidadeLux: 720,
+    medidaEm: new Date(),
   },
 };
 
 const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
+
+function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
+  if (item.ultimaLeitura !== null) {
+    return {
+      tipo: 'leitura',
+      leitura: item.ultimaLeitura,
+      desatualizada: item.leituraDesatualizada,
+    };
+  }
+  return __DEV__ ? PREVIA_DO_PAINEL : SENSOR_INDISPONIVEL;
+}
 
 /**
  * Detalhe provisório: a planta grande, o apelido, a espécie e a prévia do painel. A navegação até aqui
@@ -77,7 +89,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
             </Text>
             <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
           </View>
-          <PainelDeCondicoes estado={__DEV__ ? PREVIA_DO_PAINEL : SENSOR_INDISPONIVEL} />
+          <PainelDeCondicoes estado={estadoDoPainel(item)} />
         </ScrollView>
       ) : null}
     </FundoAconchegante>

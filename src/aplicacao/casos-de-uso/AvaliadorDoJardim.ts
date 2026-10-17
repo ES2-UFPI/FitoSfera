@@ -3,7 +3,7 @@ import { Planta } from '@/dominio/modelos/Planta';
 import { FonteDeLeituras } from '@/dominio/portas/FonteDeLeituras';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
-import { avaliarStatus } from '@/dominio/regras/StatusDaPlanta';
+import { avaliarStatus, leituraEstaDesatualizada } from '@/dominio/regras/StatusDaPlanta';
 import { PlantaNoJardim } from './PlantaNoJardim';
 
 /** Cruza planta, catálogo e sensor, para a lista e o detalhe chegarem sempre ao mesmo status. */
@@ -25,7 +25,14 @@ export class AvaliadorDoJardim {
 
   async avaliar(planta: Planta, leitura: LeituraAmbiental | null): Promise<PlantaNoJardim> {
     const especie = await this.especies.obterPorId(planta.idEspecie);
-    const status = avaliarStatus({ leitura, faixas: especie?.faixasIdeais ?? null, agora: this.relogio.agora() });
-    return { planta, especie, status };
+    const agora = this.relogio.agora();
+    const status = avaliarStatus({ leitura, faixas: especie?.faixasIdeais ?? null, agora });
+    return {
+      planta,
+      especie,
+      status,
+      ultimaLeitura: leitura,
+      leituraDesatualizada: leitura !== null && leituraEstaDesatualizada(leitura, agora),
+    };
   }
 }

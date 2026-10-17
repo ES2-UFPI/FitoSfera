@@ -7,6 +7,11 @@ export type StatusDaPlanta = 'ok' | 'atencao' | 'sem-dados';
 /** Uma leitura mais velha que isto não diz nada sobre agora. */
 export const VALIDADE_DA_LEITURA_MS = 30 * 60_000;
 
+/** Exatamente no limite ainda vale; só fica desatualizada depois dele. */
+export function leituraEstaDesatualizada(leitura: Pick<LeituraAmbiental, 'medidaEm'>, agora: Date): boolean {
+  return agora.getTime() - leitura.medidaEm.getTime() > VALIDADE_DA_LEITURA_MS;
+}
+
 /** Intervalo fechado: os dois limites contam como dentro. */
 export function estaNaFaixa(valor: number, faixa: Pick<FaixaIdeal, 'minimo' | 'maximo'>): boolean {
   return valor >= faixa.minimo && valor <= faixa.maximo;
@@ -23,7 +28,7 @@ export function avaliarStatus(entrada: {
 }): StatusDaPlanta {
   const { leitura, faixas, agora } = entrada;
   if (leitura === null || faixas === null) return 'sem-dados';
-  if (agora.getTime() - leitura.medidaEm.getTime() > VALIDADE_DA_LEITURA_MS) return 'sem-dados';
+  if (leituraEstaDesatualizada(leitura, agora)) return 'sem-dados';
 
   const tudoNaFaixa =
     estaNaFaixa(leitura.umidadePercentual, faixas.umidadeDoAr) &&
