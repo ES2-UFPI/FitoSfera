@@ -1,4 +1,4 @@
-import { AdicionarPlantaAoJardim } from '@/aplicacao/casos-de-uso/AdicionarPlantaAoJardim';
+import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
@@ -105,7 +105,7 @@ export function criarContainerDeTeste(
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     pesquisarEspecies: new PesquisarEspecies(especies),
-    adicionarPlanta: new AdicionarPlantaAoJardim(plantas, especies, new GeradorSequencial()),
+    cadastrarPlanta: new CadastrarPlanta(plantas, especies, new GeradorSequencial(), relogio),
   };
   return { container, plantas };
 }

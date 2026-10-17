@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AdicionarPlantaAoJardim } from '@/aplicacao/casos-de-uso/AdicionarPlantaAoJardim';
+import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
@@ -24,6 +24,6 @@ export function criarContainer(): Container {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     pesquisarEspecies: new PesquisarEspecies(especies),
-    adicionarPlanta: new AdicionarPlantaAoJardim(plantas, especies, new GeradorDeIdentificadorAleatorio()),
+    cadastrarPlanta: new CadastrarPlanta(plantas, especies, new GeradorDeIdentificadorAleatorio(), relogio),
   };
 }

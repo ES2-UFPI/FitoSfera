@@ -30,9 +30,14 @@ apagadas depois da migração e ficam como cópia de segurança.
   "id": "k3f9a2",
   "idEspecie": "tomate",
   "apelido": "Tomatinho",
-  "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" }
+  "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
+  "cadastradaEm": "2026-10-17T14:00:00.000Z"
 }
 ```
+
+`cadastradaEm` é a data e hora do cadastro em ISO 8601. Registros gravados antes de esse campo existir, ou com
+uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não
+exigiu uma nova versão do schema.
 
 A conversão entre o modelo `Planta` do domínio e esse JSON fica em [`MapeadorDePlanta.ts`](MapeadorDePlanta.ts).
 O domínio não conhece o formato gravado.
