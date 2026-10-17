@@ -10,9 +10,9 @@ test('tocar no vaso abre o detalhe com apelido, espécie e a prévia do painel',
   expect(screen.getByText('Tomate')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
-  expect(screen.getByLabelText('Temperatura: 24 graus Celsius.')).toBeTruthy();
-  expect(screen.getByLabelText('Luz: 720 lux.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Temperatura: 24 graus Celsius. Faixa ideal: 18 a 26 graus Celsius.')).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 500 a 1000 lux.')).toBeTruthy();
 });
 
 test('espécie fora do catálogo mostra "Espécie desconhecida"', async () => {

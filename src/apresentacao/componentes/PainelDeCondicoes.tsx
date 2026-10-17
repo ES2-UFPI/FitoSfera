@@ -16,6 +16,18 @@ export interface LeituraDoPainel {
   readonly luminosidadeLux: number;
 }
 
+export interface FaixaDoPainel {
+  readonly minimo: number;
+  readonly maximo: number;
+}
+
+/** Referências opcionais: espécies sem uma delas continuam podendo aparecer no painel. */
+export interface FaixasRecomendadasDoPainel {
+  readonly umidadePercentual?: FaixaDoPainel;
+  readonly temperaturaCelsius?: FaixaDoPainel;
+  readonly luminosidadeLux?: FaixaDoPainel;
+}
+
 export type EstadoDoPainel =
   | { readonly tipo: 'carregando' }
   | { readonly tipo: 'indisponivel' }
@@ -23,6 +35,7 @@ export type EstadoDoPainel =
   | {
       readonly tipo: 'leitura';
       readonly leitura: LeituraDoPainel;
+      readonly faixasRecomendadas?: FaixasRecomendadasDoPainel;
       readonly demonstracao?: boolean;
       readonly desatualizada?: boolean;
       readonly atualizando?: boolean;
@@ -42,20 +55,28 @@ function Indicador({
   unidade,
   descricaoDaUnidade,
   icone,
+  faixaRecomendada,
 }: {
   rotulo: string;
   valor: number;
   unidade: string;
   descricaoDaUnidade: string;
   icone: ReactNode;
+  faixaRecomendada?: FaixaDoPainel;
 }) {
   const valorFormatado = formatarNumero(valor);
+  const faixaVisivel = faixaRecomendada
+    ? `${formatarNumero(faixaRecomendada.minimo)}–${formatarNumero(faixaRecomendada.maximo)}${unidade === '%' ? '' : ' '}${unidade}`
+    : null;
+  const descricaoDaFaixa = faixaRecomendada
+    ? `Faixa ideal: ${formatarNumero(faixaRecomendada.minimo)} a ${formatarNumero(faixaRecomendada.maximo)} ${descricaoDaUnidade}.`
+    : 'Faixa ideal não informada.';
 
   return (
     <View
       style={estilos.indicador}
       accessible
-      accessibilityLabel={`${rotulo}: ${valorFormatado} ${descricaoDaUnidade}.`}
+      accessibilityLabel={`${rotulo}: ${valorFormatado} ${descricaoDaUnidade}. ${descricaoDaFaixa}`}
     >
       <View style={estilos.icone}>{icone}</View>
       <Text style={TEXTO.rotulo}>{rotulo.toUpperCase()}</Text>
@@ -63,6 +84,7 @@ function Indicador({
         <Text style={estilos.valor}>{valorFormatado}</Text>
         <Text style={estilos.unidade}>{unidade}</Text>
       </View>
+      <Text style={estilos.faixa}>{faixaVisivel ? `Ideal: ${faixaVisivel}` : 'Faixa ideal não informada'}</Text>
     </View>
   );
 }
@@ -121,6 +143,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               unidade="%"
               descricaoDaUnidade="por cento"
               icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
+              faixaRecomendada={estado.faixasRecomendadas?.umidadePercentual}
             />
             <Indicador
               rotulo="Temperatura"
@@ -128,6 +151,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               unidade="°C"
               descricaoDaUnidade="graus Celsius"
               icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
+              faixaRecomendada={estado.faixasRecomendadas?.temperaturaCelsius}
             />
             <Indicador
               rotulo="Luz"
@@ -135,6 +159,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               unidade="lux"
               descricaoDaUnidade="lux"
               icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
+              faixaRecomendada={estado.faixasRecomendadas?.luminosidadeLux}
             />
           </View>
         </>
@@ -235,5 +260,11 @@ const estilos = StyleSheet.create({
     fontFamily: FONTES.forte,
     fontSize: 11,
     color: CORES.textoApoio,
+  },
+  faixa: {
+    ...TEXTO.apoio,
+    minHeight: 34,
+    textAlign: 'center',
+    fontSize: 10.5,
   },
 });

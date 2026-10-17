@@ -20,6 +20,12 @@ const PREVIA_DO_PAINEL: EstadoDoPainel = {
     temperaturaCelsius: 24,
     luminosidadeLux: 720,
   },
+  // Referências fictícias apenas para avaliar a apresentação enquanto a issue #23 não está pronta.
+  faixasRecomendadas: {
+    umidadePercentual: { minimo: 60, maximo: 80 },
+    temperaturaCelsius: { minimo: 18, maximo: 26 },
+    luminosidadeLux: { minimo: 500, maximo: 1000 },
+  },
 };
 
 const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
