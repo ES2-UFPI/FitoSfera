@@ -70,3 +70,17 @@ test('adicionar guarda uma cópia do conteúdo ilegível antes de sobrescrever',
   expect(armazenamento.valores.get('fitosfera:v2:plantas:ilegivel')).toBe('{quebrado');
   expect(gravado().map((r: { id: string }) => r.id)).toEqual(['p1']);
 });
+
+test('remover tira só a planta do id, preservando registros que o app não entende', async () => {
+  await armazenamento.setItem('fitosfera:v2:plantas', JSON.stringify([{ id: 'x' }]));
+  await repo.adicionar(planta('p1', 'Fica'));
+  await repo.adicionar(planta('p2', 'Sai'));
+  await repo.remover('p2');
+  expect(gravado().map((r: { id: string }) => r.id)).toEqual(['x', 'p1']);
+});
+
+test('remover num conteúdo ilegível não apaga nada', async () => {
+  await armazenamento.setItem('fitosfera:v2:plantas', '{quebrado');
+  await repo.remover('p1');
+  expect(armazenamento.valores.get('fitosfera:v2:plantas')).toBe('{quebrado');
+});

@@ -1,4 +1,5 @@
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
+import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
@@ -9,10 +10,12 @@ import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Rega } from '@/dominio/modelos/Rega';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
+import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -33,6 +36,29 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
 
   async adicionar(planta: Planta) {
     this.salvas.push(planta);
+  }
+
+  async remover(id: string) {
+    const posicao = this.salvas.findIndex((planta) => planta.id === id);
+    if (posicao >= 0) this.salvas.splice(posicao, 1);
+  }
+}
+
+export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
+  readonly salvas: Rega[] = [];
+
+  async gravar(rega: Rega) {
+    this.salvas.push(rega);
+  }
+
+  async listarPorPlanta(idPlanta: string) {
+    return this.salvas
+      .filter((rega) => rega.idPlanta === idPlanta)
+      .sort((a, b) => b.regadaEm.getTime() - a.regadaEm.getTime());
+  }
+
+  async apagarDaPlanta(idPlanta: string) {
+    this.salvas.splice(0, this.salvas.length, ...this.salvas.filter((rega) => rega.idPlanta !== idPlanta));
   }
 }
 
@@ -124,6 +150,7 @@ export function criarContainerDeTeste(
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, new GeradorSequencial(), relogio),
+    excluirPlanta: new ExcluirPlanta(plantas, new RepositorioDeRegasEmMemoria()),
   };
   return { container, plantas };
 }

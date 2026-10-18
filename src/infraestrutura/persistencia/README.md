@@ -12,12 +12,13 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"2"`). | `MigradorDoArmazenamento` |
 | `fitosfera:v2:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
 | `fitosfera:v2:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v2:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
+| `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 
 Chaves reservadas para as próximas histórias, ainda sem código:
 
 | Chave | Conteúdo previsto |
 | --- | --- |
-| `fitosfera:v2:regas` | Histórico de regas por planta (US08). |
 | `fitosfera:v2:preferencias` | Preferências da pessoa, como notificações. |
 
 Chaves de versões anteriores, que só a migração lê. Elas não são apagadas depois da migração e ficam como cópia
@@ -58,6 +59,30 @@ planta.
 A conversão entre o modelo `Planta` do domínio e esse JSON fica em [`MapeadorDePlanta.ts`](MapeadorDePlanta.ts).
 O domínio não conhece o formato gravado.
 
+## Regas: chave própria por planta
+
+**Decisão (#53):** as regas não ficam embutidas no registro da planta nem numa lista única do jardim. Cada planta
+tem a sua chave, `fitosfera:v2:regas:<idPlanta>`.
+
+- **Por que não embutir na planta:** a lista de plantas é lida inteira toda vez que o app abre e a estante
+  carrega. Com as regas dentro, cada abertura carregaria o histórico de todas as plantas, e cada rega regravaria
+  o jardim inteiro.
+- **Por que não uma chave única de regas:** seria uma lista que só cresce; gravar uma rega exigiria ler e
+  regravar as regas de todas as plantas.
+- **Com uma chave por planta:** registrar uma rega lê e grava só o histórico daquela planta, e a abertura do app
+  não lê regas.
+
+**Retenção:** cada planta guarda as `LIMITE_DE_REGAS_POR_PLANTA` regas mais recentes (50, definido em
+`dominio/modelos/Rega.ts`). A poda acontece na gravação: a lista é ordenada pela data da rega e as mais antigas
+além do limite são descartadas. Uma rega registrada com atraso entra na posição certa e nunca empurra uma rega
+mais recente para fora.
+
+**Exclusão da planta:** o caso de uso `ExcluirPlanta` apaga primeiro as regas da planta (a chave e a cópia
+`:ilegivel`) e depois a planta. Se a segunda etapa falhar, a planta continua no jardim sem histórico, em vez de
+sobrarem regas de uma planta que não existe.
+
+As chaves de regas são novas na versão 2 e não precisaram de migração: não havia regas gravadas antes.
+
 ## Versão do schema e migração
 
 - A versão atual é `VERSAO_ATUAL_DO_ARMAZENAMENTO`, em `chaves.ts`.
@@ -92,5 +117,7 @@ O app abre mesmo com dados ruins:
   conteúdo original é copiado para a chave `:ilegivel` antes de ser sobrescrito.
 - **Um registro inválido dentro da lista:** só ele fica de fora da listagem. Ele continua gravado, e as
   próximas gravações o preservam como estava.
+- **Regas:** uma chave de regas ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação. Uma rega
+  sem id ou com data ilegível fica de fora e desaparece na próxima poda.
 - **Falha na migração:** o aviso vai para o console, o app segue com o que já estiver no formato atual e a
   migração é tentada de novo na próxima abertura, porque a versão gravada não avançou.

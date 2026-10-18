@@ -220,6 +220,7 @@ describe('ArmazenamentoComMigracao', () => {
         throw new Error('disco cheio');
       },
       setItem: async () => undefined,
+      removeItem: async () => undefined,
     };
     const armazenamento = new ArmazenamentoEmMemoria({ 'fitosfera:v2:plantas': '[]' });
     const comMigracao = new ArmazenamentoComMigracao(armazenamento, new MigradorDoArmazenamento(quebrado));

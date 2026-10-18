@@ -24,6 +24,11 @@ export class ArmazenamentoComMigracao implements ArmazenamentoChaveValor {
     return this.armazenamento.setItem(chave, valor);
   }
 
+  async removeItem(chave: string): Promise<void> {
+    await this.migrarUmaVez();
+    return this.armazenamento.removeItem(chave);
+  }
+
   private migrarUmaVez(): Promise<void> {
     this.migracao ??= this.migrador.migrar().catch((erro: unknown) => {
       console.warn('Não foi possível migrar os dados salvos; tento de novo na próxima abertura.', erro);
