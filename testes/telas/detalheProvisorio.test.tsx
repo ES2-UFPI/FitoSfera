@@ -1,4 +1,5 @@
-import { fireEvent, screen } from 'expo-router/testing-library';
+import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { CORES } from '@/apresentacao/tema/cores';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -60,4 +61,37 @@ test('leitura mais antiga que 30 minutos continua visível e aparece como desatu
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
   expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+});
+
+test('registrar uma rega grava o horário atual e mostra uma confirmação', async () => {
+  const agora = new Date(2026, 9, 18, 15, 30);
+  const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+  const botao = await screen.findByRole('button', { name: 'Registrar rega' });
+  expect(botao).toHaveStyle({ backgroundColor: CORES.acaoRega });
+  expect(screen.getByTestId('icone-rega')).toBeTruthy();
+
+  fireEvent.press(botao);
+
+  expect(await screen.findByText('✓ Rega registrada agora.')).toBeTruthy();
+  expect(regas.salvas).toHaveLength(1);
+  expect(regas.salvas[0]).toMatchObject({ idPlanta: 'p1', regadaEm: agora });
+});
+
+test('toques repetidos enquanto registra criam apenas uma rega', async () => {
+  const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+  const botao = await screen.findByRole('button', { name: 'Registrar rega' });
+
+  fireEvent.press(botao);
+  fireEvent.press(botao);
+
+  await waitFor(() => expect(regas.salvas).toHaveLength(1));
+  expect(await screen.findByText('✓ Rega registrada agora.')).toBeTruthy();
+});
+
+test('falha ao registrar mostra uma mensagem e libera uma nova tentativa', async () => {
+  renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', falharAoRegistrarRega: true });
+  fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para registrar a rega. Tente novamente.');
+  expect(screen.getByRole('button', { name: 'Registrar rega' }).props.accessibilityState.disabled).toBe(false);
 });

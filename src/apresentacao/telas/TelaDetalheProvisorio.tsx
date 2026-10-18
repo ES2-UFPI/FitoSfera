@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
+import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { IconeRegador } from '../componentes/IconeRegador';
 import {
   EstadoDoPainel,
   FaixasRecomendadasDoPainel,
@@ -61,6 +63,36 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
   const margens = useSafeAreaInsets();
   // undefined: carregando; null: não existe; 'falhou': o armazenamento não respondeu.
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
+  const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
+  const registroEmAndamento = useRef(false);
+  const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
+
+  function animarRegador(): Promise<void> {
+    inclinacaoDoRegador.stopAnimation();
+    inclinacaoDoRegador.setValue(0);
+    return new Promise((concluir) => {
+      Animated.sequence([
+        Animated.timing(inclinacaoDoRegador, { toValue: 1, duration: 180, useNativeDriver: false }),
+        Animated.timing(inclinacaoDoRegador, { toValue: 0, duration: 260, useNativeDriver: false }),
+      ]).start(() => concluir());
+    });
+  }
+
+  async function registrarRega() {
+    if (registroEmAndamento.current || !item || item === 'falhou') return;
+    registroEmAndamento.current = true;
+    const animacao = animarRegador();
+    definirEstadoDaRega('registrando');
+    try {
+      await Promise.all([container.registrarRega.executar(item.planta.id), animacao]);
+      definirEstadoDaRega('sucesso');
+    } catch {
+      await animacao;
+      definirEstadoDaRega('erro');
+    } finally {
+      registroEmAndamento.current = false;
+    }
+  }
 
   useEffect(() => {
     let atual = true;
@@ -106,6 +138,41 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
             <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
           </View>
           <PainelDeCondicoes estado={estadoDoPainel(item)} />
+          <View style={estilos.rega}>
+            <BotaoPrincipal
+              titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}
+              aoTocar={() => void registrarRega()}
+              desabilitado={estadoDaRega === 'registrando'}
+              icone={
+                <Animated.View
+                  style={{
+                    transform: [
+                      {
+                        rotate: inclinacaoDoRegador.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '28deg'],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  <IconeRegador cor={CORES.textoDaAcao} tamanho={22} testID="icone-rega" />
+                </Animated.View>
+              }
+              variante="rega"
+              largo
+            />
+            {estadoDaRega === 'sucesso' ? (
+              <Text style={[TEXTO.corpo, estilos.confirmacao]} accessibilityLiveRegion="polite">
+                ✓ Rega registrada agora.
+              </Text>
+            ) : null}
+            {estadoDaRega === 'erro' ? (
+              <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
+                Não deu para registrar a rega. Tente novamente.
+              </Text>
+            ) : null}
+          </View>
         </ScrollView>
       ) : null}
     </FundoAconchegante>
@@ -127,5 +194,8 @@ const estilos = StyleSheet.create({
   tabua: { alignSelf: 'stretch', marginHorizontal: ESPACO.folgado * 2, marginBottom: ESPACO.amplo },
   apelido: { textAlign: 'center', paddingHorizontal: ESPACO.amplo },
   especie: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
+  rega: { alignSelf: 'stretch', gap: ESPACO.pequeno },
+  confirmacao: { color: CORES.texto, textAlign: 'center' },
+  erro: { color: CORES.erro, textAlign: 'center' },
   texto: { textAlign: 'center', marginTop: ESPACO.medio, paddingHorizontal: ESPACO.folgado },
 });

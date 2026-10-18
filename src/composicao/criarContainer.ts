@@ -4,6 +4,7 @@ import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/GeradorDeIdentificadorAleatorio';
 import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
@@ -21,6 +22,7 @@ export function criarContainer(): Container {
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
   const relogio = new RelogioDoSistema();
+  const gerador = new GeradorDeIdentificadorAleatorio();
   // O Expo só embute a variável no app quando ela é lida assim, por extenso.
   const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio);
 
@@ -28,7 +30,8 @@ export function criarContainer(): Container {
     listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, sensor, relogio),
     pesquisarEspecies: new PesquisarEspecies(especies),
-    cadastrarPlanta: new CadastrarPlanta(plantas, especies, new GeradorDeIdentificadorAleatorio(), relogio),
+    cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
+    registrarRega: new RegistrarRega(regas, gerador, relogio),
   };
 }
