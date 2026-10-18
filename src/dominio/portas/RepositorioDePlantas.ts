@@ -5,4 +5,6 @@ export interface RepositorioDePlantas {
   listar(): Promise<readonly Planta[]>;
   obterPorId(id: string): Promise<Planta | null>;
   adicionar(planta: Planta): Promise<void>;
+  /** Tira a planta do jardim. Id inexistente não é erro. */
+  remover(id: string): Promise<void>;
 }

@@ -15,4 +15,8 @@ export class ArmazenamentoEmMemoria implements ArmazenamentoChaveValor {
   async setItem(chave: string, valor: string) {
     this.valores.set(chave, valor);
   }
+
+  async removeItem(chave: string) {
+    this.valores.delete(chave);
+  }
 }

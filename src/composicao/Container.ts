@@ -1,4 +1,5 @@
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
+import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
@@ -9,4 +10,5 @@ export interface Container {
   readonly obterPlanta: ObterPlantaDoJardim;
   readonly pesquisarEspecies: PesquisarEspecies;
   readonly cadastrarPlanta: CadastrarPlanta;
+  readonly excluirPlanta: ExcluirPlanta;
 }

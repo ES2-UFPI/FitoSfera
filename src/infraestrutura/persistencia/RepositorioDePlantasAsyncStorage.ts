@@ -31,6 +31,15 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
     await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify([...registros, paraRegistro(planta)]));
   }
 
+  /** Tira só o registro do id; registros que o app não entende continuam gravados. Conteúdo ilegível fica como está. */
+  async remover(id: string): Promise<void> {
+    const leitura = await this.ler();
+    if (leitura.tipo !== 'lista') return;
+    const restantes = leitura.registros.filter((registro) => idDoRegistro(registro) !== id);
+    if (restantes.length !== leitura.registros.length)
+      await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify(restantes));
+  }
+
   private async ler(): Promise<Leitura> {
     const bruto = await this.armazenamento.getItem(CHAVES.plantas);
     if (bruto === null) return { tipo: 'vazia' };
@@ -41,4 +50,8 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
       return { tipo: 'ilegivel', bruto };
     }
   }
+}
+
+function idDoRegistro(registro: unknown): unknown {
+  return typeof registro === 'object' && registro !== null ? (registro as { id?: unknown }).id : undefined;
 }

@@ -10,6 +10,10 @@ export const CHAVES = {
   plantas: 'fitosfera:v2:plantas',
   /** Cópia de um conteúdo de `plantas` que não deu para ler, guardada antes de ser sobrescrito. */
   plantasIlegiveis: 'fitosfera:v2:plantas:ilegivel',
+  /** Uma chave por planta, para gravar uma rega sem carregar as regas do jardim inteiro. */
+  regasDaPlanta: (idPlanta: string) => `fitosfera:v2:regas:${idPlanta}`,
+  /** Cópia de um conteúdo de `regasDaPlanta` que não deu para ler, guardada antes de ser sobrescrito. */
+  regasIlegiveisDaPlanta: (idPlanta: string) => `fitosfera:v2:regas:${idPlanta}:ilegivel`,
 } as const;
 
 /** Chaves da versão 1 (plantas sem faixas recomendadas). Só a migração lê; nada mais grava nelas. */
