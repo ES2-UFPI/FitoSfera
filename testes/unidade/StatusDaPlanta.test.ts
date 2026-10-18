@@ -1,5 +1,5 @@
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
+import { Leitura } from '@/dominio/modelos/Leitura';
 import {
   avaliarCondicoes,
   avaliarStatus,
@@ -13,7 +13,7 @@ const faixas: FaixasRecomendadas = {
   temperatura: { minimo: 18, maximo: 30 },
   luminosidade: { minimo: 5000, maximo: 30000 },
 };
-const leitura = (parcial: Partial<LeituraAmbiental> = {}): LeituraAmbiental => ({
+const leitura = (parcial: Partial<Leitura> = {}): Leitura => ({
   umidadePercentual: 55,
   temperaturaCelsius: 24,
   luminosidadeLux: 12000,

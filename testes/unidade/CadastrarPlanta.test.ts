@@ -9,7 +9,7 @@ import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtua
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
-import { FonteDeLeiturasFixa, GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
+import { SensorFixo, GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
 
 const agora = new Date('2026-10-17T14:00:00.000Z');
 const pedido = (apelido = 'Tomatinho') => ({ idEspecie: 'tomate', apelido, aparencia: APARENCIA_INICIAL });
@@ -109,7 +109,7 @@ describe('faixas recomendadas', () => {
     const jardim = await new ListarJardimVirtual(
       abrirApp(),
       new RepositorioDeEspeciesLocal([tomateRevisado]),
-      new FonteDeLeiturasFixa(leitura),
+      new SensorFixo(leitura),
       new RelogioParado(agora),
     ).executar();
 

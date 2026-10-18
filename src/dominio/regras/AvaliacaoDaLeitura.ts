@@ -1,5 +1,5 @@
 import { FaixaRecomendada, FaixasRecomendadas } from '../modelos/FaixaRecomendada';
-import { LeituraAmbiental } from '../modelos/LeituraAmbiental';
+import { Leitura } from '../modelos/Leitura';
 
 /** Posição de uma medição em relação ao intervalo recomendado, que inclui os dois limites. */
 export type SituacaoDaMedicao = 'abaixo' | 'ideal' | 'acima';
@@ -18,7 +18,7 @@ export function compararMedicaoComFaixa(valor: number, faixa: FaixaRecomendada):
 }
 
 export function compararLeituraComFaixas(
-  leitura: LeituraAmbiental,
+  leitura: Leitura,
   faixas: FaixasRecomendadas,
 ): SituacoesDaLeitura {
   return {

@@ -6,9 +6,10 @@ import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
+import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
-import { FonteDeLeituras } from '@/dominio/portas/FonteDeLeituras';
+import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
@@ -47,12 +48,21 @@ export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
 }
 
 /** Sensor de mentira: devolve a leitura combinada, nenhuma, ou falha. */
-export class FonteDeLeiturasFixa implements FonteDeLeituras {
-  constructor(private readonly leitura: LeituraAmbiental | null | 'falha' = null) {}
+export class SensorFixo implements SensorDeAmbiente {
+  constructor(private readonly leitura: Leitura | null | 'falha' = null) {}
 
-  async ultimaLeitura(): Promise<LeituraAmbiental | null> {
+  async lerLeituraAtual(): Promise<Leitura | null> {
     if (this.leitura === 'falha') throw new Error('sensor fora do ar');
     return this.leitura;
+  }
+
+  observarLeituras(): CancelarObservacao {
+    return () => undefined;
+  }
+
+  async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
+    if (this.leitura === 'falha') return 'desconectado';
+    return this.leitura === null ? 'indisponivel' : 'conectado';
   }
 }
 
@@ -96,7 +106,7 @@ export function criarContainerDeTeste(
     plantas?: Planta[];
     especies?: readonly EspecieVegetal[];
     falharAoLer?: boolean;
-    leitura?: LeituraAmbiental | null | 'falha';
+    leitura?: Leitura | null | 'falha';
     agora?: Date;
   } = {},
 ): {
@@ -107,7 +117,7 @@ export function criarContainerDeTeste(
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
     : new RepositorioDePlantasEmMemoria(opcoes.plantas);
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
-  const leituras = new FonteDeLeiturasFixa(opcoes.leitura ?? null);
+  const leituras = new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),

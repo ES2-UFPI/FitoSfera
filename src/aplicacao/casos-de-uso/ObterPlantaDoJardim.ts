@@ -1,4 +1,4 @@
-import { FonteDeLeituras } from '@/dominio/portas/FonteDeLeituras';
+import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
@@ -11,10 +11,10 @@ export class ObterPlantaDoJardim {
   constructor(
     private readonly plantas: RepositorioDePlantas,
     especies: RepositorioDeEspecies,
-    leituras: FonteDeLeituras,
+    sensor: SensorDeAmbiente,
     relogio: Relogio,
   ) {
-    this.avaliador = new AvaliadorDoJardim(especies, leituras, relogio);
+    this.avaliador = new AvaliadorDoJardim(especies, sensor, relogio);
   }
 
   async executar(id: string): Promise<PlantaNoJardim | null> {

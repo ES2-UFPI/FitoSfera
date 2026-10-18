@@ -1,5 +1,5 @@
 /** Uma medição do sensor do ambiente, com o momento em que foi feita. */
-export interface LeituraAmbiental {
+export interface Leitura {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
   readonly luminosidadeLux: number;
