@@ -10,9 +10,9 @@ test('tocar no vaso abre o detalhe com apelido, espécie e a prévia do painel',
   expect(screen.getByText('Tomate')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
-  expect(screen.getByLabelText('Temperatura: 24 graus Celsius.')).toBeTruthy();
-  expect(screen.getByLabelText('Luz: 720 lux.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Temperatura: 24 graus Celsius. Faixa ideal: 18 a 28 graus Celsius.')).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 5000 a 20000 lux.')).toBeTruthy();
 });
 
 test('espécie fora do catálogo mostra "Espécie desconhecida"', async () => {
@@ -40,7 +40,7 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
 
   expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
   expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
-  expect(screen.getByLabelText('Umidade: 61 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
 });
 
 test('leitura mais antiga que 30 minutos continua visível e aparece como desatualizada', async () => {
@@ -59,5 +59,5 @@ test('leitura mais antiga que 30 minutos continua visível e aparece como desatu
   expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
 });

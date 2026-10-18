@@ -1,5 +1,10 @@
-import { FaixaRecomendada, FaixasRecomendadas } from '../modelos/FaixaRecomendada';
+import { FaixasRecomendadas } from '../modelos/FaixaRecomendada';
 import { LeituraAmbiental } from '../modelos/LeituraAmbiental';
+import {
+  compararLeituraComFaixas,
+  SituacoesDaLeitura,
+  todasAsMedicoesEstaoIdeais,
+} from './AvaliacaoDaLeitura';
 
 /** O resumo que a estante mostra: está tudo bem, precisa de atenção, ou não dá para saber. */
 export type StatusDaPlanta = 'ok' | 'atencao' | 'sem-dados';
@@ -12,27 +17,33 @@ export function leituraEstaDesatualizada(leitura: Pick<LeituraAmbiental, 'medida
   return agora.getTime() - leitura.medidaEm.getTime() > VALIDADE_DA_LEITURA_MS;
 }
 
-/** Intervalo fechado: os dois limites contam como dentro. */
-export function estaNaFaixa(valor: number, faixa: FaixaRecomendada): boolean {
-  return valor >= faixa.minimo && valor <= faixa.maximo;
+export interface AvaliacaoDasCondicoes {
+  readonly status: StatusDaPlanta;
+  readonly situacoes: SituacoesDaLeitura | null;
+  readonly leituraDesatualizada: boolean;
 }
 
 /**
  * Compara a última leitura com as faixas recomendadas guardadas na planta. Sem leitura recente, ou sem faixa,
  * a resposta é "sem-dados" — nunca "ok", para não tranquilizar a pessoa sem motivo.
  */
-export function avaliarStatus(entrada: {
+export function avaliarCondicoes(entrada: {
   leitura: LeituraAmbiental | null;
   faixas: FaixasRecomendadas | null;
   agora: Date;
-}): StatusDaPlanta {
+}): AvaliacaoDasCondicoes {
   const { leitura, faixas, agora } = entrada;
-  if (leitura === null || faixas === null) return 'sem-dados';
-  if (leituraEstaDesatualizada(leitura, agora)) return 'sem-dados';
+  const leituraDesatualizada = leitura !== null && leituraEstaDesatualizada(leitura, agora);
+  if (leitura === null || faixas === null || leituraDesatualizada) {
+    return { status: 'sem-dados', situacoes: null, leituraDesatualizada };
+  }
 
-  const tudoNaFaixa =
-    estaNaFaixa(leitura.umidadePercentual, faixas.umidadeDoAr) &&
-    estaNaFaixa(leitura.temperaturaCelsius, faixas.temperatura) &&
-    estaNaFaixa(leitura.luminosidadeLux, faixas.luminosidade);
-  return tudoNaFaixa ? 'ok' : 'atencao';
+  const situacoes = compararLeituraComFaixas(leitura, faixas);
+  const status = todasAsMedicoesEstaoIdeais(situacoes) ? 'ok' : 'atencao';
+  return { status, situacoes, leituraDesatualizada: false };
+}
+
+/** Compatibilidade para quem precisa apenas do resumo usado na estante. */
+export function avaliarStatus(entrada: Parameters<typeof avaliarCondicoes>[0]): StatusDaPlanta {
+  return avaliarCondicoes(entrada).status;
 }

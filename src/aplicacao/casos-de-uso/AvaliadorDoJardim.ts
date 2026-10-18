@@ -3,7 +3,7 @@ import { Planta } from '@/dominio/modelos/Planta';
 import { FonteDeLeituras } from '@/dominio/portas/FonteDeLeituras';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
-import { avaliarStatus, leituraEstaDesatualizada } from '@/dominio/regras/StatusDaPlanta';
+import { avaliarCondicoes } from '@/dominio/regras/StatusDaPlanta';
 import { PlantaNoJardim } from './PlantaNoJardim';
 
 /** Cruza planta, catálogo e sensor, para a lista e o detalhe chegarem sempre ao mesmo status. */
@@ -27,13 +27,14 @@ export class AvaliadorDoJardim {
     const especie = await this.especies.obterPorId(planta.idEspecie);
     const agora = this.relogio.agora();
     // Vale a faixa guardada na planta, não a do catálogo: revisar o catálogo não muda plantas já cadastradas.
-    const status = avaliarStatus({ leitura, faixas: planta.faixasRecomendadas, agora });
+    const avaliacao = avaliarCondicoes({ leitura, faixas: planta.faixasRecomendadas, agora });
     return {
       planta,
       especie,
-      status,
+      status: avaliacao.status,
       ultimaLeitura: leitura,
-      leituraDesatualizada: leitura !== null && leituraEstaDesatualizada(leitura, agora),
+      leituraDesatualizada: avaliacao.leituraDesatualizada,
+      situacoes: avaliacao.situacoes,
     };
   }
 }

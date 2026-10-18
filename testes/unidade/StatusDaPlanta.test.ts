@@ -1,17 +1,17 @@
-import { FaixasIdeais } from '@/dominio/modelos/EspecieVegetal';
+import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
 import {
+  avaliarCondicoes,
   avaliarStatus,
   leituraEstaDesatualizada,
   VALIDADE_DA_LEITURA_MS,
 } from '@/dominio/regras/StatusDaPlanta';
 
 const agora = new Date(2026, 9, 17, 14, 0);
-const fonte = 'Fonte de teste';
-const faixas: FaixasIdeais = {
-  umidadeDoAr: { minimo: 40, maximo: 70, fonte },
-  temperatura: { minimo: 18, maximo: 30, fonte },
-  luminosidade: { minimo: 5000, maximo: 30000, fonte },
+const faixas: FaixasRecomendadas = {
+  umidadeDoAr: { minimo: 40, maximo: 70 },
+  temperatura: { minimo: 18, maximo: 30 },
+  luminosidade: { minimo: 5000, maximo: 30000 },
 };
 const leitura = (parcial: Partial<LeituraAmbiental> = {}): LeituraAmbiental => ({
   umidadePercentual: 55,
@@ -23,11 +23,16 @@ const leitura = (parcial: Partial<LeituraAmbiental> = {}): LeituraAmbiental => (
 
 test('sem leitura a planta fica "sem-dados"', () => {
   expect(avaliarStatus({ leitura: null, faixas, agora })).toBe('sem-dados');
+  expect(avaliarCondicoes({ leitura: null, faixas, agora }).situacoes).toBeNull();
 });
 
 test('leitura mais velha que a validade fica "sem-dados", nunca "ok"', () => {
   const velha = leitura({ medidaEm: new Date(agora.getTime() - VALIDADE_DA_LEITURA_MS - 1) });
   expect(avaliarStatus({ leitura: velha, faixas, agora })).toBe('sem-dados');
+  expect(avaliarCondicoes({ leitura: velha, faixas, agora })).toMatchObject({
+    situacoes: null,
+    leituraDesatualizada: true,
+  });
 });
 
 test('leitura exatamente no limite da validade ainda vale', () => {
@@ -50,6 +55,7 @@ test('a validade é de 30 minutos', () => {
 
 test('espécie sem faixa recomendada fica "sem-dados"', () => {
   expect(avaliarStatus({ leitura: leitura(), faixas: null, agora })).toBe('sem-dados');
+  expect(avaliarCondicoes({ leitura: leitura(), faixas: null, agora }).situacoes).toBeNull();
 });
 
 test('leitura recente com tudo dentro da faixa fica "ok", com os limites incluídos', () => {

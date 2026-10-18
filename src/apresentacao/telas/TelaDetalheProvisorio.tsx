@@ -4,7 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
-import { EstadoDoPainel, PainelDeCondicoes } from '../componentes/PainelDeCondicoes';
+import {
+  EstadoDoPainel,
+  FaixasRecomendadasDoPainel,
+  PainelDeCondicoes,
+} from '../componentes/PainelDeCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
@@ -12,7 +16,7 @@ import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
-const PREVIA_DO_PAINEL: EstadoDoPainel = {
+const PREVIA_DO_PAINEL = {
   tipo: 'leitura',
   demonstracao: true,
   leitura: {
@@ -21,19 +25,31 @@ const PREVIA_DO_PAINEL: EstadoDoPainel = {
     luminosidadeLux: 720,
     medidaEm: new Date(),
   },
-};
+} satisfies EstadoDoPainel;
 
 const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
 
+function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
+  const faixas = item.planta.faixasRecomendadas;
+  if (faixas === null) return undefined;
+  return {
+    umidadePercentual: faixas.umidadeDoAr,
+    temperaturaCelsius: faixas.temperatura,
+    luminosidadeLux: faixas.luminosidade,
+  };
+}
+
 function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
+  const faixasRecomendadas = faixasDoPainel(item);
   if (item.ultimaLeitura !== null) {
     return {
       tipo: 'leitura',
       leitura: item.ultimaLeitura,
       desatualizada: item.leituraDesatualizada,
+      faixasRecomendadas,
     };
   }
-  return __DEV__ ? PREVIA_DO_PAINEL : SENSOR_INDISPONIVEL;
+  return __DEV__ ? { ...PREVIA_DO_PAINEL, faixasRecomendadas } : SENSOR_INDISPONIVEL;
 }
 
 /**

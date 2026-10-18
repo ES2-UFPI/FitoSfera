@@ -16,6 +16,7 @@ test('o vaso na estante repassa o estado de cuidado ao desenho', () => {
         status: 'sem-dados',
         ultimaLeitura: null,
         leituraDesatualizada: false,
+        situacoes: null,
       }}
       fase={0}
       inclinacao="esquerda"
@@ -35,6 +36,7 @@ test('sem estado informado, o vaso usa "sem dados"', () => {
         status: 'sem-dados',
         ultimaLeitura: null,
         leituraDesatualizada: false,
+        situacoes: null,
       }}
       fase={0}
       inclinacao="esquerda"
