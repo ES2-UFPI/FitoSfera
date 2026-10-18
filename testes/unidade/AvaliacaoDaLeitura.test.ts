@@ -1,5 +1,5 @@
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
+import { Leitura } from '@/dominio/modelos/Leitura';
 import {
   compararLeituraComFaixas,
   compararMedicaoComFaixa,
@@ -19,7 +19,7 @@ test.each([
 });
 
 test('compara as três grandezas usando a mesma regra', () => {
-  const leitura: LeituraAmbiental = {
+  const leitura: Leitura = {
     umidadePercentual: 39,
     temperaturaCelsius: 24,
     luminosidadeLux: 21000,

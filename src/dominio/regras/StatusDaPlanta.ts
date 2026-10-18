@@ -1,5 +1,5 @@
 import { FaixasRecomendadas } from '../modelos/FaixaRecomendada';
-import { LeituraAmbiental } from '../modelos/LeituraAmbiental';
+import { Leitura } from '../modelos/Leitura';
 import {
   compararLeituraComFaixas,
   SituacoesDaLeitura,
@@ -13,7 +13,7 @@ export type StatusDaPlanta = 'ok' | 'atencao' | 'sem-dados';
 export const VALIDADE_DA_LEITURA_MS = 30 * 60_000;
 
 /** Exatamente no limite ainda vale; só fica desatualizada depois dele. */
-export function leituraEstaDesatualizada(leitura: Pick<LeituraAmbiental, 'medidaEm'>, agora: Date): boolean {
+export function leituraEstaDesatualizada(leitura: Pick<Leitura, 'medidaEm'>, agora: Date): boolean {
   return agora.getTime() - leitura.medidaEm.getTime() > VALIDADE_DA_LEITURA_MS;
 }
 
@@ -28,7 +28,7 @@ export interface AvaliacaoDasCondicoes {
  * a resposta é "sem-dados" — nunca "ok", para não tranquilizar a pessoa sem motivo.
  */
 export function avaliarCondicoes(entrada: {
-  leitura: LeituraAmbiental | null;
+  leitura: Leitura | null;
   faixas: FaixasRecomendadas | null;
   agora: Date;
 }): AvaliacaoDasCondicoes {

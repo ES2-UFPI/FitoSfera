@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
-import { LeituraAmbiental } from '@/dominio/modelos/LeituraAmbiental';
+import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
@@ -25,7 +25,7 @@ export function renderizarApp(
     especies?: readonly EspecieVegetal[];
     url?: string;
     falharAoLer?: boolean;
-    leitura?: LeituraAmbiental | null | 'falha';
+    leitura?: Leitura | null | 'falha';
     agora?: Date;
   } = {},
 ): { plantas: RepositorioDePlantasEmMemoria } {
