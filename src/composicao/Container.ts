@@ -3,6 +3,7 @@ import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
@@ -11,4 +12,5 @@ export interface Container {
   readonly pesquisarEspecies: PesquisarEspecies;
   readonly cadastrarPlanta: CadastrarPlanta;
   readonly excluirPlanta: ExcluirPlanta;
+  readonly registrarRega: RegistrarRega;
 }

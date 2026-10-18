@@ -13,7 +13,11 @@ import RotaBatizar from '../../../app/cadastro/apelido';
 import RotaMontarAparencia from '../../../app/cadastro/aparencia';
 import RotaBuscarEspecie from '../../../app/cadastro/index';
 import RotaPlanta from '../../../app/planta/[id]';
-import { criarContainerDeTeste, RepositorioDePlantasEmMemoria } from '../../apoio/fakes';
+import {
+  criarContainerDeTeste,
+  RepositorioDePlantasEmMemoria,
+  RepositorioDeRegasEmMemoria,
+} from '../../apoio/fakes';
 
 /**
  * Sobe o app com as rotas reais de `app/`, trocando só o layout raiz por um que injeta
@@ -27,14 +31,16 @@ export function renderizarApp(
     falharAoLer?: boolean;
     leitura?: Leitura | null | 'falha';
     agora?: Date;
+    falharAoRegistrarRega?: boolean;
   } = {},
-): { plantas: RepositorioDePlantasEmMemoria } {
-  const { container, plantas } = criarContainerDeTeste({
+): { plantas: RepositorioDePlantasEmMemoria; regas: RepositorioDeRegasEmMemoria } {
+  const { container, plantas, regas } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
     leitura: opcoes.leitura,
     agora: opcoes.agora,
+    falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
   });
 
   function LayoutDeTeste() {
@@ -60,5 +66,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas };
+  return { plantas, regas };
 }

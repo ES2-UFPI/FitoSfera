@@ -3,6 +3,7 @@ import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
@@ -47,7 +48,10 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
 export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
   readonly salvas: Rega[] = [];
 
+  constructor(private readonly falharAoGravar = false) {}
+
   async gravar(rega: Rega) {
+    if (this.falharAoGravar) throw new Error('armazenamento indisponível');
     this.salvas.push(rega);
   }
 
@@ -134,10 +138,12 @@ export function criarContainerDeTeste(
     falharAoLer?: boolean;
     leitura?: Leitura | null | 'falha';
     agora?: Date;
+    falharAoRegistrarRega?: boolean;
   } = {},
 ): {
   container: Container;
   plantas: RepositorioDePlantasEmMemoria;
+  regas: RepositorioDeRegasEmMemoria;
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
@@ -145,12 +151,15 @@ export function criarContainerDeTeste(
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
   const leituras = new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
+  const gerador = new GeradorSequencial();
+  const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega);
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     pesquisarEspecies: new PesquisarEspecies(especies),
-    cadastrarPlanta: new CadastrarPlanta(plantas, especies, new GeradorSequencial(), relogio),
-    excluirPlanta: new ExcluirPlanta(plantas, new RepositorioDeRegasEmMemoria()),
+    cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
+    excluirPlanta: new ExcluirPlanta(plantas, regas),
+    registrarRega: new RegistrarRega(regas, gerador, relogio),
   };
-  return { container, plantas };
+  return { container, plantas, regas };
 }

@@ -24,6 +24,8 @@ export const CORES = {
   acao: '#4D7A43',
   textoDaAcao: '#FCF5EA',
   sombraDaAcao: '#325028',
+  acaoRega: '#356A9A',
+  sombraDaAcaoRega: '#234766',
 
   barraDeAbas: '#FBF3E6',
   bordaDaBarra: '#EAD9BF',
