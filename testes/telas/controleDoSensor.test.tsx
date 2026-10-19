@@ -1,4 +1,4 @@
-import { fireEvent, screen } from 'expo-router/testing-library';
+import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import {
   ConfiguracaoDoSensorDeDesenvolvimento,
   ControleDoSensorDeDesenvolvimento,
@@ -69,6 +69,30 @@ test('o atalho combina calor, tempo seco e sol alto', async () => {
     true,
   );
   expect(screen.getByText('Combinação atual: umidade baixa, temperatura alta e luz alta.')).toBeTruthy();
+});
+
+test('forçar um cenário de desvio envia a notificação correspondente', async () => {
+  const sensor = new SensorSimulado(new RelogioParado());
+  const { notificador } = renderizarApp({
+    plantas: [plantaDeTeste()],
+    url: '/ajustes',
+    sensor,
+    controleDoSensorDeDesenvolvimento: sensor,
+    permitirNotificacao: true,
+  });
+
+  fireEvent.press(await screen.findByRole('button', { name: 'Quente, seco e ensolarado' }));
+
+  await waitFor(() => expect(notificador.entregues).toHaveLength(1));
+  expect(notificador.entregues[0]).toEqual(
+    expect.objectContaining({
+      idPlanta: 'p1',
+      titulo: 'Tomatinho precisa de atenção',
+      corpo: expect.stringContaining('A umidade do ar está em 10%, abaixo da faixa ideal'),
+    }),
+  );
+  expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima da faixa ideal');
+  expect(notificador.entregues[0].corpo).toContain('A luminosidade está em 100000 lux, acima da faixa ideal');
 });
 
 test('permite montar uma combinação personalizada', async () => {

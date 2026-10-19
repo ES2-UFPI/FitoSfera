@@ -17,6 +17,8 @@ import RotaBuscarEspecie from '../../../app/cadastro/index';
 import RotaPlanta from '../../../app/planta/[id]';
 import {
   criarContainerDeTeste,
+  NotificadorFalso,
+  RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
   RepositorioDeRegasEmMemoria,
 } from '../../apoio/fakes';
@@ -36,9 +38,15 @@ export function renderizarApp(
     agora?: Date;
     falharAoRegistrarRega?: boolean;
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    permitirNotificacao?: boolean;
   } = {},
-): { plantas: RepositorioDePlantasEmMemoria; regas: RepositorioDeRegasEmMemoria } {
-  const { container, plantas, regas } = criarContainerDeTeste({
+): {
+  plantas: RepositorioDePlantasEmMemoria;
+  regas: RepositorioDeRegasEmMemoria;
+  notificador: NotificadorFalso;
+  avisos: RepositorioDeAvisosEmMemoria;
+} {
+  const { container, plantas, regas, notificador, avisos } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
@@ -47,6 +55,7 @@ export function renderizarApp(
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
+    permitirNotificacao: opcoes.permitirNotificacao,
   });
 
   function LayoutDeTeste() {
@@ -72,5 +81,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas, regas };
+  return { plantas, regas, notificador, avisos };
 }

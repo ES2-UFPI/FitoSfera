@@ -108,6 +108,9 @@ export function TelaAjustes() {
   function aplicar(novaConfiguracao: ConfiguracaoDoSensorDeDesenvolvimento) {
     controleAtivo.definirConfiguracao(novaConfiguracao);
     definirConfiguracao(novaConfiguracao);
+    // O caso de uso concentra permissão, comparação, texto e deduplicação. A tela apenas pede uma nova
+    // avaliação para o cenário de desenvolvimento produzir o aviso correspondente na hora.
+    if (!novaConfiguracao.desconectado) void container.avaliarLeitura.executar();
   }
 
   function alternarSensor(ligado: boolean) {
