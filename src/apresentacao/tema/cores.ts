@@ -38,4 +38,5 @@ export const CORES = {
   statusOk: '#4D7A43',
   statusAtencao: '#B45309',
   statusSemDados: '#8A7A68',
+  fundoAtencao: '#FFD9AE',
 } as const;

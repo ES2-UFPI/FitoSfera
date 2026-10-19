@@ -39,7 +39,7 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
 
   expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
   expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
-  expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento. Dentro do ideal.')).toBeTruthy();
 });
 
 test('leitura mais antiga que 30 minutos continua visível e aparece como desatualizada', async () => {
