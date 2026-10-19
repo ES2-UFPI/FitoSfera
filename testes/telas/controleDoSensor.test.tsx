@@ -43,10 +43,14 @@ test('mostra os cenários apenas quando há um sensor de desenvolvimento', async
     selected: false,
     disabled: true,
   });
-  expect(screen.getByRole('button', { name: 'Umidade: Baixo' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Temperatura: Alto' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Luz: Alto' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Desconectado' })).toBeTruthy();
+  expect(screen.getByRole('switch', { name: 'Sensor simulado' }).props.value).toBe(true);
+  expect(screen.getByRole('button', { name: 'Configurar umidade' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Configurar temperatura' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Configurar luz' })).toBeTruthy();
+  expect(screen.getByTestId('icone-menu-umidade')).toBeTruthy();
+  expect(screen.getByTestId('icone-menu-temperatura')).toBeTruthy();
+  expect(screen.getByTestId('icone-menu-luminosidade')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Umidade: Baixo' })).toBeNull();
 });
 
 test('o atalho combina calor, tempo seco e sol alto', async () => {
@@ -71,8 +75,11 @@ test('permite montar uma combinação personalizada', async () => {
   const controle = new ControleFixo();
   renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
 
-  fireEvent.press(await screen.findByRole('button', { name: 'Umidade: Alto' }));
+  fireEvent.press(await screen.findByRole('button', { name: 'Configurar umidade' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Umidade: Alto' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Configurar temperatura' }));
   fireEvent.press(screen.getByRole('button', { name: 'Temperatura: Baixo' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Configurar luz' }));
   fireEvent.press(screen.getByRole('button', { name: 'Luz: Alto' }));
 
   expect(controle.obterConfiguracao()).toEqual({
@@ -86,6 +93,23 @@ test('permite montar uma combinação personalizada', async () => {
     disabled: false,
   });
   expect(screen.getByText('Combinação atual: umidade alta, temperatura baixa e luz alta.')).toBeTruthy();
+});
+
+test('permite desativar e reativar o sensor simulado', async () => {
+  const controle = new ControleFixo();
+  renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+
+  fireEvent(await screen.findByRole('switch', { name: 'Sensor simulado' }), 'valueChange', false);
+
+  expect(controle.obterConfiguracao().desconectado).toBe(true);
+  expect(screen.getByText('Sensor simulado desativado')).toBeTruthy();
+  expect(screen.getByText('Sensor desativado: nenhuma leitura simulada será enviada.')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Configurar umidade' }).props.accessibilityState.disabled).toBe(true);
+
+  fireEvent(screen.getByRole('switch', { name: 'Sensor simulado' }), 'valueChange', true);
+
+  expect(controle.obterConfiguracao().desconectado).toBe(false);
+  expect(screen.getByText('Sensor simulado ativo')).toBeTruthy();
 });
 
 test('o painel exibe a leitura forçada pelo simulador sem hardware', async () => {
