@@ -88,11 +88,11 @@ test('forçar um cenário de desvio envia a notificação correspondente', async
     expect.objectContaining({
       idPlanta: 'p1',
       titulo: 'Tomatinho precisa de atenção',
-      corpo: expect.stringContaining('A umidade do ar está em 10%, abaixo da faixa ideal'),
+      corpo: expect.stringContaining('A umidade do ar está em 10%, abaixo do ideal'),
     }),
   );
-  expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima da faixa ideal');
-  expect(notificador.entregues[0].corpo).toContain('A luminosidade está em 100000 lux, acima da faixa ideal');
+  expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima do ideal');
+  expect(notificador.entregues[0].corpo).toContain('A luminosidade está em 100000 lux, acima do ideal');
 });
 
 test('permite montar uma combinação personalizada', async () => {

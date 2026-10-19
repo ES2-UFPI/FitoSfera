@@ -57,7 +57,8 @@ lembra a assinatura já avisada de cada planta, e o caso de uso só notifica qua
 - um aviso que não chegou a ser entregue é tentado de novo na verificação seguinte.
 
 O texto que a pessoa lê é montado por [`MensagemDoAviso`](../../dominio/servicos/MensagemDoAviso.ts), com o
-valor medido e a faixa, para dar o que fazer sem abrir o app.
+valor medido e uma indicação curta de que ele está acima ou abaixo do ideal. Os limites detalhados ficam no
+painel da planta.
 
 ## Como testar no aparelho
 

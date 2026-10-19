@@ -14,8 +14,8 @@ const TEXTO_DA_GRANDEZA: Record<Grandeza, { readonly nome: string; readonly unid
 };
 
 /**
- * Monta o aviso que a pessoa lê na notificação, uma frase por desvio. O texto diz o valor medido e a faixa,
- * para a pessoa saber o que fazer sem abrir o app.
+ * Monta o aviso que a pessoa lê na notificação, uma frase curta por desvio. O texto mantém o valor medido,
+ * mas deixa os limites detalhados para o painel da planta.
  */
 export function montarMensagemDoAviso(apelido: string, desvios: readonly Desvio[]): MensagemDoAviso {
   return {
@@ -27,9 +27,7 @@ export function montarMensagemDoAviso(apelido: string, desvios: readonly Desvio[
 function descreverDesvio(desvio: Desvio): string {
   const { nome, unidade } = TEXTO_DA_GRANDEZA[desvio.grandeza];
   const medido = comUnidade(desvio.valor, unidade);
-  const minimo = comUnidade(desvio.faixa.minimo, unidade);
-  const maximo = comUnidade(desvio.faixa.maximo, unidade);
-  return `${nome} está em ${medido}, ${desvio.sentido} da faixa ideal (${minimo} a ${maximo}).`;
+  return `${nome} está em ${medido}, ${desvio.sentido} do ideal.`;
 }
 
 /** Uma casa decimal basta para a pessoa, e com vírgula, como se escreve em português. */
