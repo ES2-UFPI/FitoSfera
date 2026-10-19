@@ -14,6 +14,7 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v2:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
+| `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
 
 Chaves reservadas para as próximas histórias, ainda sem código:
 
@@ -119,5 +120,8 @@ O app abre mesmo com dados ruins:
   próximas gravações o preservam como estava.
 - **Regas:** uma chave de regas ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação. Uma rega
   sem id ou com data ilegível fica de fora e desaparece na próxima poda.
+- **Avisos:** um mapa de avisos ilegível é lido como "nenhum desvio avisado" e sobrescrito na próxima
+  gravação, sem cópia `:ilegivel`: ali não há dado da pessoa para preservar, e o pior que acontece é um aviso
+  se repetir uma vez.
 - **Falha na migração:** o aviso vai para o console, o app segue com o que já estiver no formato atual e a
   migração é tentada de novo na próxima abertura, porque a versão gravada não avançou.
