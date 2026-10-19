@@ -1,3 +1,4 @@
+import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
@@ -15,4 +16,5 @@ export interface Container {
   readonly excluirPlanta: ExcluirPlanta;
   readonly registrarRega: RegistrarRega;
   readonly controleDoSensorDeDesenvolvimento: ControleDoSensorDeDesenvolvimento | null;
+  readonly avaliarLeitura: AvaliarLeitura;
 }

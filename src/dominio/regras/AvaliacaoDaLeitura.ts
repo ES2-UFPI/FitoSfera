@@ -10,7 +10,7 @@ export interface SituacoesDaLeitura {
   readonly luminosidade: SituacaoDaMedicao;
 }
 
-/** Regra única para painel, resumo do jardim e futuras notificações. */
+/** Regra única para painel, resumo do jardim e notificações de desvio. */
 export function compararMedicaoComFaixa(valor: number, faixa: FaixaRecomendada): SituacaoDaMedicao {
   if (valor < faixa.minimo) return 'abaixo';
   if (valor > faixa.maximo) return 'acima';
