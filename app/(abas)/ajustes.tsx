@@ -1,5 +1,5 @@
-import { TelaEmBreve } from '@/apresentacao/telas/TelaEmBreve';
+import { TelaAjustes } from '@/apresentacao/telas/TelaAjustes';
 
 export default function RotaAjustes() {
-  return <TelaEmBreve titulo="Ajustes" descricao="Aqui você vai escolher o horário dos lembretes e o sensor." />;
+  return <TelaAjustes />;
 }
