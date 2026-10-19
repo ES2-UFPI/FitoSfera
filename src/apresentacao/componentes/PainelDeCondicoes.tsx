@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
@@ -50,6 +51,12 @@ function formatarNumero(valor: number): string {
   return String(valor).replace('.', ',');
 }
 
+const APRESENTACAO_DA_SITUACAO: Record<SituacaoDaMedicao, { simbolo: string; texto: string; cor: string }> = {
+  abaixo: { simbolo: '▼', texto: 'Abaixo do ideal', cor: CORES.statusAtencao },
+  ideal: { simbolo: '✓', texto: 'Dentro do ideal', cor: CORES.statusOk },
+  acima: { simbolo: '▲', texto: 'Acima do ideal', cor: CORES.statusAtencao },
+};
+
 export function formatarHorarioDaLeitura(instante: Date): string {
   const horas = String(instante.getHours()).padStart(2, '0');
   const minutos = String(instante.getMinutes()).padStart(2, '0');
@@ -63,6 +70,7 @@ function Indicador({
   descricaoDaUnidade,
   icone,
   faixaRecomendada,
+  avaliar,
 }: {
   rotulo: string;
   valor: number;
@@ -70,7 +78,11 @@ function Indicador({
   descricaoDaUnidade: string;
   icone: ReactNode;
   faixaRecomendada?: FaixaDoPainel;
+  avaliar: boolean;
 }) {
+  const situacao = avaliar && faixaRecomendada ? compararMedicaoComFaixa(valor, faixaRecomendada) : null;
+  const apresentacao = situacao === null ? null : APRESENTACAO_DA_SITUACAO[situacao];
+  const foraDoIdeal = situacao !== null && situacao !== 'ideal';
   const valorFormatado = formatarNumero(valor);
   const faixaVisivel = faixaRecomendada
     ? `${formatarNumero(faixaRecomendada.minimo)}–${formatarNumero(faixaRecomendada.maximo)}${unidade === '%' ? '' : ' '}${unidade}`
@@ -81,17 +93,28 @@ function Indicador({
 
   return (
     <View
-      style={estilos.indicador}
+      style={[estilos.indicador, foraDoIdeal && estilos.indicadorForaDoIdeal]}
       accessible
-      accessibilityLabel={`${rotulo}: ${valorFormatado} ${descricaoDaUnidade}. ${descricaoDaFaixa}`}
+      accessibilityLabel={`${rotulo}: ${valorFormatado} ${descricaoDaUnidade}. ${descricaoDaFaixa}${
+        apresentacao ? ` ${apresentacao.texto}.` : ''
+      }`}
     >
       <View style={estilos.icone}>{icone}</View>
       <Text style={TEXTO.rotulo}>{rotulo.toUpperCase()}</Text>
       <View style={estilos.linhaDoValor}>
-        <Text style={estilos.valor}>{valorFormatado}</Text>
+        <Text style={[estilos.valor, foraDoIdeal && estilos.valorForaDoIdeal]}>{valorFormatado}</Text>
         <Text style={estilos.unidade}>{unidade}</Text>
       </View>
       <Text style={estilos.faixa}>{faixaVisivel ? `Ideal: ${faixaVisivel}` : 'Faixa ideal não informada'}</Text>
+      {apresentacao ? (
+        <View style={[estilos.situacao, foraDoIdeal && { backgroundColor: apresentacao.cor }]}>
+          <Text
+            style={[estilos.textoDaSituacao, { color: foraDoIdeal ? CORES.superficie : apresentacao.cor }]}
+          >
+            {apresentacao.simbolo} {apresentacao.texto}
+          </Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -154,6 +177,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               descricaoDaUnidade="por cento"
               icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
               faixaRecomendada={estado.faixasRecomendadas?.umidadePercentual}
+              avaliar={!estado.desatualizada}
             />
             <Indicador
               rotulo="Temperatura"
@@ -162,6 +186,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               descricaoDaUnidade="graus Celsius"
               icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
               faixaRecomendada={estado.faixasRecomendadas?.temperaturaCelsius}
+              avaliar={!estado.desatualizada}
             />
             <Indicador
               rotulo="Luz"
@@ -170,6 +195,7 @@ export function PainelDeCondicoes({ estado }: Props) {
               descricaoDaUnidade="lux"
               icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
               faixaRecomendada={estado.faixasRecomendadas?.luminosidadeLux}
+              avaliar={!estado.desatualizada}
             />
           </View>
         </>
@@ -250,8 +276,15 @@ const estilos = StyleSheet.create({
     paddingHorizontal: ESPACO.pequeno,
     alignItems: 'center',
     borderRadius: RAIO.pequeno,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
     backgroundColor: CORES.fundoTopo,
     gap: ESPACO.minimo,
+  },
+  indicadorForaDoIdeal: {
+    borderWidth: 2.5,
+    borderColor: CORES.statusAtencao,
+    backgroundColor: CORES.fundoAtencao,
   },
   icone: {
     height: 28,
@@ -270,6 +303,9 @@ const estilos = StyleSheet.create({
     fontSize: 24,
     color: CORES.texto,
   },
+  valorForaDoIdeal: {
+    color: CORES.statusAtencao,
+  },
   unidade: {
     fontFamily: FONTES.forte,
     fontSize: 11,
@@ -280,5 +316,15 @@ const estilos = StyleSheet.create({
     minHeight: 34,
     textAlign: 'center',
     fontSize: 10.5,
+  },
+  situacao: {
+    paddingVertical: 2,
+    paddingHorizontal: ESPACO.pequeno,
+    borderRadius: RAIO.pilula,
+  },
+  textoDaSituacao: {
+    fontFamily: FONTES.forte,
+    fontSize: 11,
+    textAlign: 'center',
   },
 });

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import { PainelDeCondicoes } from '@/apresentacao/componentes/PainelDeCondicoes';
+import { CORES } from '@/apresentacao/tema/cores';
 
 const leitura = {
   umidadePercentual: 58,
@@ -25,11 +26,15 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
   expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
   expect(screen.getByText('Ideal: 500–1000 lux')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
   expect(
-    screen.getByLabelText('Temperatura: 24,5 graus Celsius. Faixa ideal: 18,5 a 26,5 graus Celsius.'),
+    screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 60 a 80 por cento. Abaixo do ideal.'),
   ).toBeTruthy();
-  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 500 a 1000 lux.')).toBeTruthy();
+  expect(
+    screen.getByLabelText(
+      'Temperatura: 24,5 graus Celsius. Faixa ideal: 18,5 a 26,5 graus Celsius. Dentro do ideal.',
+    ),
+  ).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 500 a 1000 lux. Dentro do ideal.')).toBeTruthy();
   expect(screen.getByTestId('icone-umidade')).toBeTruthy();
   expect(screen.getByTestId('icone-temperatura')).toBeTruthy();
   expect(screen.getByTestId('icone-luz')).toBeTruthy();
@@ -94,4 +99,67 @@ test('explica quando uma espécie não possui determinada faixa recomendada', ()
 
   expect(screen.getAllByText('Faixa ideal não informada')).toHaveLength(1);
   expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal não informada.')).toBeTruthy();
+});
+
+test('destaca com cor e texto os valores fora da faixa ideal', () => {
+  render(
+    <PainelDeCondicoes
+      estado={{
+        tipo: 'leitura',
+        leitura: { ...leitura, umidadePercentual: 40, temperaturaCelsius: 30, luminosidadeLux: 720 },
+        faixasRecomendadas,
+      }}
+    />,
+  );
+
+  expect(screen.getByText('▼ Abaixo do ideal')).toBeTruthy();
+  expect(screen.getByText('▲ Acima do ideal')).toBeTruthy();
+  expect(screen.getByText('✓ Dentro do ideal')).toBeTruthy();
+  expect(screen.getByLabelText(/^Umidade: 40 por cento\..*Abaixo do ideal\.$/)).toHaveStyle({
+    borderColor: CORES.statusAtencao,
+    backgroundColor: CORES.fundoAtencao,
+  });
+  expect(screen.getByLabelText(/^Temperatura: 30 graus Celsius\..*Acima do ideal\.$/)).toHaveStyle({
+    borderColor: CORES.statusAtencao,
+  });
+  expect(screen.getByLabelText(/^Luz: 720 lux\..*Dentro do ideal\.$/)).not.toHaveStyle({
+    borderColor: CORES.statusAtencao,
+  });
+});
+
+test('valor exatamente no limite da faixa conta como dentro do ideal', () => {
+  render(
+    <PainelDeCondicoes
+      estado={{
+        tipo: 'leitura',
+        leitura: { ...leitura, umidadePercentual: 60, temperaturaCelsius: 26.5, luminosidadeLux: 500 },
+        faixasRecomendadas,
+      }}
+    />,
+  );
+
+  expect(screen.getAllByText('✓ Dentro do ideal')).toHaveLength(3);
+  expect(screen.queryByText(/Abaixo do ideal|Acima do ideal/)).toBeNull();
+});
+
+test('leitura desatualizada não é avaliada contra a faixa', () => {
+  render(
+    <PainelDeCondicoes
+      estado={{
+        tipo: 'leitura',
+        leitura: { ...leitura, umidadePercentual: 40 },
+        faixasRecomendadas,
+        desatualizada: true,
+      }}
+    />,
+  );
+
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
+  expect(screen.getByLabelText('Umidade: 40 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+});
+
+test('sem faixa recomendada não indica situação', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura }} />);
+
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
 });

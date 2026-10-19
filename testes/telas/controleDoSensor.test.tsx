@@ -151,7 +151,7 @@ test('o painel exibe a leitura forçada pelo simulador sem hardware', async () =
     controleDoSensorDeDesenvolvimento: sensor,
   });
 
-  expect(await screen.findByLabelText('Umidade: 10 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(await screen.findByLabelText('Umidade: 10 por cento. Faixa ideal: 40 a 70 por cento. Abaixo do ideal.')).toBeTruthy();
   expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
 });
 
