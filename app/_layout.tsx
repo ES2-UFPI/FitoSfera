@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CamadaDaAbertura } from '@/apresentacao/abertura/CamadaDaAbertura';
 import { ProvedorDoAplicativo, useAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
+import { ligarVerificacaoEmSegundoPlano } from '@/composicao/verificacaoEmSegundoPlano';
 import { CORES } from '@/apresentacao/tema/cores';
 
 // O splash nativo (fundo creme) segura a tela até as fontes chegarem.
@@ -42,7 +43,13 @@ export default function LayoutRaiz() {
 
 /** As telas do app e, por cima, a abertura, que espera a animação e o jardim carregar. */
 function Navegacao() {
-  const { plantas } = useAplicativo();
+  const { plantas, container } = useAplicativo();
+
+  // Na primeira abertura é aqui que o app pede a permissão de notificação.
+  useEffect(() => {
+    void ligarVerificacaoEmSegundoPlano(container);
+  }, [container]);
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: CORES.fundoTopo } }}>

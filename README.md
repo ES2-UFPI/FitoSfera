@@ -26,3 +26,5 @@ npm run typecheck  # verificação de tipos do app e dos testes
   migrações.
 - [Sensores do ambiente](src/infraestrutura/sensores/README.md): a porta do sensor e como escolher entre
   nenhum sensor (padrão) e o simulado, com `EXPO_PUBLIC_SENSOR=simulado`.
+- [Notificações de desvio](src/infraestrutura/notificacoes/README.md): a porta do notificador, a verificação
+  em segundo plano e por que o mesmo desvio não avisa duas vezes.

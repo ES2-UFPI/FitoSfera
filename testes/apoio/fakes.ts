@@ -1,3 +1,4 @@
+import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
@@ -12,6 +13,8 @@ import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Rega } from '@/dominio/modelos/Rega';
+import { Aviso, Notificador } from '@/dominio/portas/Notificador';
+import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { Relogio } from '@/dominio/portas/Relogio';
@@ -96,6 +99,43 @@ export class SensorFixo implements SensorDeAmbiente {
   }
 }
 
+/** Notificador de mentira: conta os pedidos de permissão e guarda os avisos entregues. */
+export class NotificadorFalso implements Notificador {
+  readonly entregues: Aviso[] = [];
+  pedidosDePermissao = 0;
+
+  constructor(
+    private readonly permitido = true,
+    private readonly falharAoNotificar = false,
+  ) {}
+
+  async garantirPermissao(): Promise<boolean> {
+    this.pedidosDePermissao += 1;
+    return this.permitido;
+  }
+
+  async notificar(aviso: Aviso): Promise<void> {
+    if (this.falharAoNotificar) throw new Error('o sistema recusou a notificação');
+    this.entregues.push(aviso);
+  }
+}
+
+export class RepositorioDeAvisosEmMemoria implements RepositorioDeAvisos {
+  salvas: ReadonlyMap<string, string>;
+
+  constructor(iniciais: ReadonlyMap<string, string> = new Map()) {
+    this.salvas = new Map(iniciais);
+  }
+
+  async listar(): Promise<ReadonlyMap<string, string>> {
+    return new Map(this.salvas);
+  }
+
+  async gravar(assinaturas: ReadonlyMap<string, string>): Promise<void> {
+    this.salvas = new Map(assinaturas);
+  }
+}
+
 export class RelogioParado implements Relogio {
   constructor(private readonly instante: Date = new Date(2026, 9, 17, 14, 0)) {}
 
@@ -139,11 +179,14 @@ export function criarContainerDeTeste(
     leitura?: Leitura | null | 'falha';
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    permitirNotificacao?: boolean;
   } = {},
 ): {
   container: Container;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
+  notificador: NotificadorFalso;
+  avisos: RepositorioDeAvisosEmMemoria;
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
@@ -153,6 +196,8 @@ export function criarContainerDeTeste(
   const relogio = new RelogioParado(opcoes.agora);
   const gerador = new GeradorSequencial();
   const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega);
+  const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
+  const avisos = new RepositorioDeAvisosEmMemoria();
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
@@ -160,6 +205,7 @@ export function criarContainerDeTeste(
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
   };
-  return { container, plantas, regas };
+  return { container, plantas, regas, notificador, avisos };
 }
