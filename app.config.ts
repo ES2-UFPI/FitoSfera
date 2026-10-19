@@ -17,7 +17,17 @@ const config: ExpoConfig = {
   android: {
     package: 'com.fitosfera.app',
   },
-  plugins: ['expo-router', ['expo-splash-screen', { backgroundColor: '#FCF5EA' }]],
+  plugins: [
+    'expo-router',
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#FCF5EA',
+        // O splash nativo só segura o fundo creme; a marca é desenhada pela abertura animada do app.
+        image: './assets/splash-transparente.png',
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },

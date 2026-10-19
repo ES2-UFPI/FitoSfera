@@ -14,6 +14,7 @@ import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorD
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
+import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
 import { RelogioDoSistema } from '@/infraestrutura/tempo/RelogioDoSistema';
 import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
@@ -29,7 +30,7 @@ export function criarContainer(): Container {
   const relogio = new RelogioDoSistema();
   const gerador = new GeradorDeIdentificadorAleatorio();
   // O Expo só embute a variável no app quando ela é lida assim, por extenso.
-  const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio);
+  const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__);
   const notificador = escolherNotificador(Platform.OS);
 
   return {
@@ -39,6 +40,7 @@ export function criarContainer(): Container {
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    controleDoSensorDeDesenvolvimento: sensor instanceof SensorSimulado ? sensor : null,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio),
   };
 }

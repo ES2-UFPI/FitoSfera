@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
+import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
 import RotaAjustes from '../../../app/(abas)/ajustes';
@@ -15,6 +17,8 @@ import RotaBuscarEspecie from '../../../app/cadastro/index';
 import RotaPlanta from '../../../app/planta/[id]';
 import {
   criarContainerDeTeste,
+  NotificadorFalso,
+  RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
   RepositorioDeRegasEmMemoria,
 } from '../../apoio/fakes';
@@ -30,17 +34,28 @@ export function renderizarApp(
     url?: string;
     falharAoLer?: boolean;
     leitura?: Leitura | null | 'falha';
+    sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    permitirNotificacao?: boolean;
   } = {},
-): { plantas: RepositorioDePlantasEmMemoria; regas: RepositorioDeRegasEmMemoria } {
-  const { container, plantas, regas } = criarContainerDeTeste({
+): {
+  plantas: RepositorioDePlantasEmMemoria;
+  regas: RepositorioDeRegasEmMemoria;
+  notificador: NotificadorFalso;
+  avisos: RepositorioDeAvisosEmMemoria;
+} {
+  const { container, plantas, regas, notificador, avisos } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
     leitura: opcoes.leitura,
+    sensor: opcoes.sensor,
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
+    controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
+    permitirNotificacao: opcoes.permitirNotificacao,
   });
 
   function LayoutDeTeste() {
@@ -66,5 +81,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas, regas };
+  return { plantas, regas, notificador, avisos };
 }

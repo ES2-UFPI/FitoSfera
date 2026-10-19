@@ -50,7 +50,7 @@ test('leitura fora da faixa gera notificação, com a planta e o que saiu da fai
     {
       idPlanta: 'p1',
       titulo: 'Tomatinho precisa de atenção',
-      corpo: 'A temperatura está em 31 °C, acima da faixa ideal (18 °C a 28 °C).',
+      corpo: 'A temperatura está em 31 °C, acima do ideal.',
     },
   ]);
   expect(notificador.entregues).toEqual(entregues);
@@ -103,8 +103,7 @@ test('uma grandeza a mais fora da faixa é um desvio novo e avisa de novo', asyn
 
   expect(entregues).toHaveLength(1);
   expect(entregues[0].corpo).toBe(
-    'A umidade do ar está em 30%, abaixo da faixa ideal (40% a 70%). ' +
-      'A temperatura está em 31 °C, acima da faixa ideal (18 °C a 28 °C).',
+    'A umidade do ar está em 30%, abaixo do ideal. A temperatura está em 31 °C, acima do ideal.',
   );
   expect(notificador.entregues).toHaveLength(1);
 });

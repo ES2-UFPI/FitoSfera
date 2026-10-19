@@ -3,6 +3,13 @@ import { SensorIndisponivel } from '@/infraestrutura/sensores/SensorIndisponivel
 import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
 import { RelogioParado } from '../apoio/fakes';
 
+const CONFIGURACAO_AUTOMATICA = {
+  umidade: 'automatico',
+  temperatura: 'automatico',
+  luminosidade: 'automatico',
+  desconectado: false,
+} as const;
+
 describe('SensorIndisponivel', () => {
   const sensor = new SensorIndisponivel();
 
@@ -66,6 +73,58 @@ describe('SensorSimulado', () => {
       expect(leitura?.luminosidadeLux).toBeGreaterThanOrEqual(0);
     });
   });
+
+  test('permite forçar uma grandeza e avisa os observadores imediatamente', async () => {
+    const sensor = new SensorSimulado(new RelogioParado(instante));
+    const aoReceber = jest.fn();
+    const cancelar = sensor.observarLeituras(aoReceber);
+
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, umidade: 'baixo' });
+
+    expect(sensor.obterConfiguracao()).toEqual({ ...CONFIGURACAO_AUTOMATICA, umidade: 'baixo' });
+    expect(await sensor.lerLeituraAtual()).toEqual(expect.objectContaining({ umidadePercentual: 10 }));
+    expect(aoReceber).toHaveBeenCalledWith(expect.objectContaining({ umidadePercentual: 10 }));
+    cancelar();
+  });
+
+  test('permite forçar luz acima de todas as faixas do catálogo', async () => {
+    const sensor = new SensorSimulado(new RelogioParado(instante));
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, luminosidade: 'alto' });
+    expect(await sensor.lerLeituraAtual()).toEqual(
+      expect.objectContaining({ luminosidadeLux: 100000, medidaEm: instante }),
+    );
+  });
+
+  test('combina calor, umidade baixa e luz alta na mesma leitura', async () => {
+    const sensor = new SensorSimulado(new RelogioParado(instante));
+    sensor.definirConfiguracao({
+      umidade: 'baixo',
+      temperatura: 'alto',
+      luminosidade: 'alto',
+      desconectado: false,
+    });
+
+    expect(await sensor.lerLeituraAtual()).toEqual({
+      umidadePercentual: 10,
+      temperaturaCelsius: 40,
+      luminosidadeLux: 100000,
+      medidaEm: instante,
+    });
+  });
+
+  test('desconectado não tem leitura nem avisa no intervalo', async () => {
+    const sensor = new SensorSimulado(new RelogioParado(instante), 1000);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, desconectado: true });
+    const aoReceber = jest.fn();
+    const cancelar = sensor.observarLeituras(aoReceber);
+
+    jest.advanceTimersByTime(3000);
+
+    expect(await sensor.lerLeituraAtual()).toBeNull();
+    expect(await sensor.consultarEstadoDaConexao()).toBe('desconectado');
+    expect(aoReceber).not.toHaveBeenCalled();
+    cancelar();
+  });
 });
 
 describe('escolherSensor (variável EXPO_PUBLIC_SENSOR)', () => {
@@ -81,4 +140,13 @@ describe('escolherSensor (variável EXPO_PUBLIC_SENSOR)', () => {
       expect(escolherSensor(valor, relogio)).toBeInstanceOf(SensorIndisponivel);
     },
   );
+
+  test.each([undefined, ''])('%p usa o simulador como padrão somente em desenvolvimento', (valor) => {
+    expect(escolherSensor(valor, relogio, true)).toBeInstanceOf(SensorSimulado);
+    expect(escolherSensor(valor, relogio, false)).toBeInstanceOf(SensorIndisponivel);
+  });
+
+  test('uma escolha explícita pode desativar o simulador em desenvolvimento', () => {
+    expect(escolherSensor('indisponivel', relogio, true)).toBeInstanceOf(SensorIndisponivel);
+  });
 });

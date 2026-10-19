@@ -19,21 +19,16 @@ test('o título diz de qual planta é o aviso', () => {
   expect(montarMensagemDoAviso('Tomatinho', [CALOR]).titulo).toBe('Tomatinho precisa de atenção');
 });
 
-test('o corpo diz o valor medido, o lado em que saiu e a faixa ideal', () => {
-  expect(montarMensagemDoAviso('Tomatinho', [CALOR]).corpo).toBe(
-    'A temperatura está em 31,3 °C, acima da faixa ideal (18 °C a 28 °C).',
-  );
+test('o corpo diz de forma curta o valor medido e o lado em que saiu do ideal', () => {
+  expect(montarMensagemDoAviso('Tomatinho', [CALOR]).corpo).toBe('A temperatura está em 31,3 °C, acima do ideal.');
 });
 
 test('a umidade usa o símbolo colado ao número', () => {
-  expect(montarMensagemDoAviso('Jiboia', [SECO]).corpo).toBe(
-    'A umidade do ar está em 30%, abaixo da faixa ideal (40% a 70%).',
-  );
+  expect(montarMensagemDoAviso('Jiboia', [SECO]).corpo).toBe('A umidade do ar está em 30%, abaixo do ideal.');
 });
 
 test('cada desvio vira uma frase, na ordem recebida', () => {
   expect(montarMensagemDoAviso('Jiboia', [SECO, CALOR]).corpo).toBe(
-    'A umidade do ar está em 30%, abaixo da faixa ideal (40% a 70%). ' +
-      'A temperatura está em 31,3 °C, acima da faixa ideal (18 °C a 28 °C).',
+    'A umidade do ar está em 30%, abaixo do ideal. A temperatura está em 31,3 °C, acima do ideal.',
   );
 });

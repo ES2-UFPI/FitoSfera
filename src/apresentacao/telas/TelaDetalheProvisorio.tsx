@@ -18,18 +18,7 @@ import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
-const PREVIA_DO_PAINEL = {
-  tipo: 'leitura',
-  demonstracao: true,
-  leitura: {
-    umidadePercentual: 58,
-    temperaturaCelsius: 24,
-    luminosidadeLux: 720,
-    medidaEm: new Date(),
-  },
-} satisfies EstadoDoPainel;
-
-const SENSOR_INDISPONIVEL: EstadoDoPainel = { tipo: 'indisponivel' };
+const SEM_LEITURA: EstadoDoPainel = { tipo: 'sem-leitura' };
 
 function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
   const faixas = item.planta.faixasRecomendadas;
@@ -51,11 +40,11 @@ function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
       faixasRecomendadas,
     };
   }
-  return __DEV__ ? { ...PREVIA_DO_PAINEL, faixasRecomendadas } : SENSOR_INDISPONIVEL;
+  return SEM_LEITURA;
 }
 
 /**
- * Detalhe provisório: a planta grande, o apelido, a espécie e a prévia do painel. A navegação até aqui
+ * Detalhe provisório: a planta grande, o apelido, a espécie e o painel. A navegação até aqui
  * (#20) está pronta; o conteúdo completo do detalhamento é a US06 (#6), que substitui esta tela.
  */
 export function TelaDetalheProvisorio({ id }: { id: string }) {

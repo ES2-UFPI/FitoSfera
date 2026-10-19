@@ -3,17 +3,15 @@ import { CORES } from '@/apresentacao/tema/cores';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
-test('tocar no vaso abre o detalhe com apelido, espécie e a prévia do painel', async () => {
+test('tocar no vaso abre o detalhe e informa quando ainda não há leitura', async () => {
   renderizarApp({ plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomatinho' })] });
   fireEvent.press(await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.'));
   expect(screen).toHavePathname('/planta/p1');
   expect(await screen.findByRole('header', { name: 'Tomatinho' })).toBeTruthy();
   expect(screen.getByText('Tomate')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
-  expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
-  expect(screen.getByLabelText('Temperatura: 24 graus Celsius. Faixa ideal: 18 a 28 graus Celsius.')).toBeTruthy();
-  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 5000 a 20000 lux.')).toBeTruthy();
+  expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
+  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
 });
 
 test('espécie fora do catálogo mostra "Espécie desconhecida"', async () => {
