@@ -15,7 +15,8 @@ Uma `Leitura` tem umidade do ar (%), temperatura (°C), luminosidade (lux) e o m
 
 | Valor de `EXPO_PUBLIC_SENSOR` | Implementação | Comportamento |
 | --- | --- | --- |
-| vazio ou qualquer outro valor | [`SensorIndisponivel`](SensorIndisponivel.ts) | Padrão. Nunca tem leitura; as plantas aparecem como "sem dados". |
+| vazio | Depende do ambiente | Em desenvolvimento usa o simulado; em produção usa o indisponível. |
+| `indisponivel` ou qualquer outro valor | [`SensorIndisponivel`](SensorIndisponivel.ts) | Nunca tem leitura; as plantas aparecem como "sem dados". |
 | `simulado` | [`SensorSimulado`](SensorSimulado.ts) | Para desenvolvimento. Gera leituras de um ambiente de casa que variam ao longo do dia, a cada 5 segundos. |
 
 Para rodar com o sensor simulado:
@@ -24,8 +25,14 @@ Para rodar com o sensor simulado:
 EXPO_PUBLIC_SENSOR=simulado npm run web
 ```
 
-O valor também pode ir num arquivo `.env` na raiz do projeto (`EXPO_PUBLIC_SENSOR=simulado`), que o Expo lê ao
-iniciar. Depois de mudar o valor, reinicie o Expo com `--clear` para o app ser montado de novo.
+O valor também pode ir num arquivo `.env` na raiz do projeto. Em desenvolvimento, o simulador já é o padrão;
+use `EXPO_PUBLIC_SENSOR=indisponivel` para desativá-lo. Depois de mudar o valor, reinicie o Expo com `--clear`
+para o app ser montado de novo.
+
+Quando o simulador está ativo, a aba **Ajustes** permite escolher independentemente níveis automáticos, baixos
+ou altos de umidade, temperatura e luminosidade. As condições podem ser combinadas livremente; há também um
+atalho para clima quente, seco e ensolarado e uma opção de desconexão. Esses controles nunca aparecem na
+configuração padrão de produção.
 
 ## Como acrescentar um sensor
 

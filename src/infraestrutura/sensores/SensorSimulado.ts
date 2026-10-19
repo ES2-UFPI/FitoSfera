@@ -1,3 +1,7 @@
+import {
+  ConfiguracaoDoSensorDeDesenvolvimento,
+  ControleDoSensorDeDesenvolvimento,
+} from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
@@ -9,7 +13,15 @@ const UM_DIA_MS = 24 * 3_600_000;
  * Sensor de desenvolvimento: gera leituras de um ambiente de casa que variam ao longo do dia, sem hardware.
  * Ligado por `EXPO_PUBLIC_SENSOR=simulado`.
  */
-export class SensorSimulado implements SensorDeAmbiente {
+export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesenvolvimento {
+  private configuracao: ConfiguracaoDoSensorDeDesenvolvimento = {
+    umidade: 'automatico',
+    temperatura: 'automatico',
+    luminosidade: 'automatico',
+    desconectado: false,
+  };
+  private readonly observadores = new Set<(leitura: Leitura) => void>();
+
   constructor(
     private readonly relogio: Relogio,
     private readonly intervaloMs = 5000,
@@ -20,22 +32,61 @@ export class SensorSimulado implements SensorDeAmbiente {
   }
 
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
-    const temporizador = setInterval(() => aoReceber(this.medir()), this.intervaloMs);
-    return () => clearInterval(temporizador);
+    this.observadores.add(aoReceber);
+    const temporizador = setInterval(() => {
+      const leitura = this.medir();
+      if (leitura !== null) aoReceber(leitura);
+    }, this.intervaloMs);
+    let cancelada = false;
+    return () => {
+      if (cancelada) return;
+      cancelada = true;
+      this.observadores.delete(aoReceber);
+      clearInterval(temporizador);
+    };
   }
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
-    return 'conectado';
+    return this.configuracao.desconectado ? 'desconectado' : 'conectado';
+  }
+
+  obterConfiguracao(): ConfiguracaoDoSensorDeDesenvolvimento {
+    return { ...this.configuracao };
+  }
+
+  definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): void {
+    this.configuracao = { ...configuracao };
+    const leitura = this.medir();
+    if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
   }
 
   /** Uma onda por dia: mais luz e calor perto do meio-dia, mais umidade de madrugada. */
-  private medir(): Leitura {
+  private medir(): Leitura | null {
     const agora = this.relogio.agora();
+    if (this.configuracao.desconectado) return null;
     const onda = Math.sin((2 * Math.PI * (agora.getTime() % UM_DIA_MS)) / UM_DIA_MS);
+    const umidadeAutomatica = Math.round(60 - 10 * onda);
+    const temperaturaAutomatica = Math.round((24 + 4 * onda) * 10) / 10;
+    const luminosidadeAutomatica = Math.round(Math.max(0, 12000 + 11000 * onda));
     return {
-      umidadePercentual: Math.round(60 - 10 * onda),
-      temperaturaCelsius: Math.round((24 + 4 * onda) * 10) / 10,
-      luminosidadeLux: Math.round(Math.max(0, 12000 + 11000 * onda)),
+      umidadePercentual:
+        this.configuracao.umidade === 'baixo'
+          ? 10
+          : this.configuracao.umidade === 'alto'
+            ? 90
+            : umidadeAutomatica,
+      temperaturaCelsius:
+        this.configuracao.temperatura === 'baixo'
+          ? 5
+          : this.configuracao.temperatura === 'alto'
+            ? 40
+            : temperaturaAutomatica,
+      luminosidadeLux:
+        this.configuracao.luminosidade === 'baixo'
+          ? 500
+          : this.configuracao.luminosidade === 'alto'
+            ? 100000
+            : luminosidadeAutomatica,
       medidaEm: agora,
     };
   }

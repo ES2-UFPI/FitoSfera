@@ -1,8 +1,10 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
+import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
 import RotaAjustes from '../../../app/(abas)/ajustes';
@@ -30,8 +32,10 @@ export function renderizarApp(
     url?: string;
     falharAoLer?: boolean;
     leitura?: Leitura | null | 'falha';
+    sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
   } = {},
 ): { plantas: RepositorioDePlantasEmMemoria; regas: RepositorioDeRegasEmMemoria } {
   const { container, plantas, regas } = criarContainerDeTeste({
@@ -39,8 +43,10 @@ export function renderizarApp(
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
     leitura: opcoes.leitura,
+    sensor: opcoes.sensor,
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
+    controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
   });
 
   function LayoutDeTeste() {

@@ -4,6 +4,7 @@ import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtua
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
@@ -137,8 +138,10 @@ export function criarContainerDeTeste(
     especies?: readonly EspecieVegetal[];
     falharAoLer?: boolean;
     leitura?: Leitura | null | 'falha';
+    sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
   } = {},
 ): {
   container: Container;
@@ -149,7 +152,7 @@ export function criarContainerDeTeste(
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
     : new RepositorioDePlantasEmMemoria(opcoes.plantas);
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
-  const leituras = new SensorFixo(opcoes.leitura ?? null);
+  const leituras = opcoes.sensor ?? new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
   const gerador = new GeradorSequencial();
   const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega);
@@ -160,6 +163,7 @@ export function criarContainerDeTeste(
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
   };
   return { container, plantas, regas };
 }
