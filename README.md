@@ -24,5 +24,5 @@ npm run typecheck  # verificação de tipos do app e dos testes
 - [Catálogo de espécies](src/infraestrutura/catalogo/README.md): schema e como acrescentar uma espécie.
 - [Armazenamento local](src/infraestrutura/persistencia/README.md): mapa de chaves, versão do schema e
   migrações.
-- [Sensores do ambiente](src/infraestrutura/sensores/README.md): a porta do sensor e como escolher entre
-  nenhum sensor (padrão) e o simulado, com `EXPO_PUBLIC_SENSOR=simulado`.
+- [Sensores do ambiente](src/infraestrutura/sensores/README.md): a porta do sensor e como controlar o simulado,
+  que é usado por padrão apenas em desenvolvimento.
