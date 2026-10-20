@@ -5,6 +5,7 @@ import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
@@ -36,6 +37,7 @@ export function criarContainer(): Container {
   return {
     listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, sensor, relogio),
+    obterLeituraAtual: new ObterLeituraAtual(sensor),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),

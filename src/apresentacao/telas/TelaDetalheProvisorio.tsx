@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
@@ -28,7 +28,7 @@ function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | unde
   };
 }
 
-function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
+function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPainel {
   const faixasRecomendadas = faixasDoPainel(item);
   if (item.ultimaLeitura !== null) {
     return {
@@ -36,6 +36,7 @@ function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
       leitura: item.ultimaLeitura,
       desatualizada: item.leituraDesatualizada,
       faixasRecomendadas,
+      atualizando,
     };
   }
   return { tipo: 'sem-leitura', faixasRecomendadas };
@@ -47,6 +48,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
   // undefined: carregando; null: não existe; 'falhou': o armazenamento não respondeu.
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
+  const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const registroEmAndamento = useRef(false);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
 
@@ -93,6 +95,62 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
     };
   }, [container, id]);
 
+  useEffect(() => {
+    if (!item || item === 'falhou' || item.planta.id !== id) return;
+    let ativo = true;
+    let sequencia = 0;
+    const cancelar = container.obterLeituraAtual.observar((leitura) => {
+      const sequenciaDestaLeitura = ++sequencia;
+      void container.obterPlanta.executarComLeitura(id, leitura).then(
+        (atualizada) => {
+          if (ativo && sequenciaDestaLeitura === sequencia && atualizada !== null) definirItem(atualizada);
+        },
+        (falha) => console.warn('Não deu para atualizar as condições da planta.', falha),
+      );
+    });
+    return () => {
+      ativo = false;
+      cancelar();
+    };
+  }, [container, id, item && item !== 'falhou' ? item.planta.id : null]);
+
+  async function atualizarLeitura() {
+    if (atualizandoLeitura) return;
+    definirAtualizandoLeitura(true);
+    try {
+      const leitura = await container.obterLeituraAtual.executar();
+      if (leitura !== null) {
+        const atualizada = await container.obterPlanta.executarComLeitura(id, leitura);
+        if (atualizada !== null) definirItem(atualizada);
+      } else {
+        definirItem((anterior) =>
+          anterior && anterior !== 'falhou' && anterior.ultimaLeitura !== null
+            ? {
+                ...anterior,
+                status: 'sem-dados',
+                situacoes: null,
+                leituraDesatualizada: true,
+              }
+            : anterior,
+        );
+      }
+    } catch (falha) {
+      console.warn('Não deu para atualizar as condições da planta.', falha);
+      definirItem((anterior) =>
+        anterior && anterior !== 'falhou' && anterior.ultimaLeitura !== null
+          ? {
+              ...anterior,
+              status: 'sem-dados',
+              situacoes: null,
+              leituraDesatualizada: true,
+            }
+          : anterior,
+      );
+    } finally {
+      definirAtualizandoLeitura(false);
+    }
+  }
+
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <View style={estilos.topo}>
@@ -111,7 +169,15 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
         </View>
       ) : null}
       {item && item !== 'falhou' ? (
-        <ScrollView contentContainerStyle={estilos.conteudo}>
+        <ScrollView
+          contentContainerStyle={estilos.conteudo}
+          refreshControl={
+            <RefreshControl
+              refreshing={atualizandoLeitura}
+              onRefresh={() => void atualizarLeitura()}
+            />
+          }
+        >
           <View style={estilos.planta}>
             <DesenhoDaPlanta aparencia={item.planta.aparencia} largura={150} respirando />
             <TabuaDeMadeira estilo={estilos.tabua} />
@@ -120,7 +186,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
             </Text>
             <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
           </View>
-          <PainelDeCondicoes estado={estadoDoPainel(item)} />
+          <PainelDeCondicoes estado={estadoDoPainel(item, atualizandoLeitura)} />
           <View style={estilos.rega}>
             <BotaoPrincipal
               titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}
