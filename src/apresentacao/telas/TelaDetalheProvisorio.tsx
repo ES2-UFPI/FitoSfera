@@ -18,8 +18,6 @@ import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
-const SEM_LEITURA: EstadoDoPainel = { tipo: 'sem-leitura' };
-
 function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
   const faixas = item.planta.faixasRecomendadas;
   if (faixas === null) return undefined;
@@ -40,13 +38,9 @@ function estadoDoPainel(item: PlantaNoJardim): EstadoDoPainel {
       faixasRecomendadas,
     };
   }
-  return SEM_LEITURA;
+  return { tipo: 'sem-leitura', faixasRecomendadas };
 }
 
-/**
- * Detalhe provisório: a planta grande, o apelido, a espécie e o painel. A navegação até aqui
- * (#20) está pronta; o conteúdo completo do detalhamento é a US06 (#6), que substitui esta tela.
- */
 export function TelaDetalheProvisorio({ id }: { id: string }) {
   const { container } = useAplicativo();
   const margens = useSafeAreaInsets();

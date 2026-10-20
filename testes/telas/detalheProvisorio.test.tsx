@@ -11,6 +11,7 @@ test('tocar no vaso abre o detalhe e informa quando ainda não há leitura', asy
   expect(screen.getByText('Tomate')).toBeTruthy();
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
+  expect(screen.getAllByText('sem dados')).toHaveLength(3);
   expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
 });
 
@@ -42,7 +43,7 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
   expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento. Dentro do ideal.')).toBeTruthy();
 });
 
-test('leitura mais antiga que 30 minutos continua visível e aparece como desatualizada', async () => {
+test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valores antigos', async () => {
   renderizarApp({
     plantas: [plantaDeTeste()],
     url: '/planta/p1',
@@ -58,7 +59,8 @@ test('leitura mais antiga que 30 minutos continua visível e aparece como desatu
   expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.queryByText('58')).toBeNull();
 });
 
 test('registrar uma rega grava o horário atual e mostra uma confirmação', async () => {
