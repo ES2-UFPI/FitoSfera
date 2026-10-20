@@ -3,6 +3,7 @@ import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -83,15 +84,27 @@ export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
 
 /** Sensor de mentira: devolve a leitura combinada, nenhuma, ou falha. */
 export class SensorFixo implements SensorDeAmbiente {
+  private readonly observadores = new Set<(leitura: Leitura) => void>();
+  falharAoLerAtual = false;
+
   constructor(private readonly leitura: Leitura | null | 'falha' = null) {}
 
   async lerLeituraAtual(): Promise<Leitura | null> {
-    if (this.leitura === 'falha') throw new Error('sensor fora do ar');
+    if (this.leitura === 'falha' || this.falharAoLerAtual) throw new Error('sensor fora do ar');
     return this.leitura;
   }
 
-  observarLeituras(): CancelarObservacao {
-    return () => undefined;
+  observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
+    this.observadores.add(aoReceber);
+    return () => this.observadores.delete(aoReceber);
+  }
+
+  publicar(leitura: Leitura): void {
+    this.observadores.forEach((observador) => observador(leitura));
+  }
+
+  get quantidadeDeObservadores(): number {
+    return this.observadores.size;
   }
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
@@ -204,6 +217,7 @@ export function criarContainerDeTeste(
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
+    obterLeituraAtual: new ObterLeituraAtual(leituras),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     excluirPlanta: new ExcluirPlanta(plantas, regas),

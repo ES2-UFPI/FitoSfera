@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { RefreshControl } from 'react-native';
 import { CORES } from '@/apresentacao/tema/cores';
-import { plantaDeTeste } from '../apoio/fakes';
+import { plantaDeTeste, SensorFixo } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
 test('tocar no vaso abre o detalhe e informa quando ainda não há leitura', async () => {
@@ -61,6 +62,50 @@ test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valo
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
   expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
   expect(screen.queryByText('58')).toBeNull();
+});
+
+test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
+  const sensor = new SensorFixo(null);
+  renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', sensor });
+
+  expect(await screen.findByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
+  await waitFor(() => expect(sensor.quantidadeDeObservadores).toBe(1));
+
+  sensor.publicar({
+    umidadePercentual: 63,
+    temperaturaCelsius: 24,
+    luminosidadeLux: 850,
+    medidaEm: new Date(2026, 9, 17, 14, 5),
+  });
+
+  expect(await screen.findByText('Última leitura às 14:05')).toBeTruthy();
+  expect(screen.getByLabelText(/^Umidade: 63 por cento\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Temperatura: 24 graus Celsius\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Luz: 850 lux\./)).toBeTruthy();
+});
+
+test('puxar para atualizar consulta o sensor e preserva a última leitura marcada como desatualizada na falha', async () => {
+  const sensor = new SensorFixo({
+    umidadePercentual: 61,
+    temperaturaCelsius: 25,
+    luminosidadeLux: 9000,
+    medidaEm: new Date(2026, 9, 17, 13, 55),
+  });
+  renderizarApp({
+    plantas: [plantaDeTeste()],
+    url: '/planta/p1',
+    agora: new Date(2026, 9, 17, 14, 0),
+    sensor,
+  });
+
+  expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
+  sensor.falharAoLerAtual = true;
+  const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  fireEvent(screen.UNSAFE_getByType(RefreshControl), 'refresh');
+
+  expect(await screen.findByText('Leitura desatualizada')).toBeTruthy();
+  expect(screen.getByLabelText(/^Umidade: 61 por cento\./)).toBeTruthy();
+  aviso.mockRestore();
 });
 
 test('registrar uma rega grava o horário atual e mostra uma confirmação', async () => {

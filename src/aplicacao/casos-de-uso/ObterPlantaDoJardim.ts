@@ -2,6 +2,7 @@ import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
+import { Leitura } from '@/dominio/modelos/Leitura';
 import { AvaliadorDoJardim } from './AvaliadorDoJardim';
 import { PlantaNoJardim } from './PlantaNoJardim';
 
@@ -21,5 +22,12 @@ export class ObterPlantaDoJardim {
     const planta = await this.plantas.obterPorId(id);
     if (planta === null) return null;
     return this.avaliador.avaliar(planta, await this.avaliador.lerSensor());
+  }
+
+  /** Reavalia a planta com uma medição já recebida, sem consultar o sensor novamente. */
+  async executarComLeitura(id: string, leitura: Leitura): Promise<PlantaNoJardim | null> {
+    const planta = await this.plantas.obterPorId(id);
+    if (planta === null) return null;
+    return this.avaliador.avaliar(planta, leitura);
   }
 }
