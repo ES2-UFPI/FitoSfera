@@ -30,21 +30,21 @@ const OPCOES_DE_VASO = VASOS.map((id) => {
 
 /** Passo 2 do cadastro: a pessoa monta a aparência da planta, livre para qualquer espécie. */
 export function TelaMontarAparencia() {
-  const { especie, aparencia, mudarAparencia } = useRascunho();
+  const { especie, aparencia, edicao, mudarAparencia } = useRascunho();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
 
-  if (especie === null) return <Redirect href="/cadastro" />;
+  if (especie === null && edicao === null) return <Redirect href="/cadastro" />;
   const rotuloDoDestaque = FORMAS_VISUAIS[aparencia.forma].rotuloDestaque;
 
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
-      <CabecalhoDoCadastro passoAtual={2} />
+      <CabecalhoDoCadastro passoAtual={edicao ? undefined : 2} />
       <ScrollView contentContainerStyle={estilos.conteudo} showsVerticalScrollIndicator={false}>
         <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
-          Como vai ser a sua planta?
+          {edicao ? 'Mude a aparência da planta' : 'Como vai ser a sua planta?'}
         </Text>
-        <VitrineDaPlanta aparencia={aparencia} etiqueta={especie.nomeComum} />
+        <VitrineDaPlanta aparencia={aparencia} etiqueta={edicao?.apelido ?? especie?.nomeComum ?? ''} />
 
         <View style={estilos.secoes}>
           <View style={estilos.secaoDeForma}>
@@ -80,7 +80,17 @@ export function TelaMontarAparencia() {
         </View>
       </ScrollView>
       <View style={[estilos.rodape, { paddingBottom: margens.bottom + ESPACO.grande }]}>
-        <BotaoPrincipal titulo="Continuar" largo aoTocar={() => navegador.push('/cadastro/apelido')} />
+        <BotaoPrincipal
+          titulo="Continuar"
+          largo
+          aoTocar={() =>
+            navegador.push(
+              edicao
+                ? { pathname: '/editar/[id]/apelido', params: { id: edicao.idPlanta } }
+                : '/cadastro/apelido',
+            )
+          }
+        />
       </View>
     </FundoAconchegante>
   );

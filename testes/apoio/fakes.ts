@@ -1,5 +1,6 @@
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
+import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
@@ -43,6 +44,11 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
 
   async adicionar(planta: Planta) {
     this.salvas.push(planta);
+  }
+
+  async atualizar(planta: Planta) {
+    const posicao = this.salvas.findIndex((salva) => salva.id === planta.id);
+    if (posicao >= 0) this.salvas[posicao] = planta;
   }
 
   async remover(id: string) {
@@ -228,6 +234,7 @@ export function criarContainerDeTeste(
     obterLeituraAtual: new ObterLeituraAtual(leituras),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
+    editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),

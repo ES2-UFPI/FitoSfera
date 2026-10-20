@@ -15,6 +15,9 @@ import LayoutDoCadastro from '../../../app/cadastro/_layout';
 import RotaBatizar from '../../../app/cadastro/apelido';
 import RotaMontarAparencia from '../../../app/cadastro/aparencia';
 import RotaBuscarEspecie from '../../../app/cadastro/index';
+import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
+import RotaEditarApelido from '../../../app/editar/[id]/apelido';
+import RotaEditarAparencia from '../../../app/editar/[id]/index';
 import RotaPlanta from '../../../app/planta/[id]';
 import {
   criarContainerDeTeste,
@@ -81,6 +84,9 @@ export function renderizarApp(
       'cadastro/aparencia': RotaMontarAparencia,
       'cadastro/apelido': RotaBatizar,
       'planta/[id]': RotaPlanta,
+      'editar/[id]/_layout': LayoutDaEdicao,
+      'editar/[id]/index': RotaEditarAparencia,
+      'editar/[id]/apelido': RotaEditarApelido,
     },
     { initialUrl: opcoes.url ?? '/' },
   );

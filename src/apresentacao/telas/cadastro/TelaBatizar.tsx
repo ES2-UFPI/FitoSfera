@@ -15,30 +15,37 @@ import { FONTES, TEXTO } from '../../tema/tipografia';
 
 /** Passo 3 do cadastro: dar um apelido e colocar a planta na estante. */
 export function TelaBatizar() {
-  const { especie, aparencia } = useRascunho();
+  const { especie, aparencia, edicao } = useRascunho();
   const { container, recarregarJardim } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
-  const [apelido, definirApelido] = useState(especie?.nomeComum ?? '');
+  const [apelido, definirApelido] = useState(edicao?.apelido ?? especie?.nomeComum ?? '');
   const [erro, definirErro] = useState<string | null>(null);
   const [salvando, definirSalvando] = useState(false);
   // O estado só atualiza no próximo render; a ref barra o segundo toque que chega no mesmo instante.
   const salvandoAgora = useRef(false);
 
-  if (especie === null) return <Redirect href="/cadastro" />;
+  if (especie === null && edicao === null) return <Redirect href="/cadastro" />;
+  const nomeDaEspecie = especie?.nomeComum ?? edicao?.apelido ?? '';
 
   const tamanho = Array.from(apelido.trim()).length;
   const valido = tamanho > 0 && tamanho <= LIMITE_DO_APELIDO;
 
   async function colocarNaEstante() {
-    if (especie === null || !valido || salvandoAgora.current) return;
+    if (!valido || salvandoAgora.current) return;
     salvandoAgora.current = true;
     definirSalvando(true);
     definirErro(null);
     try {
-      await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
-      await recarregarJardim();
-      navegador.dismissTo('/');
+      if (edicao) {
+        await container.editarPlanta.executar(edicao.idPlanta, { apelido, aparencia });
+        await recarregarJardim();
+        navegador.dismissTo({ pathname: '/planta/[id]', params: { id: edicao.idPlanta } });
+      } else if (especie) {
+        await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
+        await recarregarJardim();
+        navegador.dismissTo('/');
+      }
     } catch (falha) {
       definirErro(falha instanceof Error ? falha.message : 'Não deu para salvar a planta. Tente de novo.');
       salvandoAgora.current = false;
@@ -49,19 +56,19 @@ export function TelaBatizar() {
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <CabecalhoDoCadastro passoAtual={3} />
+        <CabecalhoDoCadastro passoAtual={edicao ? undefined : 3} />
         <ScrollView contentContainerStyle={estilos.conteudo} keyboardShouldPersistTaps="handled">
           <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
             Como você vai chamar esta planta?
           </Text>
-          <VitrineDaPlanta aparencia={aparencia} etiqueta={apelido.trim() || especie.nomeComum} />
+          <VitrineDaPlanta aparencia={aparencia} etiqueta={apelido.trim() || nomeDaEspecie} />
 
           <View style={estilos.campo}>
             <TextInput
               value={apelido}
               onChangeText={definirApelido}
               accessibilityLabel="Apelido da planta"
-              placeholder={especie.nomeComum}
+              placeholder={nomeDaEspecie}
               placeholderTextColor={CORES.abaInativa}
               autoCapitalize="sentences"
               returnKeyType="done"
@@ -80,7 +87,7 @@ export function TelaBatizar() {
         </ScrollView>
         <View style={[estilos.rodape, { paddingBottom: margens.bottom + ESPACO.grande }]}>
           <BotaoPrincipal
-            titulo="Colocar na estante"
+            titulo={edicao ? 'Salvar alterações' : 'Colocar na estante'}
             largo
             desabilitado={!valido || salvando}
             aoTocar={() => void colocarNaEstante()}

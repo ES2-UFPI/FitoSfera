@@ -31,6 +31,15 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
     await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify([...registros, paraRegistro(planta)]));
   }
 
+  async atualizar(planta: Planta): Promise<void> {
+    const leitura = await this.ler();
+    if (leitura.tipo !== 'lista') return;
+    const registros = leitura.registros.map((registro) =>
+      idDoRegistro(registro) === planta.id ? paraRegistro(planta) : registro,
+    );
+    await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify(registros));
+  }
+
   /** Tira só o registro do id; registros que o app não entende continuam gravados. Conteúdo ilegível fica como está. */
   async remover(id: string): Promise<void> {
     const leitura = await this.ler();

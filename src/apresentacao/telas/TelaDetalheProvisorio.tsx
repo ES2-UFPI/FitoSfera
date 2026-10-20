@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
+import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import {
@@ -44,12 +46,14 @@ function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPain
 }
 
 export function TelaDetalheProvisorio({ id }: { id: string }) {
-  const { container } = useAplicativo();
+  const { container, recarregarJardim } = useAplicativo();
+  const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
+  const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
   const registroEmAndamento = useRef(false);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
 
@@ -106,21 +110,37 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
     };
   }, [container, plantaCarregada?.id]);
 
-  useEffect(() => {
-    let atual = true;
-    container.obterPlanta.executar(id).then(
-      (encontrado) => {
-        if (atual) definirItem(encontrado);
-      },
-      (falha) => {
-        console.warn('Não deu para ler a planta do armazenamento do aparelho.', falha);
-        if (atual) definirItem('falhou');
-      },
-    );
-    return () => {
-      atual = false;
-    };
-  }, [container, id]);
+  async function excluirPlanta() {
+    if (exclusao === 'excluindo') return;
+    definirExclusao('excluindo');
+    try {
+      await container.excluirPlanta.executar(id);
+      await recarregarJardim();
+      navegador.dismissTo('/');
+    } catch (falha) {
+      console.warn('Não deu para excluir a planta.', falha);
+      definirExclusao('erro');
+    }
+  }
+
+  // Relê ao voltar da edição, para mostrar o apelido e a aparência novos.
+  useFocusEffect(
+    useCallback(() => {
+      let atual = true;
+      container.obterPlanta.executar(id).then(
+        (encontrado) => {
+          if (atual) definirItem(encontrado);
+        },
+        (falha) => {
+          console.warn('Não deu para ler a planta do armazenamento do aparelho.', falha);
+          if (atual) definirItem('falhou');
+        },
+      );
+      return () => {
+        atual = false;
+      };
+    }, [container, id]),
+  );
 
   useEffect(() => {
     if (!item || item === 'falhou' || item.planta.id !== id) return;
@@ -249,7 +269,28 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
               </Text>
             ) : null}
           </View>
+          <View style={estilos.acoes}>
+            <View style={estilos.acao}>
+              <BotaoPrincipal
+                titulo="Editar"
+                variante="secundaria"
+                aoTocar={() => navegador.push({ pathname: '/editar/[id]', params: { id } })}
+                largo
+              />
+            </View>
+            <View style={estilos.acao}>
+              <BotaoPrincipal titulo="Excluir" variante="perigo" aoTocar={() => definirExclusao('confirmando')} largo />
+            </View>
+          </View>
           <CartaoDoHistorico estado={historico} />
+          <ConfirmacaoDeExclusao
+            apelido={item.planta.apelido}
+            visivel={exclusao !== 'fechada'}
+            excluindo={exclusao === 'excluindo'}
+            erro={exclusao === 'erro'}
+            aoConfirmar={() => void excluirPlanta()}
+            aoCancelar={() => definirExclusao('fechada')}
+          />
         </ScrollView>
       ) : null}
     </FundoAconchegante>
@@ -272,6 +313,8 @@ const estilos = StyleSheet.create({
   apelido: { textAlign: 'center', paddingHorizontal: ESPACO.amplo },
   especie: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
   rega: { alignSelf: 'stretch', gap: ESPACO.pequeno },
+  acoes: { alignSelf: 'stretch', flexDirection: 'row', gap: ESPACO.pequeno },
+  acao: { flex: 1 },
   confirmacao: { color: CORES.texto, textAlign: 'center' },
   erro: { color: CORES.erro, textAlign: 'center' },
   texto: { textAlign: 'center', marginTop: ESPACO.medio, paddingHorizontal: ESPACO.folgado },
