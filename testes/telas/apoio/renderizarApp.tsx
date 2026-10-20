@@ -4,6 +4,7 @@ import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDo
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
@@ -37,6 +38,7 @@ export function renderizarApp(
     sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     permitirNotificacao?: boolean;
   } = {},
@@ -54,6 +56,7 @@ export function renderizarApp(
     sensor: opcoes.sensor,
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
+    regas: opcoes.regas,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
     permitirNotificacao: opcoes.permitirNotificacao,
   });

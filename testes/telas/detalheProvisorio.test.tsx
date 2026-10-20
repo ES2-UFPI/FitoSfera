@@ -144,3 +144,52 @@ test('falha ao registrar mostra uma mensagem e libera uma nova tentativa', async
   expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para registrar a rega. Tente novamente.');
   expect(screen.getByRole('button', { name: 'Registrar rega' }).props.accessibilityState.disabled).toBe(false);
 });
+
+describe('histórico da planta', () => {
+  const agora = new Date(2026, 9, 20, 9, 0);
+
+  test('mostra a data de cadastro, há quantos dias está no jardim, a última rega e as recentes', async () => {
+    renderizarApp({
+      plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 17, 14, 0) })],
+      regas: [
+        { id: 'r1', idPlanta: 'p1', regadaEm: new Date(2026, 9, 18, 8, 5) },
+        { id: 'r2', idPlanta: 'p1', regadaEm: new Date(2026, 9, 19, 18, 30) },
+      ],
+      url: '/planta/p1',
+      agora,
+    });
+
+    expect(await screen.findByRole('header', { name: 'Histórico' })).toBeTruthy();
+    expect(await screen.findByLabelText('No jardim desde: 17/10/2026, há 3 dias no jardim.')).toBeTruthy();
+    expect(screen.getByLabelText('Última rega: 19/10/2026 às 18:30.')).toBeTruthy();
+    expect(screen.getByText('REGAS RECENTES')).toBeTruthy();
+    expect(screen.getAllByText('19/10/2026 às 18:30')).toHaveLength(2);
+    expect(screen.getByText('18/10/2026 às 08:05')).toBeTruthy();
+  });
+
+  test('planta cadastrada hoje diz que chegou hoje', async () => {
+    renderizarApp({ plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 20, 7, 0) })], url: '/planta/p1', agora });
+    expect(await screen.findByLabelText('No jardim desde: 20/10/2026, chegou hoje.')).toBeTruthy();
+  });
+
+  test('planta antiga, sem data de cadastro, mostra "data desconhecida"', async () => {
+    renderizarApp({ plantas: [plantaDeTeste({ cadastradaEm: null })], url: '/planta/p1', agora });
+    expect(await screen.findByLabelText('No jardim desde: data desconhecida.')).toBeTruthy();
+  });
+
+  test('planta sem nenhuma rega mostra "ainda não regada" e nenhuma lista', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+    expect(await screen.findByLabelText('Última rega: ainda não regada.')).toBeTruthy();
+    expect(screen.queryByText('REGAS RECENTES')).toBeNull();
+  });
+
+  test('registrar uma rega atualiza a última rega na hora', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+    expect(await screen.findByLabelText('Última rega: ainda não regada.')).toBeTruthy();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));
+
+    expect(await screen.findByLabelText('Última rega: 20/10/2026 às 09:00.')).toBeTruthy();
+    expect(screen.getByText('REGAS RECENTES')).toBeTruthy();
+  });
+});
