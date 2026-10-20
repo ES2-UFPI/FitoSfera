@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
+import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import {
@@ -45,10 +46,10 @@ function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPain
 export function TelaDetalheProvisorio({ id }: { id: string }) {
   const { container } = useAplicativo();
   const margens = useSafeAreaInsets();
-  // undefined: carregando; null: não existe; 'falhou': o armazenamento não respondeu.
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
+  const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
   const registroEmAndamento = useRef(false);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
 
@@ -71,6 +72,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
     try {
       await Promise.all([container.registrarRega.executar(item.planta.id), animacao]);
       definirEstadoDaRega('sucesso');
+      void carregarHistorico(item.planta);
     } catch {
       await animacao;
       definirEstadoDaRega('erro');
@@ -78,6 +80,31 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
       registroEmAndamento.current = false;
     }
   }
+
+  function carregarHistorico(planta: PlantaNoJardim['planta']): Promise<void> {
+    return container.obterHistorico.executar(planta).then(definirHistorico, (falha) => {
+      console.warn('Não deu para ler o histórico de regas.', falha);
+      definirHistorico('falhou');
+    });
+  }
+
+  const plantaCarregada = item && item !== 'falhou' ? item.planta : null;
+  useEffect(() => {
+    if (plantaCarregada === null) return;
+    let atual = true;
+    container.obterHistorico.executar(plantaCarregada).then(
+      (lido) => {
+        if (atual) definirHistorico(lido);
+      },
+      (falha) => {
+        console.warn('Não deu para ler o histórico de regas.', falha);
+        if (atual) definirHistorico('falhou');
+      },
+    );
+    return () => {
+      atual = false;
+    };
+  }, [container, plantaCarregada?.id]);
 
   useEffect(() => {
     let atual = true;
@@ -222,6 +249,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
               </Text>
             ) : null}
           </View>
+          <CartaoDoHistorico estado={historico} />
         </ScrollView>
       ) : null}
     </FundoAconchegante>
