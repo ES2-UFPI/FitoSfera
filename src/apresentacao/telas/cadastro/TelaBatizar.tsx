@@ -1,5 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect , useRef , useState  } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_APELIDO } from '@/dominio/modelos/Planta';
@@ -13,6 +13,15 @@ import { CORES } from '../../tema/cores';
 import { ESPACO, RAIO } from '../../tema/medidas';
 import { FONTES, TEXTO } from '../../tema/tipografia';
 
+const ESPERA_DA_CONFIRMACAO = 1200
+
+type EstadodoCadastro = 
+  |{tipo: 'ocioso' }
+  |{tipo: 'salvando'}
+  |{tipo: 'sucesso'; apelidoSalvo: string }
+  |{tipo: 'erro'};
+
+
 /** Passo 3 do cadastro: dar um apelido e colocar a planta na estante. */
 export function TelaBatizar() {
   const { especie, aparencia } = useRascunho();
@@ -20,29 +29,33 @@ export function TelaBatizar() {
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [apelido, definirApelido] = useState(especie?.nomeComum ?? '');
-  const [erro, definirErro] = useState<string | null>(null);
-  const [salvando, definirSalvando] = useState(false);
+  const [estado, definirEstado] = useState<EstadodoCadastro>({ tipo: 'ocioso' });
   // O estado só atualiza no próximo render; a ref barra o segundo toque que chega no mesmo instante.
   const salvandoAgora = useRef(false);
+
+  useEffect(() => {
+    if (estado.tipo !== 'sucesso') return;
+    const temporizador = setTimeout(() => navegador.dismissTo('/'), ESPERA_DA_CONFIRMACAO);
+    return () => clearTimeout(temporizador);
+  }, [estado.tipo, navegador]);
 
   if (especie === null) return <Redirect href="/cadastro" />;
 
   const tamanho = Array.from(apelido.trim()).length;
   const valido = tamanho > 0 && tamanho <= LIMITE_DO_APELIDO;
+  const emAndamento = estado.tipo === 'salvando' || estado.tipo === 'sucesso';
 
   async function colocarNaEstante() {
     if (especie === null || !valido || salvandoAgora.current) return;
     salvandoAgora.current = true;
-    definirSalvando(true);
-    definirErro(null);
+    definirEstado({ tipo: 'salvando' });
     try {
-      await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
+      const planta = await container.cadastrarPlanta.executar({idEspecie : especie.id, apelido, aparencia});
       await recarregarJardim();
-      navegador.dismissTo('/');
-    } catch (falha) {
-      definirErro(falha instanceof Error ? falha.message : 'Não deu para salvar a planta. Tente de novo.');
+      definirEstado({ tipo: 'sucesso', apelidoSalvo: planta.apelido });
+    } catch {
+      definirEstado({ tipo: 'erro' });
       salvandoAgora.current = false;
-      definirSalvando(false);
     }
   }
 
@@ -60,6 +73,7 @@ export function TelaBatizar() {
             <TextInput
               value={apelido}
               onChangeText={definirApelido}
+              editable={!emAndamento}
               accessibilityLabel="Apelido da planta"
               placeholder={especie.nomeComum}
               placeholderTextColor={CORES.abaInativa}
@@ -70,9 +84,7 @@ export function TelaBatizar() {
             />
           </View>
           <View style={estilos.ajuda}>
-            <Text style={[estilos.textoDeAjuda, erro !== null && estilos.erro]}>
-              {erro ?? 'Esse nome aparece na etiqueta da estante.'}
-            </Text>
+            <MensagemDoCampo estado={estado} />
             <Text style={[estilos.textoDeAjuda, tamanho > LIMITE_DO_APELIDO && estilos.erro]}>
               {tamanho}/{LIMITE_DO_APELIDO}
             </Text>
@@ -82,13 +94,24 @@ export function TelaBatizar() {
           <BotaoPrincipal
             titulo="Colocar na estante"
             largo
-            desabilitado={!valido || salvando}
+            desabilitado={!valido || emAndamento}
             aoTocar={() => void colocarNaEstante()}
           />
         </View>
       </KeyboardAvoidingView>
     </FundoAconchegante>
   );
+}
+
+function MensagemDoCampo({ estado }: { estado: EstadodoCadastro }) {
+  if(estado.tipo === 'sucesso'){
+    return (
+      <Text style={[estilos.textoDeAjuda, estilos.confirmacao]} accessibilityLiveRegion='polite'>
+        {estado.apelidoSalvo} entrou para a estante!
+      </Text>
+    );
+  }
+  return <Text style = {estilos.textoDeAjuda}>Esse nome aparece na etiquete da estante</Text>
 }
 
 const estilos = StyleSheet.create({
@@ -115,6 +138,7 @@ const estilos = StyleSheet.create({
     marginTop: ESPACO.pequeno,
   },
   textoDeAjuda: { ...TEXTO.apoio, flexShrink: 1 },
+  confirmacao : {color: CORES.texto},
   erro: { color: CORES.erro },
   rodape: { paddingHorizontal: ESPACO.amplo, paddingTop: ESPACO.medio },
 });
