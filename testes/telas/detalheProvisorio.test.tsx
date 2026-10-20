@@ -84,7 +84,7 @@ test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
   expect(screen.getByLabelText(/^Luz: 850 lux\./)).toBeTruthy();
 });
 
-test('puxar para atualizar consulta o sensor e preserva a última leitura marcada como desatualizada na falha', async () => {
+test('puxar para atualizar consulta o sensor e oculta os valores antigos marcados como desatualizados na falha', async () => {
   const sensor = new SensorFixo({
     umidadePercentual: 61,
     temperaturaCelsius: 25,
@@ -104,7 +104,11 @@ test('puxar para atualizar consulta o sensor e preserva a última leitura marcad
   fireEvent(screen.UNSAFE_getByType(RefreshControl), 'refresh');
 
   expect(await screen.findByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getByLabelText(/^Umidade: 61 por cento\./)).toBeTruthy();
+  expect(screen.getAllByText('sem dados')).toHaveLength(3);
+  expect(screen.queryByText('61')).toBeNull();
+  expect(screen.queryByText('25')).toBeNull();
+  expect(screen.queryByText('9000')).toBeNull();
+  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
   aviso.mockRestore();
 });
 
