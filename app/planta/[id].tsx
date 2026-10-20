@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
-import { TelaDetalheProvisorio } from '@/apresentacao/telas/TelaDetalheProvisorio';
+import { TelaDetalheDaPlanta } from '@/apresentacao/telas/TelaDetalheDaPlanta';
 
 export default function RotaPlanta() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  return <TelaDetalheProvisorio id={id} />;
+  return <TelaDetalheDaPlanta id={id} />;
 }

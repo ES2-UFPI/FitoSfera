@@ -159,7 +159,7 @@ describe('histórico da planta', () => {
       agora,
     });
 
-    expect(await screen.findByRole('header', { name: 'Histórico' })).toBeTruthy();
+    expect(await screen.findByRole('header', { name: 'Rega e histórico' })).toBeTruthy();
     expect(await screen.findByLabelText('No jardim desde: 17/10/2026, há 3 dias no jardim.')).toBeTruthy();
     expect(screen.getByLabelText('Última rega: 19/10/2026 às 18:30.')).toBeTruthy();
     expect(screen.getByText('REGAS RECENTES')).toBeTruthy();

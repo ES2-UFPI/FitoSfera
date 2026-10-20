@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
 import { CORES } from '../tema/cores';
@@ -121,6 +121,9 @@ function Indicador({
   );
 }
 
+/** A partir desta escala de fonte do sistema, três colunas não cabem lado a lado num celular. */
+const FONTE_QUE_EMPILHA = 1.3;
+
 function Indicadores({
   leitura,
   faixas,
@@ -128,8 +131,12 @@ function Indicadores({
   leitura: LeituraDoPainel | null;
   faixas?: FaixasRecomendadasDoPainel;
 }) {
+  const { fontScale } = useWindowDimensions();
   return (
-    <View style={estilos.indicadores}>
+    <View
+      testID="indicadores-das-condicoes"
+      style={[estilos.indicadores, fontScale >= FONTE_QUE_EMPILHA && estilos.indicadoresEmpilhados]}
+    >
       <Indicador
         rotulo="Umidade"
         valor={leitura?.umidadePercentual ?? null}
@@ -271,8 +278,8 @@ const estilos = StyleSheet.create({
     gap: ESPACO.pequeno,
   },
   simboloDoAviso: {
-    width: ESPACO.amplo,
-    height: ESPACO.amplo,
+    minWidth: ESPACO.amplo,
+    minHeight: ESPACO.amplo,
     borderRadius: RAIO.pilula,
     textAlign: 'center',
     fontFamily: FONTES.forte,
@@ -286,6 +293,9 @@ const estilos = StyleSheet.create({
   indicadores: {
     flexDirection: 'row',
     gap: ESPACO.pequeno,
+  },
+  indicadoresEmpilhados: {
+    flexDirection: 'column',
   },
   indicador: {
     flex: 1,

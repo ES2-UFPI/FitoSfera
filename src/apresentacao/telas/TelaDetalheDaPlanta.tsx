@@ -16,9 +16,10 @@ import {
 } from '../componentes/PainelDeCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
+import { APRESENTACAO_DO_STATUS } from '../estante/textosDoStatus';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
 import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
+import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
 function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
@@ -45,7 +46,7 @@ function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPain
   return { tipo: 'sem-leitura', faixasRecomendadas };
 }
 
-export function TelaDetalheProvisorio({ id }: { id: string }) {
+export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const { container, recarregarJardim } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
@@ -123,7 +124,6 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
     }
   }
 
-  // Relê ao voltar da edição, para mostrar o apelido e a aparência novos.
   useFocusEffect(
     useCallback(() => {
       let atual = true;
@@ -226,15 +226,27 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
           }
         >
           <View style={estilos.planta}>
-            <DesenhoDaPlanta aparencia={item.planta.aparencia} largura={150} respirando />
-            <TabuaDeMadeira estilo={estilos.tabua} />
-            <Text style={[TEXTO.titulo, estilos.apelido]} accessibilityRole="header">
-              {item.planta.apelido}
-            </Text>
-            <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
+            <View style={estilos.desenho} accessible={false} importantForAccessibility="no-hide-descendants">
+              <DesenhoDaPlanta aparencia={item.planta.aparencia} largura={72} respirando />
+              <TabuaDeMadeira estilo={estilos.tabua} />
+            </View>
+            <View style={estilos.identificacao}>
+              <Text style={TEXTO.titulo} accessibilityRole="header">
+                {item.planta.apelido}
+              </Text>
+              <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
+              <View
+                style={estilos.status}
+                accessible
+                accessibilityLabel={`Status: ${APRESENTACAO_DO_STATUS[item.status].falado}.`}
+              >
+                <View style={[estilos.pontoDoStatus, { backgroundColor: APRESENTACAO_DO_STATUS[item.status].cor }]} />
+                <Text style={estilos.textoDoStatus}>{APRESENTACAO_DO_STATUS[item.status].falado}</Text>
+              </View>
+            </View>
           </View>
           <PainelDeCondicoes estado={estadoDoPainel(item, atualizandoLeitura)} />
-          <View style={estilos.rega}>
+          <CartaoDoHistorico estado={historico}>
             <BotaoPrincipal
               titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}
               aoTocar={() => void registrarRega()}
@@ -268,7 +280,7 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
                 Não deu para registrar a rega. Tente novamente.
               </Text>
             ) : null}
-          </View>
+          </CartaoDoHistorico>
           <View style={estilos.acoes}>
             <View style={estilos.acao}>
               <BotaoPrincipal
@@ -282,7 +294,6 @@ export function TelaDetalheProvisorio({ id }: { id: string }) {
               <BotaoPrincipal titulo="Excluir" variante="perigo" aoTocar={() => definirExclusao('confirmando')} largo />
             </View>
           </View>
-          <CartaoDoHistorico estado={historico} />
           <ConfirmacaoDeExclusao
             apelido={item.planta.apelido}
             visivel={exclusao !== 'fechada'}
@@ -304,17 +315,30 @@ const estilos = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     paddingHorizontal: ESPACO.grande,
-    paddingTop: ESPACO.medio,
+    paddingTop: ESPACO.pequeno,
     paddingBottom: ESPACO.folgado,
-    gap: ESPACO.folgado,
+    gap: ESPACO.grande,
   },
-  planta: { alignItems: 'center', gap: ESPACO.minimo },
-  tabua: { alignSelf: 'stretch', marginHorizontal: ESPACO.folgado * 2, marginBottom: ESPACO.amplo },
-  apelido: { textAlign: 'center', paddingHorizontal: ESPACO.amplo },
+  planta: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: ESPACO.grande },
+  desenho: { width: 88, alignItems: 'center' },
+  tabua: { alignSelf: 'stretch' },
+  identificacao: { flex: 1, gap: ESPACO.minimo },
   especie: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
-  rega: { alignSelf: 'stretch', gap: ESPACO.pequeno },
-  acoes: { alignSelf: 'stretch', flexDirection: 'row', gap: ESPACO.pequeno },
-  acao: { flex: 1 },
+  status: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ESPACO.pequeno,
+    marginTop: ESPACO.minimo,
+    paddingVertical: ESPACO.minimo,
+    paddingHorizontal: ESPACO.medio,
+    borderRadius: RAIO.pilula,
+    backgroundColor: CORES.papel,
+  },
+  pontoDoStatus: { width: 8, height: 8, borderRadius: RAIO.pilula },
+  textoDoStatus: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.textoDoPapel },
+  acoes: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
+  acao: { flexGrow: 1, flexBasis: 140 },
   confirmacao: { color: CORES.texto, textAlign: 'center' },
   erro: { color: CORES.erro, textAlign: 'center' },
   texto: { textAlign: 'center', marginTop: ESPACO.medio, paddingHorizontal: ESPACO.folgado },
