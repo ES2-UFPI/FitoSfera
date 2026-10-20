@@ -3,7 +3,6 @@ import { CORES } from '../tema/cores';
 import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
 import { FONTES } from '../tema/tipografia';
 
-/** "+ Nova planta", sempre à mão no canto da estante. */
 export function BotaoFlutuante({ aoTocar }: { aoTocar: () => void }) {
   return (
     <Pressable

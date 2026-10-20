@@ -8,14 +8,12 @@ interface Props {
   titulo: string;
   aoTocar: () => void;
   desabilitado?: boolean;
-  /** Ocupa a largura toda, para o botão de avançar no rodapé das telas de cadastro. */
   largo?: boolean;
   testID?: string;
   icone?: ReactNode;
   variante?: 'padrao' | 'rega';
 }
 
-/** A ação principal de cada tela: verde-folha, em formato de pílula. */
 export function BotaoPrincipal({
   titulo,
   aoTocar,

@@ -40,15 +40,19 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   expect(screen.getByTestId('icone-luz')).toBeTruthy();
 });
 
-test('avisa por texto quando a leitura está desatualizada', () => {
+test('leitura desatualizada mostra "sem dados" em vez dos valores antigos', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, desatualizada: true }} />);
 
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
-  expect(screen.getByLabelText(/^Umidade: 58 por cento\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Temperatura: 24,5 graus Celsius\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Luz: 720 lux\./)).toBeTruthy();
+  expect(screen.getAllByText('sem dados')).toHaveLength(3);
+  expect(screen.queryByText('58')).toBeNull();
+  expect(screen.queryByText('24,5')).toBeNull();
+  expect(screen.queryByText('720')).toBeNull();
+  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Temperatura: sem dados recentes\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Luz: sem dados recentes\./)).toBeTruthy();
 });
 
 test('mostra o estado de carregamento sem inventar valores', () => {
@@ -64,6 +68,20 @@ test('explica quando o sensor está indisponível', () => {
 
   expect(screen.getByText('O sensor ainda não está disponível nesta versão.')).toBeTruthy();
   expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+});
+
+test('sem leitura, mostra as faixas ideais da espécie sem inventar valores', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'sem-leitura', faixasRecomendadas }} />);
+
+  expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
+  expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
+  expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
+  expect(screen.getByText('Ideal: 500–1000 lux')).toBeTruthy();
+  expect(screen.getAllByText('sem dados')).toHaveLength(3);
+  expect(
+    screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 60 a 80 por cento.'),
+  ).toBeTruthy();
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
 });
 
 test('distingue a ausência de leituras de um sensor indisponível', () => {
@@ -155,7 +173,8 @@ test('leitura desatualizada não é avaliada contra a faixa', () => {
   );
 
   expect(screen.queryByText(/do ideal$/)).toBeNull();
-  expect(screen.getByLabelText('Umidade: 40 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+  expect(screen.queryByText('40')).toBeNull();
 });
 
 test('sem faixa recomendada não indica situação', () => {
