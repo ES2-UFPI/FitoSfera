@@ -4,11 +4,11 @@ import { ALVO_DE_TOQUE, ESPACO } from '../tema/medidas';
 import { IndicadorDePassos, Passo } from './IndicadorDePassos';
 
 /** Voltar à esquerda e o progresso do cadastro à direita. */
-export function CabecalhoDoCadastro({ passoAtual }: { passoAtual: Passo }) {
+export function CabecalhoDoCadastro({ passoAtual }: { passoAtual?: Passo }) {
   return (
     <View style={estilos.cabecalho}>
       <BotaoVoltar />
-      <IndicadorDePassos passoAtual={passoAtual} />
+      {passoAtual ? <IndicadorDePassos passoAtual={passoAtual} /> : null}
     </View>
   );
 }

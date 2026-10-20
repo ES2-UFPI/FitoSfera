@@ -44,4 +44,9 @@ export class Planta {
       dados.faixasRecomendadas ?? null,
     );
   }
+
+  /** Espécie, data de cadastro e faixas não mudam na edição. */
+  editar(alteracoes: { apelido: string; aparencia: Aparencia }): Planta {
+    return Planta.criar({ ...this, ...alteracoes });
+  }
 }

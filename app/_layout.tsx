@@ -56,6 +56,7 @@ function Navegacao() {
         <Stack.Screen name="(abas)" />
         <Stack.Screen name="cadastro" options={{ presentation: 'modal' }} />
         <Stack.Screen name="planta/[id]" />
+        <Stack.Screen name="editar/[id]" options={{ presentation: 'modal' }} />
       </Stack>
       <CamadaDaAbertura jardimCarregado={plantas !== null} />
     </>
