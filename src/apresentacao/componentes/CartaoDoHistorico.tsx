@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { CORES } from '../tema/cores';
@@ -33,12 +34,13 @@ function Linha({ rotulo, valor, detalhe }: { rotulo: string; valor: string; deta
   );
 }
 
-export function CartaoDoHistorico({ estado }: { estado: EstadoDoHistorico }) {
+export function CartaoDoHistorico({ estado, children }: { estado: EstadoDoHistorico; children?: ReactNode }) {
   return (
     <View style={estilos.cartao}>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Histórico
+        Rega e histórico
       </Text>
+      {children}
 
       {estado === undefined ? <Text style={TEXTO.corpo}>Buscando o histórico da planta…</Text> : null}
 
