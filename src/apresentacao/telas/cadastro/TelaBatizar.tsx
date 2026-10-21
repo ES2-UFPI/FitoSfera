@@ -111,6 +111,13 @@ function MensagemDoCampo({ estado }: { estado: EstadodoCadastro }) {
       </Text>
     );
   }
+  if(estado.tipo === 'erro'){
+    return (
+      <Text style={[estilos.textoDeAjuda, estilos.erro]} accessibilityLiveRegion='polite'>
+        Ocorreu um erro ao salvar. Tente novamente.
+      </Text>
+    )
+  }
   return <Text style = {estilos.textoDeAjuda}>Esse nome aparece na etiquete da estante</Text>
 }
 
