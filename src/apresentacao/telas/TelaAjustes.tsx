@@ -3,6 +3,7 @@ import { ColorValue, Pressable, ScrollView, StyleSheet, Switch, Text, View } fro
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ConfiguracaoDoSensorDeDesenvolvimento,
+  ControleDoSensorDeDesenvolvimento,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -11,6 +12,7 @@ import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { CORES } from '../tema/cores';
 import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
+import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
 import { TelaEmBreve } from './TelaEmBreve';
 
 type Grandeza = 'umidade' | 'temperatura' | 'luminosidade';
@@ -92,15 +94,35 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
 export function TelaAjustes() {
   const { container } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
+  const pareamento = container.pareamentoDoSensor;
   const margens = useSafeAreaInsets();
-  const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(
-    () => controle?.obterConfiguracao() ?? AUTOMATICO,
-  );
-  const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
 
-  if (controle === null) {
+  if (controle === null && pareamento === null) {
     return <TelaEmBreve titulo="Ajustes" descricao="Aqui você vai escolher o horário dos lembretes e o sensor." />;
   }
+
+  return (
+    <FundoAconchegante>
+      <ScrollView
+        contentContainerStyle={[estilos.conteudo, { paddingTop: margens.top + ESPACO.medio }]}
+        contentInsetAdjustmentBehavior="automatic"
+      >
+        <Text style={TEXTO.titulo} accessibilityRole="header">
+          Ajustes
+        </Text>
+        {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
+        {controle ? <CartaoDoSensorDeDesenvolvimento controle={controle} /> : null}
+      </ScrollView>
+    </FundoAconchegante>
+  );
+}
+
+function CartaoDoSensorDeDesenvolvimento({ controle }: { controle: ControleDoSensorDeDesenvolvimento }) {
+  const { container } = useAplicativo();
+  const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(() =>
+    controle.obterConfiguracao(),
+  );
+  const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -124,88 +146,78 @@ export function TelaAjustes() {
   }
 
   return (
-    <FundoAconchegante>
-      <ScrollView
-        contentContainerStyle={[estilos.conteudo, { paddingTop: margens.top + ESPACO.medio }]}
-        contentInsetAdjustmentBehavior="automatic"
-      >
-        <Text style={TEXTO.titulo} accessibilityRole="header">
-          Ajustes
-        </Text>
-        <View style={estilos.cartao}>
-          <View style={estilos.cabecalho}>
-            <View style={estilos.titulosDoCabecalho}>
-              <Text style={TEXTO.subtitulo}>Sensor de desenvolvimento</Text>
-              <Text style={estilos.selo}>DADOS SIMULADOS</Text>
-            </View>
-            <Switch
-              accessibilityLabel="Sensor simulado"
-              accessibilityHint="Ativa ou interrompe as leituras simuladas"
-              accessibilityRole="switch"
-              value={sensorLigado}
-              onValueChange={alternarSensor}
-              trackColor={{ false: CORES.bordaSuave, true: CORES.acao }}
-              thumbColor={CORES.superficie}
-            />
-          </View>
-
-          <View style={estilos.estadoDoSensor}>
-            <View style={[estilos.indicadorDoSensor, sensorLigado && estilos.indicadorDoSensorAtivo]} />
-            <Text style={estilos.textoDoEstado}>{sensorLigado ? 'Sensor simulado ativo' : 'Sensor simulado desativado'}</Text>
-          </View>
-
-          <Text style={TEXTO.corpo}>Use um atalho ou combine as condições para testar o aplicativo sem hardware.</Text>
-          <View style={estilos.explicacaoDoAutomatico}>
-            <Text style={estilos.tituloDaExplicacao}>O que significa automático?</Text>
-            <Text style={TEXTO.apoio}>
-              A condição varia sozinha ao longo do dia seguindo um ciclo ambiental simulado. Você pode deixar uma
-              grandeza automática e forçar apenas as outras.
-            </Text>
-          </View>
-
-          <Text style={TEXTO.rotulo}>ATALHOS</Text>
-          <View style={estilos.opcoes}>
-            <BotaoDeOpcao
-              titulo="Tudo automático"
-              selecionado={configuracoesIguais(configuracao, AUTOMATICO)}
-              desabilitado={!sensorLigado}
-              aoTocar={() => aplicar(AUTOMATICO)}
-            />
-            <BotaoDeOpcao
-              titulo="Quente, seco e ensolarado"
-              selecionado={configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)}
-              desabilitado={!sensorLigado}
-              aoTocar={() => aplicar(QUENTE_SECO_ENSOLARADO)}
-            />
-            <BotaoDeOpcao
-              titulo="Customizado"
-              selecionado={configuracaoPersonalizada(configuracao)}
-              desabilitado={!configuracaoPersonalizada(configuracao)}
-              aoTocar={() => {}}
-            />
-          </View>
-
-          <Text style={TEXTO.rotulo}>COMBINAÇÃO PERSONALIZADA</Text>
-          <View style={estilos.menus}>
-            {GRUPOS.map((grupo) => (
-              <MenuDaGrandeza
-                key={grupo.grandeza}
-                {...grupo}
-                nivel={configuracao[grupo.grandeza]}
-                aberto={menuAberto === grupo.grandeza}
-                desabilitado={!sensorLigado}
-                aoAlternar={() => definirMenuAberto(menuAberto === grupo.grandeza ? null : grupo.grandeza)}
-                aoSelecionar={(nivel) => definirNivel(grupo.grandeza, nivel)}
-              />
-            ))}
-          </View>
-
-          <Text style={estilos.descricao} accessibilityLiveRegion="polite">
-            {descrever(configuracao)}
-          </Text>
+    <View style={estilos.cartao}>
+      <View style={estilos.cabecalho}>
+        <View style={estilos.titulosDoCabecalho}>
+          <Text style={TEXTO.subtitulo}>Sensor de desenvolvimento</Text>
+          <Text style={estilos.selo}>DADOS SIMULADOS</Text>
         </View>
-      </ScrollView>
-    </FundoAconchegante>
+        <Switch
+          accessibilityLabel="Sensor simulado"
+          accessibilityHint="Ativa ou interrompe as leituras simuladas"
+          accessibilityRole="switch"
+          value={sensorLigado}
+          onValueChange={alternarSensor}
+          trackColor={{ false: CORES.bordaSuave, true: CORES.acao }}
+          thumbColor={CORES.superficie}
+        />
+      </View>
+
+      <View style={estilos.estadoDoSensor}>
+        <View style={[estilos.indicadorDoSensor, sensorLigado && estilos.indicadorDoSensorAtivo]} />
+        <Text style={estilos.textoDoEstado}>{sensorLigado ? 'Sensor simulado ativo' : 'Sensor simulado desativado'}</Text>
+      </View>
+
+      <Text style={TEXTO.corpo}>Use um atalho ou combine as condições para testar o aplicativo sem hardware.</Text>
+      <View style={estilos.explicacaoDoAutomatico}>
+        <Text style={estilos.tituloDaExplicacao}>O que significa automático?</Text>
+        <Text style={TEXTO.apoio}>
+          A condição varia sozinha ao longo do dia seguindo um ciclo ambiental simulado. Você pode deixar uma
+          grandeza automática e forçar apenas as outras.
+        </Text>
+      </View>
+
+      <Text style={TEXTO.rotulo}>ATALHOS</Text>
+      <View style={estilos.opcoes}>
+        <BotaoDeOpcao
+          titulo="Tudo automático"
+          selecionado={configuracoesIguais(configuracao, AUTOMATICO)}
+          desabilitado={!sensorLigado}
+          aoTocar={() => aplicar(AUTOMATICO)}
+        />
+        <BotaoDeOpcao
+          titulo="Quente, seco e ensolarado"
+          selecionado={configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)}
+          desabilitado={!sensorLigado}
+          aoTocar={() => aplicar(QUENTE_SECO_ENSOLARADO)}
+        />
+        <BotaoDeOpcao
+          titulo="Customizado"
+          selecionado={configuracaoPersonalizada(configuracao)}
+          desabilitado={!configuracaoPersonalizada(configuracao)}
+          aoTocar={() => {}}
+        />
+      </View>
+
+      <Text style={TEXTO.rotulo}>COMBINAÇÃO PERSONALIZADA</Text>
+      <View style={estilos.menus}>
+        {GRUPOS.map((grupo) => (
+          <MenuDaGrandeza
+            key={grupo.grandeza}
+            {...grupo}
+            nivel={configuracao[grupo.grandeza]}
+            aberto={menuAberto === grupo.grandeza}
+            desabilitado={!sensorLigado}
+            aoAlternar={() => definirMenuAberto(menuAberto === grupo.grandeza ? null : grupo.grandeza)}
+            aoSelecionar={(nivel) => definirNivel(grupo.grandeza, nivel)}
+          />
+        ))}
+      </View>
+
+      <Text style={estilos.descricao} accessibilityLiveRegion="polite">
+        {descrever(configuracao)}
+      </Text>
+    </View>
   );
 }
 

@@ -1,6 +1,7 @@
 import { FaixasRecomendadas } from '../modelos/FaixaRecomendada';
 import { Leitura } from '../modelos/Leitura';
 import {
+  algumaMedicaoForaDaFaixa,
   compararLeituraComFaixas,
   SituacoesDaLeitura,
   todasAsMedicoesEstaoIdeais,
@@ -39,7 +40,12 @@ export function avaliarCondicoes(entrada: {
   }
 
   const situacoes = compararLeituraComFaixas(leitura, faixas);
-  const status = todasAsMedicoesEstaoIdeais(situacoes) ? 'ok' : 'atencao';
+  // Sem a luz, só dá para afirmar "atenção"; "ok" exigiria as três medidas.
+  const status = algumaMedicaoForaDaFaixa(situacoes)
+    ? 'atencao'
+    : todasAsMedicoesEstaoIdeais(situacoes)
+      ? 'ok'
+      : 'sem-dados';
   return { status, situacoes, leituraDesatualizada: false };
 }
 

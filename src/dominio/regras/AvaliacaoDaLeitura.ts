@@ -7,7 +7,8 @@ export type SituacaoDaMedicao = 'abaixo' | 'ideal' | 'acima';
 export interface SituacoesDaLeitura {
   readonly umidadeDoAr: SituacaoDaMedicao;
   readonly temperatura: SituacaoDaMedicao;
-  readonly luminosidade: SituacaoDaMedicao;
+  /** Null quando a leitura veio sem luminosidade. */
+  readonly luminosidade: SituacaoDaMedicao | null;
 }
 
 /** Regra única para painel, resumo do jardim e notificações de desvio. */
@@ -24,8 +25,15 @@ export function compararLeituraComFaixas(
   return {
     umidadeDoAr: compararMedicaoComFaixa(leitura.umidadePercentual, faixas.umidadeDoAr),
     temperatura: compararMedicaoComFaixa(leitura.temperaturaCelsius, faixas.temperatura),
-    luminosidade: compararMedicaoComFaixa(leitura.luminosidadeLux, faixas.luminosidade),
+    luminosidade:
+      leitura.luminosidadeLux === null ? null : compararMedicaoComFaixa(leitura.luminosidadeLux, faixas.luminosidade),
   };
+}
+
+export function algumaMedicaoForaDaFaixa(situacoes: SituacoesDaLeitura): boolean {
+  return [situacoes.umidadeDoAr, situacoes.temperatura, situacoes.luminosidade].some(
+    (situacao) => situacao === 'abaixo' || situacao === 'acima',
+  );
 }
 
 export function todasAsMedicoesEstaoIdeais(situacoes: SituacoesDaLeitura): boolean {

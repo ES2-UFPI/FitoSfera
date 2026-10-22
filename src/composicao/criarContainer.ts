@@ -17,10 +17,12 @@ import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorD
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
+import { SensorBluetooth } from '@/infraestrutura/sensores/SensorBluetooth';
 import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
 import { RelogioDoSistema } from '@/infraestrutura/tempo/RelogioDoSistema';
 import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
+import { criarSensorBluetooth } from './criarSensorBluetooth';
 import { escolherSensor } from './escolherSensor';
 
 /** Raiz de composição: o único lugar do app que escolhe as implementações concretas. */
@@ -33,7 +35,9 @@ export function criarContainer(): Container {
   const relogio = new RelogioDoSistema();
   const gerador = new GeradorDeIdentificadorAleatorio();
   // O Expo só embute a variável no app quando ela é lida assim, por extenso.
-  const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__);
+  const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__, () =>
+    criarSensorBluetooth(armazenamento, relogio),
+  );
   const notificador = escolherNotificador(Platform.OS);
 
   return {
@@ -47,6 +51,7 @@ export function criarContainer(): Container {
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: sensor instanceof SensorSimulado ? sensor : null,
+    pareamentoDoSensor: sensor instanceof SensorBluetooth ? sensor : null,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio),
   };
 }

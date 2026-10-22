@@ -17,7 +17,7 @@ export interface Desvio {
   readonly faixa: FaixaRecomendada;
 }
 
-const MEDICAO_DA_GRANDEZA: Record<Grandeza, (leitura: Leitura) => number> = {
+const MEDICAO_DA_GRANDEZA: Record<Grandeza, (leitura: Leitura) => number | null> = {
   umidadeDoAr: (leitura) => leitura.umidadePercentual,
   temperatura: (leitura) => leitura.temperaturaCelsius,
   luminosidade: (leitura) => leitura.luminosidadeLux,
@@ -30,6 +30,7 @@ const MEDICAO_DA_GRANDEZA: Record<Grandeza, (leitura: Leitura) => number> = {
 export function detectarDesvios(leitura: Leitura, faixas: FaixasRecomendadas): readonly Desvio[] {
   return GRANDEZAS.flatMap((grandeza) => {
     const valor = MEDICAO_DA_GRANDEZA[grandeza](leitura);
+    if (valor === null) return [];
     const faixa = faixas[grandeza];
     const situacao = compararMedicaoComFaixa(valor, faixa);
     return situacao === 'ideal' ? [] : [{ grandeza, sentido: situacao, valor, faixa }];

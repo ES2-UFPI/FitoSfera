@@ -50,6 +50,9 @@ npm run typecheck  # verificação de tipos do app e dos testes
 Requisitos: Node 22+. Para rodar no Android (`npm run android`), também são necessários JDK 17, Android SDK
 e um emulador ou celular com depuração USB.
 
+O Bluetooth do sensor físico usa código nativo e **não funciona no Expo Go**: no Expo Go, o app abre normalmente,
+mas sem sensor. Para parear o sensor, instale o development build com `npm run android`.
+
 ## Como o time trabalha
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, pull requests e regras de proteção.
@@ -63,7 +66,9 @@ e um emulador ou celular com depuração USB.
 - [Catálogo de espécies](src/infraestrutura/catalogo/README.md): schema e como acrescentar uma espécie.
 - [Armazenamento local](src/infraestrutura/persistencia/README.md): mapa de chaves, versão do schema e
   migrações.
-- [Sensores do ambiente](src/infraestrutura/sensores/README.md): a porta do sensor e como controlar o simulado,
-  que é usado por padrão apenas em desenvolvimento.
+- [Sensores do ambiente](src/infraestrutura/sensores/README.md): a porta do sensor, como controlar o simulado
+  (padrão em desenvolvimento) e o sensor físico por Bluetooth, com a escolha da biblioteca `react-native-ble-plx`.
+- [Firmware do sensor](firmware/README.md): o ESP32 com DHT11 e BH1750, o contrato BLE que o app consome e a
+  [montagem na protoboard](firmware/instrucoes_montagem.md).
 - [Notificações de desvio](src/infraestrutura/notificacoes/README.md): a porta do notificador, a verificação
   em segundo plano e por que o mesmo desvio não avisa duas vezes.

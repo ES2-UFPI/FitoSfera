@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
@@ -19,6 +20,7 @@ import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
 import RotaEditarApelido from '../../../app/editar/[id]/apelido';
 import RotaEditarAparencia from '../../../app/editar/[id]/index';
 import RotaPlanta from '../../../app/planta/[id]';
+import RotaSensor from '../../../app/sensor';
 import {
   criarContainerDeTeste,
   NotificadorFalso,
@@ -44,6 +46,7 @@ export function renderizarApp(
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
   } = {},
 ): {
@@ -63,6 +66,7 @@ export function renderizarApp(
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
     regas: opcoes.regas,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
+    pareamentoDoSensor: opcoes.pareamentoDoSensor,
     permitirNotificacao: opcoes.permitirNotificacao,
   });
 
@@ -86,6 +90,7 @@ export function renderizarApp(
       'cadastro/aparencia': RotaMontarAparencia,
       'cadastro/apelido': RotaBatizar,
       'planta/[id]': RotaPlanta,
+      sensor: RotaSensor,
       'editar/[id]/_layout': LayoutDaEdicao,
       'editar/[id]/index': RotaEditarAparencia,
       'editar/[id]/apelido': RotaEditarApelido,
