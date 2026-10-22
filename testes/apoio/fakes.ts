@@ -200,7 +200,9 @@ export function criarContainerDeTeste(
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
-    : new RepositorioDePlantasEmMemoria(opcoes.plantas);
+    : opcoes.falhaAoCadastrar
+      ? new RepositorioQueFalhaAoGravar(opcoes.plantas)
+      : new RepositorioDePlantasEmMemoria(opcoes.plantas);
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
   const leituras = opcoes.sensor ?? new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);

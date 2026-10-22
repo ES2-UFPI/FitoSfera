@@ -8,6 +8,8 @@ const ignorarPratica = ['<rootDir>/fitosfera-pratica'];
 module.exports = {
   // Metade dos núcleos: com todos, os testes de tela disputam CPU com o Metro e o editor e estouram o tempo.
   maxWorkers: '50%',
+  // As telas de cadastro desenham dezenas de SVGs; rodando em paralelo, 5 s não basta.
+  testTimeout: 15000,
   projects: [
     {
       displayName: 'unidade',
@@ -22,8 +24,6 @@ module.exports = {
     {
       displayName: 'telas',
       preset: 'jest-expo',
-      // As telas de cadastro desenham dezenas de SVGs; rodando em paralelo, 5 s não basta.
-      testTimeout: 15000,
       roots: ['<rootDir>/testes/telas'],
       setupFilesAfterEnv: ['<rootDir>/testes/telas/configurar.ts'],
       moduleNameMapper: {

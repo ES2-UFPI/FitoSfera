@@ -33,6 +33,7 @@ export function renderizarApp(
     especies?: readonly EspecieVegetal[];
     url?: string;
     falharAoLer?: boolean;
+    falhaAoCadastrar?: boolean;
     leitura?: Leitura | null | 'falha';
     sensor?: SensorDeAmbiente;
     agora?: Date;
@@ -50,6 +51,7 @@ export function renderizarApp(
     plantas: opcoes.plantas,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
+    falhaAoCadastrar: opcoes.falhaAoCadastrar,
     leitura: opcoes.leitura,
     sensor: opcoes.sensor,
     agora: opcoes.agora,
