@@ -36,6 +36,7 @@ de segurança:
 ```json
 {
   "id": "k3f9a2",
+  "idJardim": "jardim-principal",
   "idEspecie": "tomate",
   "apelido": "Tomatinho",
   "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
@@ -47,6 +48,10 @@ de segurança:
   }
 }
 ```
+
+`idJardim` identifica o jardim ao qual a planta pertence. Registros antigos sem esse campo são lidos como parte do
+`jardim-principal`; o campo é gravado na próxima vez que o registro for salvo. Essa compatibilidade mantém os
+dados existentes sem exigir uma nova versão do schema.
 
 `cadastradaEm` é a data e hora do cadastro em ISO 8601. Registros gravados antes de esse campo existir, ou com
 uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não

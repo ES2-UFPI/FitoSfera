@@ -2,6 +2,7 @@ import { Aparencia } from './Aparencia';
 import { FaixasRecomendadas } from './FaixaRecomendada';
 
 export const LIMITE_DO_APELIDO = 30;
+export const ID_JARDIM_PRINCIPAL = 'jardim-principal';
 
 export class ApelidoInvalido extends Error {
   constructor() {
@@ -14,6 +15,7 @@ export class ApelidoInvalido extends Error {
 export class Planta {
   private constructor(
     readonly id: string,
+    readonly idJardim: string,
     readonly idEspecie: string,
     readonly apelido: string,
     readonly aparencia: Aparencia,
@@ -25,6 +27,7 @@ export class Planta {
 
   static criar(dados: {
     id: string;
+    idJardim?: string;
     idEspecie: string;
     apelido: string;
     aparencia: Aparencia;
@@ -37,6 +40,7 @@ export class Planta {
     if (tamanho === 0 || tamanho > LIMITE_DO_APELIDO) throw new ApelidoInvalido();
     return new Planta(
       dados.id,
+      dados.idJardim ?? ID_JARDIM_PRINCIPAL,
       dados.idEspecie,
       apelido,
       dados.aparencia,

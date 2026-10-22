@@ -1,11 +1,12 @@
 import { APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
-import { Planta } from '@/dominio/modelos/Planta';
+import { ID_JARDIM_PRINCIPAL, Planta } from '@/dominio/modelos/Planta';
 import { deRegistro, paraRegistro } from '@/infraestrutura/persistencia/MapeadorDePlanta';
 import { FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
 
 test('ida e volta preserva todos os campos', () => {
   const planta = Planta.criar({
     id: 'p1',
+    idJardim: 'varanda',
     idEspecie: 'tomate',
     apelido: 'Tom',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
@@ -46,6 +47,16 @@ test.each([undefined, null, 'ontem', 42])('registro antigo com data %p continua 
 
 test('registro sem aparência ganha a aparência inicial', () => {
   expect(deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom' })?.aparencia).toEqual(APARENCIA_INICIAL);
+});
+
+test('registro antigo sem jardim entra no jardim principal', () => {
+  expect(deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom' })?.idJardim).toBe(ID_JARDIM_PRINCIPAL);
+});
+
+test.each([null, 42, ''])('id de jardim inválido %p usa o jardim principal', (idJardim) => {
+  expect(deRegistro({ id: 'p1', idJardim, idEspecie: 'tomate', apelido: 'Tom' })?.idJardim).toBe(
+    ID_JARDIM_PRINCIPAL,
+  );
 });
 
 test('registro com id de forma desconhecido mantém o resto da aparência', () => {
