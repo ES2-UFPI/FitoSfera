@@ -1,9 +1,10 @@
 import { normalizarAparencia } from '@/dominio/modelos/Aparencia';
 import { FaixaRecomendada, FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { Planta } from '@/dominio/modelos/Planta';
+import { ID_JARDIM_PRINCIPAL, Planta } from '@/dominio/modelos/Planta';
 
 export interface RegistroDePlanta {
   id: string;
+  idJardim: string;
   idEspecie: string;
   apelido: string;
   aparencia: { forma: string; folhagem: string; destaque: string; vaso: string };
@@ -16,6 +17,7 @@ export interface RegistroDePlanta {
 export function paraRegistro(planta: Planta): RegistroDePlanta {
   return {
     id: planta.id,
+    idJardim: planta.idJardim,
     idEspecie: planta.idEspecie,
     apelido: planta.apelido,
     aparencia: { ...planta.aparencia },
@@ -27,11 +29,15 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
 /** Devolve null para o que não dá para ler, em vez de derrubar a listagem inteira. */
 export function deRegistro(bruto: unknown): Planta | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { id, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas } = bruto as Record<string, unknown>;
+  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas } = bruto as Record<
+    string,
+    unknown
+  >;
   if (typeof id !== 'string' || typeof idEspecie !== 'string' || typeof apelido !== 'string') return null;
   try {
     return Planta.criar({
       id,
+      idJardim: typeof idJardim === 'string' && idJardim.length > 0 ? idJardim : ID_JARDIM_PRINCIPAL,
       idEspecie,
       apelido,
       aparencia: normalizarAparencia(aparencia),
