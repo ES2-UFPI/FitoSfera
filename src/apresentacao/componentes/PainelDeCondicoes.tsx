@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
 import { CORES } from '../tema/cores';
@@ -7,10 +7,7 @@ import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from './IconesDasCondicoes';
 
-/**
- * Valores já preparados para exibição. A futura `Leitura` do domínio poderá ser
- * convertida para este formato sem acoplar o painel à implementação do sensor.
- */
+
 export interface LeituraDoPainel {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
@@ -33,7 +30,7 @@ export interface FaixasRecomendadasDoPainel {
 export type EstadoDoPainel =
   | { readonly tipo: 'carregando' }
   | { readonly tipo: 'indisponivel' }
-  | { readonly tipo: 'sem-leitura' }
+  | { readonly tipo: 'sem-leitura'; readonly faixasRecomendadas?: FaixasRecomendadasDoPainel }
   | {
       readonly tipo: 'leitura';
       readonly leitura: LeituraDoPainel;
@@ -70,20 +67,19 @@ function Indicador({
   descricaoDaUnidade,
   icone,
   faixaRecomendada,
-  avaliar,
 }: {
   rotulo: string;
-  valor: number;
+  valor: number | null;
   unidade: string;
   descricaoDaUnidade: string;
   icone: ReactNode;
   faixaRecomendada?: FaixaDoPainel;
-  avaliar: boolean;
 }) {
-  const situacao = avaliar && faixaRecomendada ? compararMedicaoComFaixa(valor, faixaRecomendada) : null;
+  const situacao = valor !== null && faixaRecomendada ? compararMedicaoComFaixa(valor, faixaRecomendada) : null;
   const apresentacao = situacao === null ? null : APRESENTACAO_DA_SITUACAO[situacao];
   const foraDoIdeal = situacao !== null && situacao !== 'ideal';
-  const valorFormatado = formatarNumero(valor);
+  const valorFormatado = valor === null ? null : formatarNumero(valor);
+  const valorFalado = valorFormatado === null ? 'sem dados recentes' : `${valorFormatado} ${descricaoDaUnidade}`;
   const faixaVisivel = faixaRecomendada
     ? `${formatarNumero(faixaRecomendada.minimo)}–${formatarNumero(faixaRecomendada.maximo)}${unidade === '%' ? '' : ' '}${unidade}`
     : null;
@@ -95,15 +91,21 @@ function Indicador({
     <View
       style={[estilos.indicador, foraDoIdeal && estilos.indicadorForaDoIdeal]}
       accessible
-      accessibilityLabel={`${rotulo}: ${valorFormatado} ${descricaoDaUnidade}. ${descricaoDaFaixa}${
+      accessibilityLabel={`${rotulo}: ${valorFalado}. ${descricaoDaFaixa}${
         apresentacao ? ` ${apresentacao.texto}.` : ''
       }`}
     >
       <View style={estilos.icone}>{icone}</View>
       <Text style={TEXTO.rotulo}>{rotulo.toUpperCase()}</Text>
       <View style={estilos.linhaDoValor}>
-        <Text style={[estilos.valor, foraDoIdeal && estilos.valorForaDoIdeal]}>{valorFormatado}</Text>
-        <Text style={estilos.unidade}>{unidade}</Text>
+        {valorFormatado === null ? (
+          <Text style={estilos.semDados}>sem dados</Text>
+        ) : (
+          <>
+            <Text style={[estilos.valor, foraDoIdeal && estilos.valorForaDoIdeal]}>{valorFormatado}</Text>
+            <Text style={estilos.unidade}>{unidade}</Text>
+          </>
+        )}
       </View>
       <Text style={estilos.faixa}>{faixaVisivel ? `Ideal: ${faixaVisivel}` : 'Faixa ideal não informada'}</Text>
       {apresentacao ? (
@@ -115,6 +117,50 @@ function Indicador({
           </Text>
         </View>
       ) : null}
+    </View>
+  );
+}
+
+/** A partir desta escala de fonte do sistema, três colunas não cabem lado a lado num celular. */
+const FONTE_QUE_EMPILHA = 1.3;
+
+function Indicadores({
+  leitura,
+  faixas,
+}: {
+  leitura: LeituraDoPainel | null;
+  faixas?: FaixasRecomendadasDoPainel;
+}) {
+  const { fontScale } = useWindowDimensions();
+  return (
+    <View
+      testID="indicadores-das-condicoes"
+      style={[estilos.indicadores, fontScale >= FONTE_QUE_EMPILHA && estilos.indicadoresEmpilhados]}
+    >
+      <Indicador
+        rotulo="Umidade"
+        valor={leitura?.umidadePercentual ?? null}
+        unidade="%"
+        descricaoDaUnidade="por cento"
+        icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
+        faixaRecomendada={faixas?.umidadePercentual}
+      />
+      <Indicador
+        rotulo="Temperatura"
+        valor={leitura?.temperaturaCelsius ?? null}
+        unidade="°C"
+        descricaoDaUnidade="graus Celsius"
+        icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
+        faixaRecomendada={faixas?.temperaturaCelsius}
+      />
+      <Indicador
+        rotulo="Luz"
+        valor={leitura?.luminosidadeLux ?? null}
+        unidade="lux"
+        descricaoDaUnidade="lux"
+        icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
+        faixaRecomendada={faixas?.luminosidadeLux}
+      />
     </View>
   );
 }
@@ -147,9 +193,12 @@ export function PainelDeCondicoes({ estado }: Props) {
       ) : null}
 
       {estado.tipo === 'sem-leitura' ? (
-        <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">
-          Nenhuma leitura disponível ainda.
-        </Text>
+        <>
+          <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">
+            Nenhuma leitura disponível ainda.
+          </Text>
+          {estado.faixasRecomendadas ? <Indicadores leitura={null} faixas={estado.faixasRecomendadas} /> : null}
+        </>
       ) : null}
 
       {estado.tipo === 'leitura' ? (
@@ -169,35 +218,11 @@ export function PainelDeCondicoes({ estado }: Props) {
               <Text style={estilos.textoDoAviso}>Leitura desatualizada</Text>
             </View>
           ) : null}
-          <View style={estilos.indicadores}>
-            <Indicador
-              rotulo="Umidade"
-              valor={estado.leitura.umidadePercentual}
-              unidade="%"
-              descricaoDaUnidade="por cento"
-              icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
-              faixaRecomendada={estado.faixasRecomendadas?.umidadePercentual}
-              avaliar={!estado.desatualizada}
-            />
-            <Indicador
-              rotulo="Temperatura"
-              valor={estado.leitura.temperaturaCelsius}
-              unidade="°C"
-              descricaoDaUnidade="graus Celsius"
-              icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
-              faixaRecomendada={estado.faixasRecomendadas?.temperaturaCelsius}
-              avaliar={!estado.desatualizada}
-            />
-            <Indicador
-              rotulo="Luz"
-              valor={estado.leitura.luminosidadeLux}
-              unidade="lux"
-              descricaoDaUnidade="lux"
-              icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
-              faixaRecomendada={estado.faixasRecomendadas?.luminosidadeLux}
-              avaliar={!estado.desatualizada}
-            />
-          </View>
+          {/* Leitura velha não passa por atual: os valores somem e só as faixas ideais ficam. */}
+          <Indicadores
+            leitura={estado.desatualizada ? null : estado.leitura}
+            faixas={estado.faixasRecomendadas}
+          />
         </>
       ) : null}
     </View>
@@ -253,8 +278,8 @@ const estilos = StyleSheet.create({
     gap: ESPACO.pequeno,
   },
   simboloDoAviso: {
-    width: ESPACO.amplo,
-    height: ESPACO.amplo,
+    minWidth: ESPACO.amplo,
+    minHeight: ESPACO.amplo,
     borderRadius: RAIO.pilula,
     textAlign: 'center',
     fontFamily: FONTES.forte,
@@ -268,6 +293,9 @@ const estilos = StyleSheet.create({
   indicadores: {
     flexDirection: 'row',
     gap: ESPACO.pequeno,
+  },
+  indicadoresEmpilhados: {
+    flexDirection: 'column',
   },
   indicador: {
     flex: 1,
@@ -305,6 +333,11 @@ const estilos = StyleSheet.create({
   },
   valorForaDoIdeal: {
     color: CORES.statusAtencao,
+  },
+  semDados: {
+    fontFamily: FONTES.forte,
+    fontSize: 13,
+    color: CORES.textoApoio,
   },
   unidade: {
     fontFamily: FONTES.forte,

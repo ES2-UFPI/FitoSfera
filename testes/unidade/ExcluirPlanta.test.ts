@@ -46,6 +46,7 @@ test('as regas saem antes da planta: se a remoção da planta falhar, não sobra
       listar: () => plantas.listar(),
       obterPorId: (id) => plantas.obterPorId(id),
       adicionar: (p) => plantas.adicionar(p),
+      atualizar: (p) => plantas.atualizar(p),
       remover: async () => {
         ordem.push('planta');
         throw new Error('disco cheio');

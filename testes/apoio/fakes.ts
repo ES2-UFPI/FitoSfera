@@ -1,8 +1,11 @@
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
+import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
+import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -43,6 +46,11 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
     this.salvas.push(planta);
   }
 
+  async atualizar(planta: Planta) {
+    const posicao = this.salvas.findIndex((salva) => salva.id === planta.id);
+    if (posicao >= 0) this.salvas[posicao] = planta;
+  }
+
   async remover(id: string) {
     const posicao = this.salvas.findIndex((planta) => planta.id === id);
     if (posicao >= 0) this.salvas.splice(posicao, 1);
@@ -52,7 +60,12 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
 export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
   readonly salvas: Rega[] = [];
 
-  constructor(private readonly falharAoGravar = false) {}
+  constructor(
+    private readonly falharAoGravar = false,
+    iniciais: readonly Rega[] = [],
+  ) {
+    this.salvas.push(...iniciais);
+  }
 
   async gravar(rega: Rega) {
     if (this.falharAoGravar) throw new Error('armazenamento indisponível');
@@ -89,15 +102,27 @@ export class RepositorioQueFalhaAoGravar extends RepositorioDePlantasEmMemoria {
 
 /** Sensor de mentira: devolve a leitura combinada, nenhuma, ou falha. */
 export class SensorFixo implements SensorDeAmbiente {
+  private readonly observadores = new Set<(leitura: Leitura) => void>();
+  falharAoLerAtual = false;
+
   constructor(private readonly leitura: Leitura | null | 'falha' = null) {}
 
   async lerLeituraAtual(): Promise<Leitura | null> {
-    if (this.leitura === 'falha') throw new Error('sensor fora do ar');
+    if (this.leitura === 'falha' || this.falharAoLerAtual) throw new Error('sensor fora do ar');
     return this.leitura;
   }
 
-  observarLeituras(): CancelarObservacao {
-    return () => undefined;
+  observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
+    this.observadores.add(aoReceber);
+    return () => this.observadores.delete(aoReceber);
+  }
+
+  publicar(leitura: Leitura): void {
+    this.observadores.forEach((observador) => observador(leitura));
+  }
+
+  get quantidadeDeObservadores(): number {
+    return this.observadores.size;
   }
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
@@ -166,6 +191,7 @@ export function plantaDeTeste(
     apelido: string;
     aparencia: Aparencia;
     faixasRecomendadas: FaixasRecomendadas | null;
+    cadastradaEm: Date | null;
   }> = {},
 ): Planta {
   return Planta.criar({
@@ -188,6 +214,7 @@ export function criarContainerDeTeste(
     sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     permitirNotificacao?: boolean;
   } = {},
@@ -207,16 +234,19 @@ export function criarContainerDeTeste(
   const leituras = opcoes.sensor ?? new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
   const gerador = new GeradorSequencial();
-  const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega);
+  const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega, opcoes.regas);
   const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
   const avisos = new RepositorioDeAvisosEmMemoria();
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
+    obterLeituraAtual: new ObterLeituraAtual(leituras),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
+    editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
   };

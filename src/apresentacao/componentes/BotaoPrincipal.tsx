@@ -8,14 +8,12 @@ interface Props {
   titulo: string;
   aoTocar: () => void;
   desabilitado?: boolean;
-  /** Ocupa a largura toda, para o botão de avançar no rodapé das telas de cadastro. */
   largo?: boolean;
   testID?: string;
   icone?: ReactNode;
-  variante?: 'padrao' | 'rega';
+  variante?: 'padrao' | 'rega' | 'secundaria' | 'perigo';
 }
 
-/** A ação principal de cada tela: verde-folha, em formato de pílula. */
 export function BotaoPrincipal({
   titulo,
   aoTocar,
@@ -36,6 +34,8 @@ export function BotaoPrincipal({
       style={({ pressed }) => [
         estilos.botao,
         variante === 'rega' && estilos.rega,
+        variante === 'secundaria' && estilos.secundaria,
+        variante === 'perigo' && estilos.perigo,
         largo && estilos.largo,
         pressed && estilos.pressionado,
         desabilitado && estilos.desabilitado,
@@ -43,7 +43,7 @@ export function BotaoPrincipal({
     >
       <View style={estilos.conteudo}>
         {icone}
-        <Text style={TEXTO.botao}>{titulo}</Text>
+        <Text style={[TEXTO.botao, variante === 'secundaria' && estilos.textoSecundario]}>{titulo}</Text>
       </View>
     </Pressable>
   );
@@ -67,6 +67,15 @@ const estilos = StyleSheet.create({
   largo: { alignSelf: 'stretch', minHeight: 52 },
   conteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: ESPACO.pequeno },
   rega: { backgroundColor: CORES.acaoRega, shadowColor: CORES.sombraDaAcaoRega },
+  secundaria: {
+    backgroundColor: CORES.superficie,
+    borderWidth: 1.5,
+    borderColor: CORES.acao,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  textoSecundario: { color: CORES.acao },
+  perigo: { backgroundColor: CORES.erro, shadowColor: CORES.erro, shadowOpacity: 0.2 },
   pressionado: { transform: [{ scale: 0.97 }] },
   desabilitado: { opacity: 0.45 },
 });

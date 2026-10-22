@@ -2,9 +2,16 @@ import { createContext, ReactNode, useCallback, useContext, useMemo, useState } 
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 
+export interface EdicaoDaPlanta {
+  readonly idPlanta: string;
+  readonly apelido: string;
+}
+
 interface Rascunho {
   readonly especie: EspecieVegetal | null;
   readonly aparencia: Aparencia;
+  /** Null no cadastro; preenchido quando os passos editam uma planta existente. */
+  readonly edicao: EdicaoDaPlanta | null;
   escolherEspecie(especie: EspecieVegetal): void;
   mudarAparencia(parcial: Partial<Aparencia>): void;
 }
@@ -15,9 +22,16 @@ const ContextoDoRascunho = createContext<Rascunho | null>(null);
  * O que a pessoa já escolheu durante o cadastro. Vive no layout do cadastro: fechar o cadastro
  * descarta tudo, sem rascunho salvo.
  */
-export function ProvedorDoRascunho({ children }: { children: ReactNode }) {
-  const [especie, definirEspecie] = useState<EspecieVegetal | null>(null);
-  const [aparencia, definirAparencia] = useState<Aparencia>(APARENCIA_INICIAL);
+export function ProvedorDoRascunho({
+  children,
+  inicial,
+}: {
+  children: ReactNode;
+  inicial?: { especie: EspecieVegetal | null; aparencia: Aparencia; edicao: EdicaoDaPlanta };
+}) {
+  const [especie, definirEspecie] = useState<EspecieVegetal | null>(inicial?.especie ?? null);
+  const [aparencia, definirAparencia] = useState<Aparencia>(inicial?.aparencia ?? APARENCIA_INICIAL);
+  const edicao = inicial?.edicao ?? null;
 
   const escolherEspecie = useCallback((escolhida: EspecieVegetal) => definirEspecie(escolhida), []);
   const mudarAparencia = useCallback(
@@ -26,8 +40,8 @@ export function ProvedorDoRascunho({ children }: { children: ReactNode }) {
   );
 
   const valor = useMemo(
-    () => ({ especie, aparencia, escolherEspecie, mudarAparencia }),
-    [especie, aparencia, escolherEspecie, mudarAparencia],
+    () => ({ especie, aparencia, edicao, escolherEspecie, mudarAparencia }),
+    [especie, aparencia, edicao, escolherEspecie, mudarAparencia],
   );
   return <ContextoDoRascunho.Provider value={valor}>{children}</ContextoDoRascunho.Provider>;
 }

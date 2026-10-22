@@ -21,3 +21,26 @@ test('emoji conta como um caractere e acentos são preservados', () => {
   const apelido = 'Manjericão 🌿' + 'x'.repeat(18);
   expect(Planta.criar({ ...base, apelido }).apelido).toBe(apelido);
 });
+
+test('editar troca apelido e aparência e mantém espécie, data de cadastro e faixas', () => {
+  const faixasRecomendadas = {
+    umidadeDoAr: { minimo: 40, maximo: 70 },
+    temperatura: { minimo: 18, maximo: 28 },
+    luminosidade: { minimo: 5000, maximo: 20000 },
+  };
+  const cadastradaEm = new Date(2026, 9, 1, 9, 0);
+  const original = Planta.criar({ ...base, apelido: 'Tomatinho', cadastradaEm, faixasRecomendadas });
+  const aparencia = { ...APARENCIA_INICIAL, vaso: 'azul' as const };
+
+  const editada = original.editar({ apelido: '  Tomatão ', aparencia });
+
+  expect(editada).toEqual(
+    Planta.criar({ ...base, apelido: 'Tomatão', aparencia, cadastradaEm, faixasRecomendadas }),
+  );
+  expect(original.apelido).toBe('Tomatinho');
+});
+
+test('editar recusa apelido inválido', () => {
+  const original = Planta.criar({ ...base, apelido: 'Tomatinho' });
+  expect(() => original.editar({ apelido: ' ', aparencia: APARENCIA_INICIAL })).toThrow(ApelidoInvalido);
+});

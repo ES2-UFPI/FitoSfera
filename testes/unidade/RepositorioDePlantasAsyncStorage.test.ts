@@ -84,3 +84,21 @@ test('remover num conteúdo ilegível não apaga nada', async () => {
   await repo.remover('p1');
   expect(armazenamento.valores.get('fitosfera:v2:plantas')).toBe('{quebrado');
 });
+
+test('atualizar troca o registro no mesmo lugar, preservando registros que o app não entende', async () => {
+  await armazenamento.setItem('fitosfera:v2:plantas', JSON.stringify([{ id: 'x' }]));
+  await repo.adicionar(planta('p1', 'Antes'));
+  await repo.adicionar(planta('p2', 'Outra'));
+  await repo.atualizar(planta('p1', 'Depois'));
+  expect(gravado().map((r: { id: string; apelido?: string }) => [r.id, r.apelido])).toEqual([
+    ['x', undefined],
+    ['p1', 'Depois'],
+    ['p2', 'Outra'],
+  ]);
+});
+
+test('atualizar num conteúdo ilegível não apaga nada', async () => {
+  await armazenamento.setItem('fitosfera:v2:plantas', '{quebrado');
+  await repo.atualizar(planta('p1', 'Depois'));
+  expect(armazenamento.valores.get('fitosfera:v2:plantas')).toBe('{quebrado');
+});

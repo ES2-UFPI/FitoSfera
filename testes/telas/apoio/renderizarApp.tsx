@@ -4,6 +4,7 @@ import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDo
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
@@ -14,6 +15,9 @@ import LayoutDoCadastro from '../../../app/cadastro/_layout';
 import RotaBatizar from '../../../app/cadastro/apelido';
 import RotaMontarAparencia from '../../../app/cadastro/aparencia';
 import RotaBuscarEspecie from '../../../app/cadastro/index';
+import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
+import RotaEditarApelido from '../../../app/editar/[id]/apelido';
+import RotaEditarAparencia from '../../../app/editar/[id]/index';
 import RotaPlanta from '../../../app/planta/[id]';
 import {
   criarContainerDeTeste,
@@ -38,6 +42,7 @@ export function renderizarApp(
     sensor?: SensorDeAmbiente;
     agora?: Date;
     falharAoRegistrarRega?: boolean;
+    regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     permitirNotificacao?: boolean;
   } = {},
@@ -56,6 +61,7 @@ export function renderizarApp(
     sensor: opcoes.sensor,
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
+    regas: opcoes.regas,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
     permitirNotificacao: opcoes.permitirNotificacao,
   });
@@ -80,6 +86,9 @@ export function renderizarApp(
       'cadastro/aparencia': RotaMontarAparencia,
       'cadastro/apelido': RotaBatizar,
       'planta/[id]': RotaPlanta,
+      'editar/[id]/_layout': LayoutDaEdicao,
+      'editar/[id]/index': RotaEditarAparencia,
+      'editar/[id]/apelido': RotaEditarApelido,
     },
     { initialUrl: opcoes.url ?? '/' },
   );
