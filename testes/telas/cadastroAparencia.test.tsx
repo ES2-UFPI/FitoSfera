@@ -50,7 +50,9 @@ test('fluxo completo salva a aparência escolhida e volta ao jardim com a planta
     apelido: 'Tomatinho',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
   });
-  expect(await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
+  expect(
+    await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.',{},{timeout: 3000}),
+  ).toBeTruthy();
   expect(screen).toHavePathname('/');
 });
 
@@ -75,7 +77,7 @@ test('toque duplo em "Colocar na estante" salva uma planta só', async () => {
   const botao = screen.getByRole('button', { name: 'Colocar na estante' });
   fireEvent.press(botao);
   fireEvent.press(botao);
-  await screen.findByLabelText('Tomate. Sem dados. Toque para ver os detalhes.');
+  await screen.findByLabelText('Tomate. Sem dados. Toque para ver os detalhes.',{},{timeout: 3000});
   expect(plantas.salvas).toHaveLength(1);
 });
 

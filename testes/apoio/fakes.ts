@@ -93,6 +93,12 @@ export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
     throw new Error('armazenamento indisponível');
   }
 }
+/** Simula o armazenamento do aparelho recusando a gravação de uma planta nova. */
+export class RepositorioQueFalhaAoGravar extends RepositorioDePlantasEmMemoria {
+  async adicionar(): Promise<void> {
+    throw new Error('armazenamento indisponível');
+  }
+}
 
 /** Sensor de mentira: devolve a leitura combinada, nenhuma, ou falha. */
 export class SensorFixo implements SensorDeAmbiente {
@@ -203,6 +209,7 @@ export function criarContainerDeTeste(
     plantas?: Planta[];
     especies?: readonly EspecieVegetal[];
     falharAoLer?: boolean;
+    falhaAoCadastrar?: boolean;
     leitura?: Leitura | null | 'falha';
     sensor?: SensorDeAmbiente;
     agora?: Date;
@@ -220,7 +227,9 @@ export function criarContainerDeTeste(
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
-    : new RepositorioDePlantasEmMemoria(opcoes.plantas);
+    : opcoes.falhaAoCadastrar
+      ? new RepositorioQueFalhaAoGravar(opcoes.plantas)
+      : new RepositorioDePlantasEmMemoria(opcoes.plantas);
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
   const leituras = opcoes.sensor ?? new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
