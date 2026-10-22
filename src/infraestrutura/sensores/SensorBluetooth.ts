@@ -4,7 +4,7 @@ import {
   SensorEncontrado,
   SensorPareado,
 } from '@/aplicacao/portas/PareamentoDoSensor';
-import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
@@ -31,11 +31,13 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   private conexao: ConexaoBle | null = null;
   private estado: EstadoDaConexao = 'indisponivel';
   private ultimaLeitura: Leitura | null = null;
+  private ultimaComunicacao: Date | null = null;
   private inicio: Promise<void> | null = null;
   private reconexao: ReturnType<typeof setTimeout> | null = null;
   private encerrarConexao: (() => void) | null = null;
   private readonly observadores = new Set<(leitura: Leitura) => void>();
   private readonly esperas = new Set<(leitura: Leitura) => void>();
+  private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
 
   constructor(
     private readonly cliente: ClienteBle,
@@ -60,8 +62,22 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     return this.estado;
   }
 
-  pedirPermissoes(): Promise<boolean> {
-    return this.cliente.pedirPermissoes();
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao {
+    void this.garantirInicio();
+    const observador = (conexao: ConexaoDoSensor) => aoMudar(conexao);
+    this.observadoresDaConexao.add(observador);
+    observador(this.conexaoAtual());
+    return () => this.observadoresDaConexao.delete(observador);
+  }
+
+  async pedirPermissoes(): Promise<boolean> {
+    const permitido = await this.cliente.pedirPermissoes();
+    // Quem estava parado por falta de permissão volta a tentar na hora, sem esperar a próxima tentativa.
+    if (permitido && this.estado === 'sem-permissao') {
+      this.cancelarReconexao();
+      void this.conectarAoPareado();
+    }
+    return permitido;
   }
 
   procurar(aoEncontrar: (sensor: SensorEncontrado) => void, aoFalhar: (falha: FalhaNoPareamento) => void): () => void {
@@ -126,7 +142,8 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     await this.desconectar();
     await this.guarda.esquecer();
     this.ultimaLeitura = null;
-    this.estado = 'indisponivel';
+    this.ultimaComunicacao = null;
+    this.definirEstado('indisponivel');
   }
 
   private garantirInicio(): Promise<void> {
@@ -143,6 +160,11 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   private async conectarAoPareado(): Promise<void> {
     const pareado = this.pareado;
     if (pareado === null || this.conexao !== null) return;
+    if (!(await this.cliente.temPermissoes().catch(() => false))) {
+      this.definirEstado('sem-permissao');
+      this.agendarReconexao();
+      return;
+    }
     try {
       await this.conectar(pareado.id);
     } catch {
@@ -151,23 +173,23 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   }
 
   private async conectar(id: string): Promise<void> {
-    this.estado = 'conectando';
+    this.definirEstado('conectando');
     let conexao: ConexaoBle;
     try {
       conexao = await this.cliente.conectar(id);
     } catch (erro) {
-      this.estado = this.pareado === null ? 'indisponivel' : 'desconectado';
+      this.definirEstado(this.pareado === null ? 'indisponivel' : 'desconectado');
       throw erro;
     }
     this.conexao = conexao;
-    this.estado = 'conectado';
+    this.definirEstado('conectado');
 
     const pararDeMonitorar = conexao.monitorar((valor) => this.receber(valor));
     const pararDeVigiar = conexao.aoCair(() => {
       if (this.conexao !== conexao) return;
       this.encerrarConexao?.();
       this.conexao = null;
-      this.estado = 'desconectado';
+      this.definirEstado('desconectado');
       this.agendarReconexao();
     });
     this.encerrarConexao = () => {
@@ -186,8 +208,20 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     if (pacote === null) return;
     const leitura: Leitura = { ...pacote, medidaEm: this.relogio.agora() };
     this.ultimaLeitura = leitura;
+    this.ultimaComunicacao = leitura.medidaEm;
     this.esperas.forEach((resolver) => resolver(leitura));
     this.observadores.forEach((observador) => observador(leitura));
+  }
+
+  private definirEstado(estado: EstadoDaConexao): void {
+    if (estado === this.estado) return;
+    this.estado = estado;
+    const conexao = this.conexaoAtual();
+    this.observadoresDaConexao.forEach((observador) => observador(conexao));
+  }
+
+  private conexaoAtual(): ConexaoDoSensor {
+    return { estado: this.estado, ultimaComunicacao: this.ultimaComunicacao };
   }
 
   private esperarLeitura(): { promessa: Promise<Leitura | null>; cancelar(): void } {
@@ -222,6 +256,6 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     this.encerrarConexao?.();
     this.conexao = null;
     if (conexao !== null) await conexao.desconectar().catch(() => undefined);
-    this.estado = this.pareado === null ? 'indisponivel' : 'desconectado';
+    this.definirEstado(this.pareado === null ? 'indisponivel' : 'desconectado');
   }
 }

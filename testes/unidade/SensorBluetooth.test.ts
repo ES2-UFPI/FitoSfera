@@ -1,4 +1,5 @@
 import { FalhaNoPareamento, SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
+import { ConexaoDoSensor } from '@/dominio/modelos/EstadoDaConexao';
 import { ClienteBle, ConexaoBle, DispositivoBle, EstadoDoBluetooth } from '@/infraestrutura/sensores/ClienteBle';
 import {
   ESPERA_PARA_RECONECTAR_MS,
@@ -58,8 +59,13 @@ class ClienteFalso implements ClienteBle {
   buscaParada = false;
   private aoEncontrar: ((dispositivo: DispositivoBle) => void) | null = null;
 
+  temPermissao = true;
   async pedirPermissoes() {
+    if (this.permitir) this.temPermissao = true;
     return this.permitir;
+  }
+  async temPermissoes() {
+    return this.temPermissao;
   }
   async consultarEstado() {
     return this.estado;
@@ -258,5 +264,76 @@ describe('pareamento', () => {
     expect(guarda.sensor).toBeNull();
     expect(await sensor.lerLeituraAtual()).toBeNull();
     expect(await sensor.consultarEstadoDaConexao()).toBe('indisponivel');
+  });
+});
+
+describe('estado da conexão', () => {
+  const estados = (aoMudar: jest.Mock) => aoMudar.mock.calls.map(([conexao]: [ConexaoDoSensor]) => conexao.estado);
+
+  test('avisa na hora e a cada mudança: conectando e conectado', async () => {
+    const { sensor } = montar(SENSOR);
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(estados(aoMudar)).toEqual(['indisponivel', 'conectando', 'conectado']);
+  });
+
+  test('quando a ligação cai durante o uso, avisa "desconectado" com a hora da última comunicação', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.ultima.cair();
+
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: instante });
+  });
+
+  test('sem leitura nenhuma, a última comunicação é desconhecida', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.falharAoConectar = true;
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: null });
+  });
+
+  test('sem permissão de Bluetooth, avisa "sem-permissao" e não tenta conectar', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.temPermissao = false;
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(estados(aoMudar)).toEqual(['indisponivel', 'sem-permissao']);
+    expect(cliente.conexoes).toHaveLength(0);
+  });
+
+  test('dar a permissão reconecta na hora, sem esperar a próxima tentativa', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.temPermissao = false;
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    await sensor.pedirPermissoes();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(estados(aoMudar).slice(-2)).toEqual(['conectando', 'conectado']);
+  });
+
+  test('cancelar a observação para os avisos', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoMudar = jest.fn();
+    const cancelar = sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+    cancelar();
+    const avisos = aoMudar.mock.calls.length;
+
+    cliente.ultima.cair();
+
+    expect(aoMudar).toHaveBeenCalledTimes(avisos);
   });
 });

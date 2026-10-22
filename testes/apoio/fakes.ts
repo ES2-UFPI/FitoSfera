@@ -1,3 +1,4 @@
+import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -14,7 +15,7 @@ import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Rega } from '@/dominio/modelos/Rega';
@@ -127,8 +128,28 @@ export class SensorFixo implements SensorDeAmbiente {
   }
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
-    if (this.leitura === 'falha') return 'desconectado';
-    return this.leitura === null ? 'indisponivel' : 'conectado';
+    return this.conexaoAtual().estado;
+  }
+
+  private conexao: ConexaoDoSensor | null = null;
+  private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
+
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao {
+    this.observadoresDaConexao.add(aoMudar);
+    aoMudar(this.conexaoAtual());
+    return () => this.observadoresDaConexao.delete(aoMudar);
+  }
+
+  private conexaoAtual(): ConexaoDoSensor {
+    if (this.conexao !== null) return this.conexao;
+    if (this.leitura === 'falha') return { estado: 'desconectado', ultimaComunicacao: null };
+    if (this.leitura === null) return { estado: 'indisponivel', ultimaComunicacao: null };
+    return { estado: 'conectado', ultimaComunicacao: this.leitura.medidaEm };
+  }
+
+  mudarConexao(conexao: ConexaoDoSensor): void {
+    this.conexao = conexao;
+    this.observadoresDaConexao.forEach((observador) => observador(conexao));
   }
 }
 
@@ -243,6 +264,7 @@ export function criarContainerDeTeste(
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     obterLeituraAtual: new ObterLeituraAtual(leituras),
+    conexaoDoSensor: new AcompanharConexaoDoSensor(leituras),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),

@@ -8,12 +8,14 @@ import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
 import { IconeRegador } from '../componentes/IconeRegador';
 import {
   EstadoDoPainel,
   FaixasRecomendadasDoPainel,
   PainelDeCondicoes,
 } from '../componentes/PainelDeCondicoes';
+import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { APRESENTACAO_DO_STATUS } from '../estante/textosDoStatus';
@@ -50,6 +52,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const { container, recarregarJardim } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
+  const conexao = useConexaoDoSensor();
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
@@ -245,7 +248,10 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               </View>
             </View>
           </View>
-          <PainelDeCondicoes estado={estadoDoPainel(item, atualizandoLeitura)} />
+          <PainelDeCondicoes
+            estado={estadoDoPainel(item, atualizandoLeitura)}
+            origem={<IndicadorDeConexao conexao={conexao} />}
+          />
           <CartaoDoHistorico estado={historico}>
             <BotaoPrincipal
               titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}

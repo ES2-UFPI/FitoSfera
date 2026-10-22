@@ -12,6 +12,8 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
+import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import {
   descreverSinal,
@@ -52,6 +54,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
   const { recarregarJardim } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
+  const conexao = useConexaoDoSensor();
   const [etapa, definirEtapa] = useState<Etapa>({ tipo: 'permissao' });
   const [encontrados, definirEncontrados] = useState<ReadonlyMap<string, SensorEncontrado>>(new Map());
   const pararBusca = useRef<(() => void) | null>(null);
@@ -118,6 +121,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
           Parear sensor
         </Text>
         <Text style={TEXTO.corpo}>Ligue o sensor FitoSfera e deixe-o perto do celular.</Text>
+        <IndicadorDeConexao conexao={conexao} />
 
         {etapa.tipo === 'permissao' ? (
           <Text style={TEXTO.corpo} accessibilityLiveRegion="polite">
