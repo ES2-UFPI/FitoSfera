@@ -9,6 +9,7 @@ import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
@@ -209,6 +210,7 @@ export function criarContainerDeTeste(
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
   } = {},
 ): {
@@ -239,6 +241,7 @@ export function criarContainerDeTeste(
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
+    pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
   };
   return { container, plantas, regas, notificador, avisos };

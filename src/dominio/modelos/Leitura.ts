@@ -2,6 +2,7 @@
 export interface Leitura {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
-  readonly luminosidadeLux: number;
+  /** Null quando o sensor de luz não respondeu, mas temperatura e umidade chegaram. */
+  readonly luminosidadeLux: number | null;
   readonly medidaEm: Date;
 }

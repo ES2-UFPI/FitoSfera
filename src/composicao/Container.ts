@@ -9,6 +9,7 @@ import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
@@ -22,5 +23,6 @@ export interface Container {
   readonly registrarRega: RegistrarRega;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly controleDoSensorDeDesenvolvimento: ControleDoSensorDeDesenvolvimento | null;
+  readonly pareamentoDoSensor: PareamentoDoSensor | null;
   readonly avaliarLeitura: AvaliarLeitura;
 }

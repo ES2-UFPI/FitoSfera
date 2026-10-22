@@ -11,7 +11,7 @@ import { IconeLuz, IconeTemperatura, IconeUmidade } from './IconesDasCondicoes';
 export interface LeituraDoPainel {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
-  readonly luminosidadeLux: number;
+  readonly luminosidadeLux: number | null;
   readonly medidaEm: Date;
 }
 

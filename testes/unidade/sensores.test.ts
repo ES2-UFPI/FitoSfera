@@ -149,4 +149,23 @@ describe('escolherSensor (variável EXPO_PUBLIC_SENSOR)', () => {
   test('uma escolha explícita pode desativar o simulador em desenvolvimento', () => {
     expect(escolherSensor('indisponivel', relogio, true)).toBeInstanceOf(SensorIndisponivel);
   });
+
+  describe('bluetooth', () => {
+    const bluetooth = new SensorIndisponivel();
+    const criarBluetooth = () => bluetooth;
+
+    test.each(['bluetooth', ' Bluetooth '])('"%s" escolhe o sensor Bluetooth', (valor) => {
+      expect(escolherSensor(valor, relogio, true, criarBluetooth)).toBe(bluetooth);
+    });
+
+    test('sem valor, a produção usa o Bluetooth e o desenvolvimento continua no simulado', () => {
+      expect(escolherSensor(undefined, relogio, false, criarBluetooth)).toBe(bluetooth);
+      expect(escolherSensor(undefined, relogio, true, criarBluetooth)).toBeInstanceOf(SensorSimulado);
+    });
+
+    test('sem o módulo nativo (Expo Go, web), o Bluetooth vira indisponível', () => {
+      expect(escolherSensor('bluetooth', relogio, true, () => null)).toBeInstanceOf(SensorIndisponivel);
+      expect(escolherSensor(undefined, relogio, false, () => null)).toBeInstanceOf(SensorIndisponivel);
+    });
+  });
 });

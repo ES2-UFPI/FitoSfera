@@ -16,9 +16,16 @@ const config: ExpoConfig = {
   platforms: previaWeb ? ['android', 'web'] : ['android'],
   android: {
     package: 'com.fitosfera.app',
+    // Android 12+ usa BLUETOOTH_SCAN e BLUETOOTH_CONNECT; até o 11, a busca BLE exige localização.
+    permissions: [
+      'android.permission.BLUETOOTH_SCAN',
+      'android.permission.BLUETOOTH_CONNECT',
+      'android.permission.ACCESS_FINE_LOCATION',
+    ],
   },
   plugins: [
     'expo-router',
+    ['react-native-ble-plx', { isBackgroundEnabled: false, neverForLocation: true }],
     [
       'expo-splash-screen',
       {

@@ -15,6 +15,7 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
 
 Chaves reservadas para as próximas histórias, ainda sem código:
 

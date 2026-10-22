@@ -79,3 +79,17 @@ test('leitura do futuro (relógio do sensor adiantado) conta como recente', () =
   const adiantada = leitura({ medidaEm: new Date(agora.getTime() + 2 * 60_000) });
   expect(avaliarStatus({ leitura: adiantada, faixas, agora })).toBe('ok');
 });
+
+describe('leitura sem luminosidade (sensor de luz sem resposta)', () => {
+  test('com o resto dentro da faixa, não dá para dizer "ok": fica "sem-dados"', () => {
+    const avaliacao = avaliarCondicoes({ leitura: leitura({ luminosidadeLux: null }), faixas, agora });
+    expect(avaliacao.status).toBe('sem-dados');
+    expect(avaliacao.situacoes).toEqual({ umidadeDoAr: 'ideal', temperatura: 'ideal', luminosidade: null });
+  });
+
+  test('com outra medida fora da faixa, já é "atencao"', () => {
+    expect(avaliarStatus({ leitura: leitura({ luminosidadeLux: null, temperaturaCelsius: 35 }), faixas, agora })).toBe(
+      'atencao',
+    );
+  });
+});
