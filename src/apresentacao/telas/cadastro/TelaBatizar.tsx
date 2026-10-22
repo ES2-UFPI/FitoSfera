@@ -113,12 +113,12 @@ function MensagemDoCampo({ estado }: { estado: EstadodoCadastro }) {
   }
   if(estado.tipo === 'erro'){
     return (
-      <Text style={[estilos.textoDeAjuda, estilos.erro]} accessibilityLiveRegion='polite'>
+      <Text style={[estilos.textoDeAjuda, estilos.erro]} accessibilityRole='alert'>
         Ocorreu um erro ao salvar. Tente novamente.
       </Text>
     )
   }
-  return <Text style = {estilos.textoDeAjuda}>Esse nome aparece na etiquete da estante</Text>
+  return <Text style = {estilos.textoDeAjuda}>Esse nome aparece na etiqueta da estante</Text>
 }
 
 const estilos = StyleSheet.create({
