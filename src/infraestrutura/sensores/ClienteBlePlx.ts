@@ -13,18 +13,27 @@ export function bluetoothDisponivel(): boolean {
   return Platform.OS !== 'web' && NativeModules.BlePlx != null;
 }
 
+function permissoesNecessarias(): Permission[] {
+  const versao = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
+  return versao >= ANDROID_12
+    ? [PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN, PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT]
+    : [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
+}
+
 export class ClienteBlePlx implements ClienteBle {
   private readonly gerente = new BleManager();
 
   async pedirPermissoes(): Promise<boolean> {
     if (Platform.OS !== 'android') return true;
-    const versao = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
-    const permissoes: Permission[] =
-      versao >= ANDROID_12
-        ? [PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN, PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT]
-        : [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION];
+    const permissoes = permissoesNecessarias();
     const resultado = await PermissionsAndroid.requestMultiple(permissoes);
     return permissoes.every((permissao) => resultado[permissao] === PermissionsAndroid.RESULTS.GRANTED);
+  }
+
+  async temPermissoes(): Promise<boolean> {
+    if (Platform.OS !== 'android') return true;
+    const concedidas = await Promise.all(permissoesNecessarias().map((permissao) => PermissionsAndroid.check(permissao)));
+    return concedidas.every(Boolean);
   }
 
   async consultarEstado(): Promise<EstadoDoBluetooth> {

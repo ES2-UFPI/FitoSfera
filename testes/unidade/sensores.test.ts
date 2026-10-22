@@ -169,3 +169,33 @@ describe('escolherSensor (variável EXPO_PUBLIC_SENSOR)', () => {
     });
   });
 });
+
+describe('observarConexao', () => {
+  test('o indisponível avisa "indisponivel" na hora', () => {
+    const aoMudar = jest.fn();
+    new SensorIndisponivel().observarConexao(aoMudar);
+    expect(aoMudar).toHaveBeenCalledWith({ estado: 'indisponivel', ultimaComunicacao: null });
+  });
+
+  test('o simulado avisa quando é desligado e religado, com a hora da última leitura', async () => {
+    const instante = new Date('2026-10-22T13:00:00.000Z');
+    const sensor = new SensorSimulado(new RelogioParado(instante));
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await sensor.lerLeituraAtual();
+
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, desconectado: true });
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: instante });
+
+    sensor.definirConfiguracao(CONFIGURACAO_AUTOMATICA);
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'conectado', ultimaComunicacao: instante });
+  });
+
+  test('mudar só os níveis do simulado não avisa a conexão de novo', () => {
+    const sensor = new SensorSimulado(new RelogioParado());
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, umidade: 'alto' });
+    expect(aoMudar).toHaveBeenCalledTimes(1);
+  });
+});

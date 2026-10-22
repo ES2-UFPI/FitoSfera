@@ -1,4 +1,4 @@
-import { EstadoDaConexao } from '../modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '../modelos/EstadoDaConexao';
 import { Leitura } from '../modelos/Leitura';
 
 /** Encerra uma observação de leituras. Chamar mais de uma vez não tem efeito. */
@@ -14,4 +14,6 @@ export interface SensorDeAmbiente {
   /** Avisa cada leitura nova até a observação ser cancelada. */
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao;
   consultarEstadoDaConexao(): Promise<EstadoDaConexao>;
+  /** Avisa a situação da conexão na hora e a cada mudança, até a observação ser cancelada. */
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao;
 }

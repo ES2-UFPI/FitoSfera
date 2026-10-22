@@ -19,6 +19,8 @@ export interface ConexaoBle {
 /** O pedaço da biblioteca BLE de que o sensor precisa. Em teste, entra um cliente falso. */
 export interface ClienteBle {
   pedirPermissoes(): Promise<boolean>;
+  /** Confere, sem perguntar nada à pessoa, se as permissões já foram dadas. */
+  temPermissoes(): Promise<boolean>;
   consultarEstado(): Promise<EstadoDoBluetooth>;
   /** Só avisa dispositivos que anunciam o serviço do FitoSfera. */
   procurar(aoEncontrar: (dispositivo: DispositivoBle) => void, aoFalhar: (erro: unknown) => void): () => void;

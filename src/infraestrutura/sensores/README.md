@@ -1,13 +1,18 @@
 # Sensores do ambiente
 
-O domínio pede leituras pela porta [`SensorDeAmbiente`](../../dominio/portas/SensorDeAmbiente.ts), que tem três
+O domínio pede leituras pela porta [`SensorDeAmbiente`](../../dominio/portas/SensorDeAmbiente.ts), que tem quatro
 operações:
 
 | Operação | O que faz |
 | --- | --- |
 | `lerLeituraAtual()` | Devolve a leitura mais recente (`Leitura`), ou `null` quando ainda não há nenhuma. |
 | `observarLeituras(aoReceber)` | Avisa cada leitura nova; devolve uma função que encerra a observação. |
-| `consultarEstadoDaConexao()` | Devolve o `EstadoDaConexao`: `indisponivel`, `desconectado`, `conectando` ou `conectado`. |
+| `consultarEstadoDaConexao()` | Devolve o `EstadoDaConexao`: `indisponivel`, `sem-permissao`, `desconectado`, `conectando` ou `conectado`. |
+| `observarConexao(aoMudar)` | Avisa na hora e a cada mudança a `ConexaoDoSensor`: o estado e a hora da última comunicação (a chegada da última leitura). |
+
+O indicador de conexão do detalhe da planta e da tela de pareamento usa `observarConexao`, então muda assim que
+o estado muda, sem ficar consultando. Com o sensor Bluetooth, `sem-permissao` aparece quando as permissões de
+Bluetooth foram negadas; ao permitir na tela de pareamento, o app reconecta na hora.
 
 Uma `Leitura` tem umidade do ar (%), temperatura (°C), luminosidade (lux) e o momento da medição (`medidaEm`).
 A luminosidade é `null` quando o sensor de luz não respondeu mas os outros dois sim: nesse caso a planta fica

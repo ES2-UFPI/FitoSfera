@@ -1,3 +1,4 @@
+import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -16,6 +17,7 @@ export interface Container {
   readonly listarJardim: ListarJardimVirtual;
   readonly obterPlanta: ObterPlantaDoJardim;
   readonly obterLeituraAtual: ObterLeituraAtual;
+  readonly conexaoDoSensor: AcompanharConexaoDoSensor;
   readonly pesquisarEspecies: PesquisarEspecies;
   readonly cadastrarPlanta: CadastrarPlanta;
   readonly editarPlanta: EditarPlanta;
