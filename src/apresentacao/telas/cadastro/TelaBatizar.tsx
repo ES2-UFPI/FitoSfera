@@ -28,7 +28,7 @@ export function TelaBatizar() {
   const { container, recarregarJardim } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
-  const [apelido, definirApelido] = useState(especie?.nomeComum ?? '');
+  const [apelido, definirApelido] = useState(edicao?.apelido ?? especie?.nomeComum ?? '');
   const [estado, definirEstado] = useState<EstadodoCadastro>({ tipo: 'ocioso' });
   // O estado só atualiza no próximo render; a ref barra o segundo toque que chega no mesmo instante.
   const salvandoAgora = useRef(false);
@@ -39,7 +39,8 @@ export function TelaBatizar() {
     return () => clearTimeout(temporizador);
   }, [estado.tipo, navegador]);
 
-  if (especie === null) return <Redirect href="/cadastro" />;
+  if (especie === null && edicao === null) return <Redirect href="/cadastro" />;
+  const nomeDaEspecie = especie?.nomeComum ?? especie?.nomeComum ?? '';
 
   const tamanho = Array.from(apelido.trim()).length;
   const valido = tamanho > 0 && tamanho <= LIMITE_DO_APELIDO;
@@ -50,22 +51,18 @@ export function TelaBatizar() {
     salvandoAgora.current = true;
     definirEstado({ tipo: 'salvando' });
     try {
-      const planta = await container.cadastrarPlanta.executar({idEspecie : especie.id, apelido, aparencia});
-      await recarregarJardim();
-      definirEstado({ tipo: 'sucesso', apelidoSalvo: planta.apelido });
-    } catch {
-      definirEstado({ tipo: 'erro' });
       if (edicao) {
         await container.editarPlanta.executar(edicao.idPlanta, { apelido, aparencia });
         await recarregarJardim();
         navegador.dismissTo({ pathname: '/planta/[id]', params: { id: edicao.idPlanta } });
       } else if (especie) {
-        await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
+        const planta = await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
         await recarregarJardim();
-        navegador.dismissTo('/');
+        // O apelido vem da planta gravada: é ele que o domínio aparou e guardou na etiqueta.
+        definirEstado({ tipo: 'sucesso', apelidoSalvo: planta.apelido });
       }
-    } catch (falha) {
-      definirErro(falha instanceof Error ? falha.message : 'Não deu para salvar a planta. Tente de novo.');
+    } catch {
+      definirEstado({ tipo: 'erro' });
       salvandoAgora.current = false;
     }
   }
