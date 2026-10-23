@@ -49,7 +49,7 @@ function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPain
 }
 
 export function TelaDetalheDaPlanta({ id }: { id: string }) {
-  const { container, recarregarJardim } = useAplicativo();
+  const { container, recarregarJardim, idJardimSelecionado } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const conexao = useConexaoDoSensor();
@@ -130,7 +130,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   useFocusEffect(
     useCallback(() => {
       let atual = true;
-      container.obterPlanta.executar(id).then(
+      container.obterPlanta.executar(id, idJardimSelecionado).then(
         (encontrado) => {
           if (atual) definirItem(encontrado);
         },
@@ -142,35 +142,35 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       return () => {
         atual = false;
       };
-    }, [container, id]),
+    }, [container, id, idJardimSelecionado]),
   );
 
   useEffect(() => {
-    if (!item || item === 'falhou' || item.planta.id !== id) return;
+    if (!item || item === 'falhou' || item.planta.id !== id || item.planta.idJardim !== idJardimSelecionado) return;
     let ativo = true;
     let sequencia = 0;
     const cancelar = container.obterLeituraAtual.observar((leitura) => {
       const sequenciaDestaLeitura = ++sequencia;
-      void container.obterPlanta.executarComLeitura(id, leitura).then(
+      void container.obterPlanta.executarComLeitura(id, leitura, idJardimSelecionado).then(
         (atualizada) => {
           if (ativo && sequenciaDestaLeitura === sequencia && atualizada !== null) definirItem(atualizada);
         },
         (falha) => console.warn('Não deu para atualizar as condições da planta.', falha),
       );
-    });
+    }, idJardimSelecionado);
     return () => {
       ativo = false;
       cancelar();
     };
-  }, [container, id, item && item !== 'falhou' ? item.planta.id : null]);
+  }, [container, id, idJardimSelecionado, item && item !== 'falhou' ? item.planta.id : null]);
 
   async function atualizarLeitura() {
     if (atualizandoLeitura) return;
     definirAtualizandoLeitura(true);
     try {
-      const leitura = await container.obterLeituraAtual.executar();
+      const leitura = await container.obterLeituraAtual.executar(idJardimSelecionado);
       if (leitura !== null) {
-        const atualizada = await container.obterPlanta.executarComLeitura(id, leitura);
+        const atualizada = await container.obterPlanta.executarComLeitura(id, leitura, idJardimSelecionado);
         if (atualizada !== null) definirItem(atualizada);
       } else {
         definirItem((anterior) =>
@@ -220,7 +220,11 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       ) : null}
       {item && item !== 'falhou' ? (
         <ScrollView
-          contentContainerStyle={estilos.conteudo}
+          contentContainerStyle={[
+            estilos.conteudo,
+            { paddingBottom: margens.bottom + ESPACO.folgado },
+          ]}
+          scrollIndicatorInsets={{ bottom: margens.bottom }}
           refreshControl={
             <RefreshControl
               refreshing={atualizandoLeitura}
@@ -322,7 +326,6 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: ESPACO.grande,
     paddingTop: ESPACO.pequeno,
-    paddingBottom: ESPACO.folgado,
     gap: ESPACO.grande,
   },
   planta: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: ESPACO.grande },

@@ -5,6 +5,7 @@ import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
@@ -36,6 +37,7 @@ import {
 export function renderizarApp(
   opcoes: {
     plantas?: Planta[];
+    jardins?: Jardim[];
     especies?: readonly EspecieVegetal[];
     url?: string;
     falharAoLer?: boolean;
@@ -57,6 +59,7 @@ export function renderizarApp(
 } {
   const { container, plantas, regas, notificador, avisos } = criarContainerDeTeste({
     plantas: opcoes.plantas,
+    jardins: opcoes.jardins,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
     falhaAoCadastrar: opcoes.falhaAoCadastrar,

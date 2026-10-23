@@ -11,6 +11,7 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/GeradorDeIdentificadorAleatorio';
 import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
@@ -18,8 +19,11 @@ import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorD
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
-import { SensorBluetooth } from '@/infraestrutura/sensores/SensorBluetooth';
+import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
+import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
+import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
 import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
+import { SensoresSimuladosDosJardins } from '@/infraestrutura/sensores/SensoresSimuladosDosJardins';
 import { RelogioDoSistema } from '@/infraestrutura/tempo/RelogioDoSistema';
 import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
@@ -30,6 +34,7 @@ import { escolherSensor } from './escolherSensor';
 export function criarContainer(): Container {
   const armazenamento = new ArmazenamentoComMigracao(AsyncStorage, new MigradorDoArmazenamento(AsyncStorage));
   const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
+  const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
@@ -39,21 +44,25 @@ export function criarContainer(): Container {
   const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__, () =>
     criarSensorBluetooth(armazenamento, relogio),
   );
+  const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
+  const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados);
   const notificador = escolherNotificador(Platform.OS);
 
   return {
-    listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio),
-    obterPlanta: new ObterPlantaDoJardim(plantas, especies, sensor, relogio),
-    obterLeituraAtual: new ObterLeituraAtual(sensor),
-    conexaoDoSensor: new AcompanharConexaoDoSensor(sensor),
+    gerenciarJardins: new GerenciarJardins(jardins, gerador,
+      sensor instanceof CentralDeSensoresBluetooth ? sensor : undefined),
+    listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio, fontes),
+    obterPlanta: new ObterPlantaDoJardim(plantas, especies, sensor, relogio, fontes),
+    obterLeituraAtual: new ObterLeituraAtual(sensor, fontes),
+    conexaoDoSensor: new AcompanharConexaoDoSensor(sensor, fontes),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
-    controleDoSensorDeDesenvolvimento: sensor instanceof SensorSimulado ? sensor : null,
-    pareamentoDoSensor: sensor instanceof SensorBluetooth ? sensor : null,
-    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio),
+    controleDoSensorDeDesenvolvimento: simulados,
+    pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
+    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes),
   };
 }

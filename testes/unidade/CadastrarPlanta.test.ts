@@ -46,6 +46,15 @@ test('cadastrar a mesma espécie duas vezes cria duas plantas distintas', async 
   ]);
 });
 
+test('cadastro em outro jardim mantém a associação após reabrir o armazenamento', async () => {
+  const aparelho = new ArmazenamentoEmMemoria();
+  const plantas = new RepositorioDePlantasAsyncStorage(aparelho);
+  const cadastrar = new CadastrarPlanta(plantas, new RepositorioDeEspeciesLocal(ESPECIES_DE_TESTE),
+    new GeradorSequencial(), new RelogioParado(agora));
+  await cadastrar.executar({ ...pedido(), idJardim: 'sala' });
+  expect((await new RepositorioDePlantasAsyncStorage(aparelho).listar())[0].idJardim).toBe('sala');
+});
+
 test('espécie fora do catálogo lança EspecieNaoEncontrada e não grava nada', async () => {
   const { plantas, cadastrar } = montar();
   await expect(cadastrar.executar({ ...pedido(), idEspecie: 'nao-existe' })).rejects.toThrow(EspecieNaoEncontrada);

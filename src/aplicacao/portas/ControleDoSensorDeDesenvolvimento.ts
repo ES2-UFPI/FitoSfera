@@ -10,6 +10,6 @@ export interface ConfiguracaoDoSensorDeDesenvolvimento {
 
 /** Controle separado da porta do sensor: um adaptador real não precisa conhecer cenários de teste. */
 export interface ControleDoSensorDeDesenvolvimento {
-  obterConfiguracao(): ConfiguracaoDoSensorDeDesenvolvimento;
-  definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): void;
+  obterConfiguracao(idJardim?: string): ConfiguracaoDoSensorDeDesenvolvimento;
+  definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento, idJardim?: string): void;
 }

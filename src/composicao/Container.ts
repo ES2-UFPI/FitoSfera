@@ -9,11 +9,13 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
+  readonly gerenciarJardins: GerenciarJardins;
   readonly listarJardim: ListarJardimVirtual;
   readonly obterPlanta: ObterPlantaDoJardim;
   readonly obterLeituraAtual: ObterLeituraAtual;

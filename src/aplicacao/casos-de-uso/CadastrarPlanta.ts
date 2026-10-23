@@ -25,7 +25,7 @@ export class CadastrarPlanta {
     private readonly relogio: Relogio,
   ) {}
 
-  async executar(pedido: { idEspecie: string; apelido: string; aparencia: Aparencia }): Promise<Planta> {
+  async executar(pedido: { idEspecie: string; apelido: string; aparencia: Aparencia; idJardim?: string }): Promise<Planta> {
     const especie = await this.especies.obterPorId(pedido.idEspecie);
     if (especie === null) throw new EspecieNaoEncontrada(pedido.idEspecie);
     const planta = Planta.criar({

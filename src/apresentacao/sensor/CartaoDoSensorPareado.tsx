@@ -13,9 +13,10 @@ import { finalDoEndereco } from './textosDoSensor';
 type EstadoDoCartao = SensorPareado | null | undefined;
 
 export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDoSensor }) {
-  const { recarregarJardim } = useAplicativo();
+  const { container, recarregarJardim, recarregarJardins } = useAplicativo();
   const navegador = useRouter();
   const [pareado, definirPareado] = useState<EstadoDoCartao>(undefined);
+  const [todos, definirTodos] = useState<readonly SensorPareado[]>([]);
 
   useFocusEffect(
     useCallback(() => {
@@ -24,15 +25,22 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
         (lido) => atual && definirPareado(lido),
         () => atual && definirPareado(null),
       );
+      void pareamento.listarPareados?.().then((lista) => { if (atual) definirTodos(lista); });
       return () => {
         atual = false;
       };
     }, [pareamento]),
   );
 
-  async function esquecer() {
-    await pareamento.esquecer();
-    definirPareado(null);
+  async function esquecer(sensor: SensorPareado) {
+    for (const jardim of await container.gerenciarJardins.listar()) {
+      if (jardim.idSensor === sensor.id) await container.gerenciarJardins.desassociar(jardim.id);
+    }
+    await pareamento.esquecer(sensor.id);
+    const lista = pareamento.listarPareados ? await pareamento.listarPareados() : [];
+    definirTodos(lista);
+    definirPareado(lista[lista.length - 1] ?? null);
+    await recarregarJardins();
     await recarregarJardim();
   }
 
@@ -45,7 +53,7 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
       {pareado === null ? (
         <Text style={TEXTO.corpo}>Nenhum sensor pareado. Pareie o FitoSfera para as leituras virem do ambiente real.</Text>
       ) : null}
-      {pareado ? (
+      {pareado && !pareamento.listarPareados ? (
         <View style={estilos.pareado} accessible accessibilityLabel={`Pareado com ${pareado.nome}, final ${finalDoEndereco(pareado.id)}.`}>
           <View style={estilos.ponto} />
           <Text style={estilos.nome}>
@@ -53,6 +61,13 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
           </Text>
         </View>
       ) : null}
+      {pareamento.listarPareados ? todos.map((sensor) => (
+        <View key={sensor.id} style={estilos.pareado}>
+          <Text style={estilos.nome}>{sensor.nome} · final {finalDoEndereco(sensor.id)}</Text>
+          <BotaoPrincipal titulo={`Esquecer ${sensor.nome} · ${finalDoEndereco(sensor.id)}`} variante="secundaria"
+            aoTocar={() => void esquecer(sensor)} />
+        </View>
+      )) : null}
       {pareado !== undefined ? (
         <View style={estilos.botoes}>
           <BotaoPrincipal
@@ -60,8 +75,8 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
             aoTocar={() => navegador.push('/sensor')}
             largo
           />
-          {pareado ? (
-            <BotaoPrincipal titulo="Esquecer sensor" variante="secundaria" aoTocar={() => void esquecer()} largo />
+          {pareado && !pareamento.listarPareados ? (
+            <BotaoPrincipal titulo="Esquecer sensor" variante="secundaria" aoTocar={() => void esquecer(pareado)} largo />
           ) : null}
         </View>
       ) : null}

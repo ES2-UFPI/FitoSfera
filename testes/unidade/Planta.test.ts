@@ -1,10 +1,19 @@
 import { APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
-import { ApelidoInvalido, Planta } from '@/dominio/modelos/Planta';
+import { ApelidoInvalido, ID_JARDIM_PRINCIPAL, Planta } from '@/dominio/modelos/Planta';
 
 const base = { id: 'p1', idEspecie: 'tomate', aparencia: APARENCIA_INICIAL };
 
 test('criar apara os espaços do apelido', () => {
   expect(Planta.criar({ ...base, apelido: '  Tomatinho  ' }).apelido).toBe('Tomatinho');
+});
+
+test('planta sem jardim informado entra no jardim principal', () => {
+  expect(Planta.criar({ ...base, apelido: 'Tomatinho' }).idJardim).toBe(ID_JARDIM_PRINCIPAL);
+});
+
+test('editar preserva o jardim da planta', () => {
+  const original = Planta.criar({ ...base, idJardim: 'varanda', apelido: 'Tomatinho' });
+  expect(original.editar({ apelido: 'Tom', aparencia: APARENCIA_INICIAL }).idJardim).toBe('varanda');
 });
 
 test('apelido só com espaços é recusado', () => {

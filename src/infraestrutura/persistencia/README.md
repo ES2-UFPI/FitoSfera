@@ -15,6 +15,9 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v2:jardins` | Jardins (`id`, `nome`, `idSensor`) e ID do jardim selecionado. Ausente em instalações antigas, que usam o Jardim principal. | `RepositorioDeJardinsAsyncStorage` |
+| `fitosfera:v2:sensores-pareados` | Lista de sensores Bluetooth (`id`, `nome`), independentes da associação aos jardins. | `RepositorioDeSensoresPareadosAsyncStorage` |
+| `fitosfera:v2:sensor-pareado` | Formato antigo de sensor único, lido apenas enquanto a lista nova não foi gravada. | Compatibilidade com instalações anteriores |
 | `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
 
 Chaves reservadas para as próximas histórias, ainda sem código:
@@ -36,6 +39,7 @@ de segurança:
 ```json
 {
   "id": "k3f9a2",
+  "idJardim": "jardim-principal",
   "idEspecie": "tomate",
   "apelido": "Tomatinho",
   "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
@@ -47,6 +51,10 @@ de segurança:
   }
 }
 ```
+
+`idJardim` identifica o jardim ao qual a planta pertence. Registros antigos sem esse campo são lidos como parte do
+`jardim-principal`; o campo é gravado na próxima vez que o registro for salvo. Essa compatibilidade mantém os
+dados existentes sem exigir uma nova versão do schema.
 
 `cadastradaEm` é a data e hora do cadastro em ISO 8601. Registros gravados antes de esse campo existir, ou com
 uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não
