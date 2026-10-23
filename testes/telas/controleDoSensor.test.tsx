@@ -37,6 +37,15 @@ test('each garden has its own simulated readings and controls', () => {
   expect(controle.obterSensor('varanda')).not.toBe(controle.obterSensor('sala'));
 });
 
+test('the simulator association control is in Settings, not on the garden screen', async () => {
+  const controle = new SensoresSimuladosDosJardins(new RelogioParado(new Date('2026-10-18T13:00:00Z')));
+  renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+
+  expect(await screen.findByRole('button', { name: 'Associar simulador a este jardim' })).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', { name: 'Associar simulador a este jardim' }));
+  expect(await screen.findByText('Simulador associado a Jardim principal')).toBeTruthy();
+});
+
 test('mostra os cenários apenas quando há um sensor de desenvolvimento', async () => {
   renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: new ControleFixo() });
 

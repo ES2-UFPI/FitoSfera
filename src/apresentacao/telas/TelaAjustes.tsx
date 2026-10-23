@@ -7,6 +7,7 @@ import {
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from '../componentes/IconesDasCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { CORES } from '../tema/cores';
@@ -92,10 +93,19 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
 }
 
 export function TelaAjustes() {
-  const { container, idJardimSelecionado, jardins } = useAplicativo();
+  const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
   const margens = useSafeAreaInsets();
+  const jardimAtual = jardins.find((jardim) => jardim.id === idJardimSelecionado);
+  const simuladorAssociado = jardimAtual?.idSensor === 'simulado' || jardimAtual?.idSensor === `simulado:${idJardimSelecionado}`;
+
+  async function alternarAssociacaoSimulada() {
+    if (simuladorAssociado) await container.gerenciarJardins.desassociar(idJardimSelecionado);
+    else await container.gerenciarJardins.associarSensorSimulado(idJardimSelecionado);
+    await recarregarJardins();
+    await recarregarJardim();
+  }
 
   if (controle === null && pareamento === null) {
     return <TelaEmBreve titulo="Ajustes" descricao="Aqui você vai escolher o horário dos lembretes e o sensor." />;
@@ -111,23 +121,40 @@ export function TelaAjustes() {
           Ajustes
         </Text>
         {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
-        {controle ? <CartaoDoSensorDeDesenvolvimento key={idJardimSelecionado} controle={controle}
-          idJardim={idJardimSelecionado} nomeDoJardim={jardins.find((jardim) => jardim.id === idJardimSelecionado)?.nome ?? 'Jardim principal'} /> : null}
+        {controle ? (
+          <CartaoDoSensorDeDesenvolvimento
+            key={idJardimSelecionado}
+            controle={controle}
+            idJardim={idJardimSelecionado}
+            nomeDoJardim={jardimAtual?.nome ?? 'Jardim principal'}
+            simuladorAssociado={simuladorAssociado}
+            aoAlternarAssociacao={alternarAssociacaoSimulada}
+          />
+        ) : null}
       </ScrollView>
     </FundoAconchegante>
   );
 }
 
-function CartaoDoSensorDeDesenvolvimento({ controle, idJardim, nomeDoJardim }: {
+function CartaoDoSensorDeDesenvolvimento({
+  controle,
+  idJardim,
+  nomeDoJardim,
+  simuladorAssociado,
+  aoAlternarAssociacao,
+}: {
   controle: ControleDoSensorDeDesenvolvimento;
   idJardim: string;
   nomeDoJardim: string;
+  simuladorAssociado: boolean;
+  aoAlternarAssociacao(): Promise<void>;
 }) {
   const { container } = useAplicativo();
   const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(() =>
     controle.obterConfiguracao(idJardim),
   );
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
+  const [falhaAoAssociar, definirFalhaAoAssociar] = useState(false);
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -166,6 +193,25 @@ function CartaoDoSensorDeDesenvolvimento({ controle, idJardim, nomeDoJardim }: {
           trackColor={{ false: CORES.bordaSuave, true: CORES.acao }}
           thumbColor={CORES.superficie}
         />
+      </View>
+
+      <View style={estilos.vinculoDoJardim}>
+        <View style={estilos.titulosDoCabecalho}>
+          <Text style={estilos.tituloDaExplicacao}>Jardim monitorado</Text>
+          <Text style={TEXTO.apoio}>{simuladorAssociado ? `Simulador associado a ${nomeDoJardim}` : `Nenhum simulador associado a ${nomeDoJardim}`}</Text>
+        </View>
+        <BotaoPrincipal
+          titulo={simuladorAssociado ? 'Desassociar simulador' : 'Associar simulador a este jardim'}
+          variante="secundaria"
+          largo
+          aoTocar={() => {
+            definirFalhaAoAssociar(false);
+            void aoAlternarAssociacao().catch(() => definirFalhaAoAssociar(true));
+          }}
+        />
+        {falhaAoAssociar ? (
+          <Text style={estilos.erroDoVinculo} accessibilityRole="alert">Não foi possível alterar a associação. Tente novamente.</Text>
+        ) : null}
       </View>
 
       <View style={estilos.estadoDoSensor}>
@@ -351,6 +397,15 @@ const estilos = StyleSheet.create({
   },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACO.medio },
   titulosDoCabecalho: { flex: 1, gap: ESPACO.pequeno },
+  vinculoDoJardim: {
+    padding: ESPACO.medio,
+    gap: ESPACO.pequeno,
+    borderWidth: 1,
+    borderColor: CORES.bordaSuave,
+    borderRadius: RAIO.medio,
+    backgroundColor: CORES.fundoTopo,
+  },
+  erroDoVinculo: { ...TEXTO.apoio, color: CORES.erro },
   selo: {
     alignSelf: 'flex-start',
     paddingHorizontal: ESPACO.pequeno,
