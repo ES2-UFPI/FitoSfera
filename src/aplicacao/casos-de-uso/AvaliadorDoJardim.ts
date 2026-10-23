@@ -1,6 +1,7 @@
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
+import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 import { avaliarCondicoes } from '@/dominio/regras/StatusDaPlanta';
@@ -12,12 +13,14 @@ export class AvaliadorDoJardim {
     private readonly especies: RepositorioDeEspecies,
     private readonly sensor: SensorDeAmbiente,
     private readonly relogio: Relogio,
+    private readonly fontes?: FontesDeJardim,
   ) {}
 
   /** Uma leitura só para todas as plantas; sensor fora do ar vira "sem leitura", não erro. */
-  async lerSensor(): Promise<Leitura | null> {
+  async lerSensor(idJardim?: string): Promise<Leitura | null> {
     try {
-      return await this.sensor.lerLeituraAtual();
+      const sensor = idJardim && this.fontes ? await this.fontes.obter(idJardim) : this.sensor;
+      return await sensor.lerLeituraAtual();
     } catch {
       return null;
     }

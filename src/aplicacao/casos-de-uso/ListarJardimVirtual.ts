@@ -1,4 +1,5 @@
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
+import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
@@ -14,12 +15,14 @@ export class ListarJardimVirtual {
     especies: RepositorioDeEspecies,
     sensor: SensorDeAmbiente,
     relogio: Relogio,
+    fontes?: FontesDeJardim,
   ) {
-    this.avaliador = new AvaliadorDoJardim(especies, sensor, relogio);
+    this.avaliador = new AvaliadorDoJardim(especies, sensor, relogio, fontes);
   }
 
-  async executar(): Promise<readonly PlantaNoJardim[]> {
-    const [plantas, leitura] = await Promise.all([this.plantas.listar(), this.avaliador.lerSensor()]);
-    return Promise.all(plantas.map((planta) => this.avaliador.avaliar(planta, leitura)));
+  async executar(idJardim?: string): Promise<readonly PlantaNoJardim[]> {
+    const [plantas, leitura] = await Promise.all([this.plantas.listar(), this.avaliador.lerSensor(idJardim)]);
+    return Promise.all(plantas.filter((planta) => idJardim === undefined || planta.idJardim === idJardim)
+      .map((planta) => this.avaliador.avaliar(planta, leitura)));
   }
 }

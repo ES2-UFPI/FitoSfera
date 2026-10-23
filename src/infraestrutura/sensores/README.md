@@ -23,7 +23,7 @@ A luminosidade é `null` quando o sensor de luz não respondeu mas os outros doi
 | Valor de `EXPO_PUBLIC_SENSOR` | Implementação | Comportamento |
 | --- | --- | --- |
 | vazio | Depende do ambiente | Em desenvolvimento usa o simulado; em produção usa o Bluetooth. |
-| `bluetooth` | [`SensorBluetooth`](SensorBluetooth.ts) | O sensor físico do [firmware](../../../firmware/README.md), por BLE. Sem o módulo nativo (Expo Go, web), vira o indisponível. |
+| `bluetooth` | [`CentralDeSensoresBluetooth`](CentralDeSensoresBluetooth.ts) | O sensor físico do [firmware](../../../firmware/README.md), por BLE. Sem o módulo nativo (Expo Go, web), vira o indisponível. |
 | `indisponivel` ou qualquer outro valor | [`SensorIndisponivel`](SensorIndisponivel.ts) | Nunca tem leitura; as plantas aparecem como "sem dados". |
 | `simulado` | [`SensorSimulado`](SensorSimulado.ts) | Para desenvolvimento. Gera leituras de um ambiente de casa que variam ao longo do dia, a cada 5 segundos. |
 
@@ -36,9 +36,12 @@ EXPO_PUBLIC_SENSOR=simulado npm run web
 O valor também pode ir num arquivo `.env` na raiz do projeto. Em desenvolvimento, o simulador já é o padrão;
 use `EXPO_PUBLIC_SENSOR=indisponivel` para desativá-lo. Depois de mudar o valor, reinicie o Expo com `--clear`
 para o app ser montado de novo.
+Cada jardim precisa associar um sensor antes de exibir leituras; no desenvolvimento é possível associar seu próprio
+sensor simulado pela tela do jardim. Cenários e desconexão do simulador são independentes por jardim. Jardins sem
+sensor mostram "sem dados".
 
-Quando o simulador está ativo, a aba **Ajustes** permite escolher independentemente níveis automáticos, baixos
-ou altos de umidade, temperatura e luminosidade. As condições podem ser combinadas livremente; há também um
+Quando o simulador está ativo, a aba **Ajustes** permite escolher independentemente para o jardim selecionado níveis
+automáticos, baixos ou altos de umidade, temperatura e luminosidade. As condições podem ser combinadas livremente; há também um
 atalho para clima quente, seco e ensolarado e uma opção de desconexão. Esses controles nunca aparecem na
 configuração padrão de produção.
 
@@ -59,14 +62,17 @@ web o app continua abrindo, com o sensor indisponível.
 | [`ClienteBle.ts`](ClienteBle.ts) | O pedaço da biblioteca de que o sensor precisa. |
 | [`ClienteBlePlx.ts`](ClienteBlePlx.ts) | A implementação com a `react-native-ble-plx` e o pedido de permissões. É o único arquivo que importa a biblioteca, e só é carregado quando o módulo nativo existe. |
 | [`SensorBluetooth.ts`](SensorBluetooth.ts) | Implementa `SensorDeAmbiente` e `PareamentoDoSensor` (em `aplicacao/portas/`): conexão, reconexão e pareamento. |
+| [`CentralDeSensoresBluetooth.ts`](CentralDeSensoresBluetooth.ts) | Mantém os dispositivos pareados separados e escolhe uma conexão por ID. |
+| [`FontesDosJardins.ts`](FontesDosJardins.ts) | Resolve o sensor associado ao jardim; sem associação, usa o indisponível. |
 
 **Pareamento:** na aba **Ajustes**, "Parear sensor" abre a tela que pede as permissões (Bluetooth no Android 12+,
 localização no 11 ou antes), procura por 15 s os sensores que anunciam o serviço do FitoSfera e lista do sinal
 mais forte para o mais fraco. Todos se chamam `FitoSfera`, então a lista mostra o final do endereço. Tocar num
-sensor conecta e espera a primeira leitura (até 20 s); só então o sensor é guardado em
-`fitosfera:v2:sensor-pareado`.
+sensor conecta e espera a primeira leitura (até 20 s); só então é incluído em
+`fitosfera:v2:sensores-pareados`. Parear não associa automaticamente o dispositivo ao jardim: a escolha é feita
+na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua legível após atualizar o app.
 
-**Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor guardado. Se a ligação
+**Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo a cada 10 s. A hora da leitura é a da chegada do
 pacote, porque o firmware não tem relógio.
 

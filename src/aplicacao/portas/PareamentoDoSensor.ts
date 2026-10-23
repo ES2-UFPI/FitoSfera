@@ -35,5 +35,7 @@ export interface PareamentoDoSensor {
   /** Conecta, espera a primeira leitura e, só então, guarda o sensor para reconectar sozinho depois. */
   parear(sensor: SensorPareado): Promise<Leitura>;
   obterPareado(): Promise<SensorPareado | null>;
-  esquecer(): Promise<void>;
+  /** Quando há vários jardins, cada dispositivo continua pareado independentemente. */
+  listarPareados?(): Promise<readonly SensorPareado[]>;
+  esquecer(id?: string): Promise<void>;
 }

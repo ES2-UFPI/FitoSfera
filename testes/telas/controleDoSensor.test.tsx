@@ -4,6 +4,7 @@ import {
   ControleDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
+import { SensoresSimuladosDosJardins } from '@/infraestrutura/sensores/SensoresSimuladosDosJardins';
 import { plantaDeTeste, RelogioParado } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -25,6 +26,16 @@ class ControleFixo implements ControleDoSensorDeDesenvolvimento {
     this.configuracao = { ...configuracao };
   }
 }
+
+test('each garden has its own simulated readings and controls', () => {
+  const controle = new SensoresSimuladosDosJardins(new RelogioParado(new Date('2026-10-18T13:00:00Z')));
+  const automatica = { umidade: 'automatico', temperatura: 'automatico', luminosidade: 'automatico', desconectado: false } as const;
+  controle.definirConfiguracao({ ...automatica, umidade: 'baixo' }, 'varanda');
+  controle.definirConfiguracao({ ...automatica, umidade: 'alto' }, 'sala');
+  expect(controle.obterConfiguracao('varanda').umidade).toBe('baixo');
+  expect(controle.obterConfiguracao('sala').umidade).toBe('alto');
+  expect(controle.obterSensor('varanda')).not.toBe(controle.obterSensor('sala'));
+});
 
 test('mostra os cenários apenas quando há um sensor de desenvolvimento', async () => {
   renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: new ControleFixo() });

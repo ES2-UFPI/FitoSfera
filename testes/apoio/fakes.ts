@@ -9,6 +9,7 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { Container } from '@/composicao/Container';
@@ -18,6 +19,7 @@ import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
@@ -26,6 +28,7 @@ import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador'
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
+import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -56,6 +59,23 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
   async remover(id: string) {
     const posicao = this.salvas.findIndex((planta) => planta.id === id);
     if (posicao >= 0) this.salvas.splice(posicao, 1);
+  }
+}
+
+export class RepositorioDeJardinsEmMemoria implements RepositorioDeJardins {
+  jardins: Jardim[];
+  selecionado = JARDIM_PRINCIPAL.id;
+
+  constructor(iniciais: readonly Jardim[] = [JARDIM_PRINCIPAL]) { this.jardins = [...iniciais]; }
+
+  async listar(): Promise<readonly Jardim[]> { return [...this.jardins]; }
+  async obterSelecionado(): Promise<string> { return this.selecionado; }
+  async salvar(jardim: Jardim): Promise<void> {
+    this.jardins = [...this.jardins.filter((item) => item.id !== jardim.id), jardim];
+  }
+  async selecionar(id: string): Promise<void> {
+    if (!this.jardins.some((item) => item.id === id)) throw new Error('Jardim não encontrado.');
+    this.selecionado = id;
   }
 }
 
@@ -209,6 +229,7 @@ export class GeradorSequencial implements GeradorDeIdentificador {
 export function plantaDeTeste(
   parcial: Partial<{
     id: string;
+    idJardim: string;
     idEspecie: string;
     apelido: string;
     aparencia: Aparencia;
@@ -229,6 +250,7 @@ export function plantaDeTeste(
 export function criarContainerDeTeste(
   opcoes: {
     plantas?: Planta[];
+    jardins?: Jardim[];
     especies?: readonly EspecieVegetal[];
     falharAoLer?: boolean;
     falhaAoCadastrar?: boolean;
@@ -261,6 +283,7 @@ export function criarContainerDeTeste(
   const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
   const avisos = new RepositorioDeAvisosEmMemoria();
   const container: Container = {
+    gerenciarJardins: new GerenciarJardins(new RepositorioDeJardinsEmMemoria(opcoes.jardins), gerador),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     obterLeituraAtual: new ObterLeituraAtual(leituras),

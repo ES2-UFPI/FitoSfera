@@ -92,7 +92,7 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
 }
 
 export function TelaAjustes() {
-  const { container } = useAplicativo();
+  const { container, idJardimSelecionado, jardins } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
   const margens = useSafeAreaInsets();
@@ -111,16 +111,21 @@ export function TelaAjustes() {
           Ajustes
         </Text>
         {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
-        {controle ? <CartaoDoSensorDeDesenvolvimento controle={controle} /> : null}
+        {controle ? <CartaoDoSensorDeDesenvolvimento key={idJardimSelecionado} controle={controle}
+          idJardim={idJardimSelecionado} nomeDoJardim={jardins.find((jardim) => jardim.id === idJardimSelecionado)?.nome ?? 'Jardim principal'} /> : null}
       </ScrollView>
     </FundoAconchegante>
   );
 }
 
-function CartaoDoSensorDeDesenvolvimento({ controle }: { controle: ControleDoSensorDeDesenvolvimento }) {
+function CartaoDoSensorDeDesenvolvimento({ controle, idJardim, nomeDoJardim }: {
+  controle: ControleDoSensorDeDesenvolvimento;
+  idJardim: string;
+  nomeDoJardim: string;
+}) {
   const { container } = useAplicativo();
   const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(() =>
-    controle.obterConfiguracao(),
+    controle.obterConfiguracao(idJardim),
   );
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
 
@@ -128,11 +133,11 @@ function CartaoDoSensorDeDesenvolvimento({ controle }: { controle: ControleDoSen
   const sensorLigado = !configuracao.desconectado;
 
   function aplicar(novaConfiguracao: ConfiguracaoDoSensorDeDesenvolvimento) {
-    controleAtivo.definirConfiguracao(novaConfiguracao);
+    controleAtivo.definirConfiguracao(novaConfiguracao, idJardim);
     definirConfiguracao(novaConfiguracao);
     // O caso de uso concentra permissão, comparação, texto e deduplicação. A tela apenas pede uma nova
     // avaliação para o cenário de desenvolvimento produzir o aviso correspondente na hora.
-    if (!novaConfiguracao.desconectado) void container.avaliarLeitura.executar();
+    if (!novaConfiguracao.desconectado) void container.avaliarLeitura.executar(idJardim);
   }
 
   function alternarSensor(ligado: boolean) {
@@ -149,7 +154,7 @@ function CartaoDoSensorDeDesenvolvimento({ controle }: { controle: ControleDoSen
     <View style={estilos.cartao}>
       <View style={estilos.cabecalho}>
         <View style={estilos.titulosDoCabecalho}>
-          <Text style={TEXTO.subtitulo}>Sensor de desenvolvimento</Text>
+          <Text style={TEXTO.subtitulo}>Sensor simulado · {nomeDoJardim}</Text>
           <Text style={estilos.selo}>DADOS SIMULADOS</Text>
         </View>
         <Switch

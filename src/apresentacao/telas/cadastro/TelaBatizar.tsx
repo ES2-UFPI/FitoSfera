@@ -25,7 +25,7 @@ type EstadodoCadastro =
 /** Passo 3 do cadastro: dar um apelido e colocar a planta na estante. */
 export function TelaBatizar() {
   const { especie, aparencia, edicao } = useRascunho();
-  const { container, recarregarJardim } = useAplicativo();
+  const { container, recarregarJardim, idJardimSelecionado } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [apelido, definirApelido] = useState(edicao?.apelido ?? especie?.nomeComum ?? '');
@@ -56,7 +56,7 @@ export function TelaBatizar() {
         await recarregarJardim();
         navegador.dismissTo({ pathname: '/planta/[id]', params: { id: edicao.idPlanta } });
       } else if (especie) {
-        const planta = await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia });
+        const planta = await container.cadastrarPlanta.executar({ idEspecie: especie.id, apelido, aparencia, idJardim: idJardimSelecionado });
         await recarregarJardim();
         // O apelido vem da planta gravada: é ele que o domínio aparou e guardou na etiqueta.
         definirEstado({ tipo: 'sucesso', apelidoSalvo: planta.apelido });

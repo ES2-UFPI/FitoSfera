@@ -173,6 +173,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
           <View style={estilos.secao} accessibilityLiveRegion="polite">
             <Text style={TEXTO.subtitulo}>✓ Sensor pareado</Text>
             <Text style={TEXTO.corpo}>Primeira leitura: {resumirLeitura(etapa.leitura)}.</Text>
+            <Text style={TEXTO.apoio}>Escolha o jardim que este sensor monitora na tela do jardim.</Text>
             <BotaoPrincipal titulo="Concluir" aoTocar={() => navegador.back()} largo />
           </View>
         ) : null}

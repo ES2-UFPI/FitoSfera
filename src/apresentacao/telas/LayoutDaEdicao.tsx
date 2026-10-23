@@ -12,12 +12,12 @@ import { TEXTO } from '../tema/tipografia';
 
 /** Abre os passos de aparência e apelido do cadastro já preenchidos com a planta. */
 export function LayoutDaEdicao({ id }: { id: string }) {
-  const { container } = useAplicativo();
+  const { container, idJardimSelecionado } = useAplicativo();
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
 
   useEffect(() => {
     let atual = true;
-    container.obterPlanta.executar(id).then(
+    container.obterPlanta.executar(id, idJardimSelecionado).then(
       (encontrado) => {
         if (atual) definirItem(encontrado);
       },
@@ -29,7 +29,7 @@ export function LayoutDaEdicao({ id }: { id: string }) {
     return () => {
       atual = false;
     };
-  }, [container, id]);
+  }, [container, id, idJardimSelecionado]);
 
   if (item === undefined) return <FundoAconchegante />;
 
