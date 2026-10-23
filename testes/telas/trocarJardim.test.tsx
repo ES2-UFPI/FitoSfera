@@ -34,6 +34,8 @@ test('sensor associado a um jardim não pode ser associado ao outro', async () =
     jardins: [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }],
     pareamentoDoSensor: pareamento,
   });
+  expect(screen.queryByRole('button', { name: 'Associar sensor físico' })).toBeNull();
+  fireEvent.press(await screen.findByRole('button', { name: 'Mostrar opções do sensor' }));
   fireEvent.press(await screen.findByRole('button', { name: 'Associar sensor físico' }));
   fireEvent.press(screen.getByRole('button', { name: 'Associar FitoSfera · le-01' }));
   fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));

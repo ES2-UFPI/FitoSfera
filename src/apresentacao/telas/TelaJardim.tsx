@@ -30,6 +30,7 @@ export function TelaJardim() {
   const [erroDoJardim, definirErroDoJardim] = useState(false);
   const [sensores, definirSensores] = useState<readonly SensorPareado[]>([]);
   const [erroDoSensor, definirErroDoSensor] = useState('');
+  const [sensorAberto, definirSensorAberto] = useState(false);
   const [listaDeSensoresAberta, definirListaDeSensoresAberta] = useState(false);
   const margens = useSafeAreaInsets();
   const navegador = useRouter();
@@ -100,17 +101,20 @@ export function TelaJardim() {
 
   return (
     <FundoAconchegante style={{ paddingTop: margens.top }}>
-        <View style={estilos.cartaoDoJardim}>
-          <Text style={TEXTO.rotulo}>JARDIM ATUAL</Text>
-          <Text style={estilos.nomeDoJardim} numberOfLines={1}>{nomeDoJardim}</Text>
-          <Text style={TEXTO.apoio}>{lista.length} {lista.length === 1 ? 'planta' : 'plantas'} neste espaço</Text>
-          <BotaoPrincipal
-            titulo="Trocar ou criar jardim"
-            variante="secundaria"
-            largo
-            aoTocar={() => definirSeletorAberto(true)}
-          />
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Trocar ou criar jardim"
+          accessibilityHint={`Jardim atual: ${nomeDoJardim}`}
+          onPress={() => definirSeletorAberto(true)}
+          style={({ pressed }) => [estilos.cartaoDoJardim, pressed && estilos.cartaoPressionado]}
+        >
+          <View style={estilos.detalheDoCartaoCompacto}>
+            <Text style={TEXTO.rotulo}>JARDIM ATUAL</Text>
+            <Text style={estilos.nomeDoJardim} numberOfLines={1}>{nomeDoJardim}</Text>
+            <Text style={TEXTO.apoio}>{lista.length} {lista.length === 1 ? 'planta' : 'plantas'} neste espaço</Text>
+          </View>
+          <Text style={estilos.indicadorDeAbertura} accessibilityElementsHidden>⌄</Text>
+        </Pressable>
 
         <View style={estilos.cabecalhoJardim}>
           <CabecalhoDoJardim quantidade={lista.length} />
@@ -118,46 +122,58 @@ export function TelaJardim() {
 
         {container.pareamentoDoSensor || container.controleDoSensorDeDesenvolvimento ? (
           <View style={estilos.cartaoDoSensor}>
-            <View style={estilos.cabecalhoDoSensor}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={sensorAberto ? 'Ocultar opções do sensor' : 'Mostrar opções do sensor'}
+              accessibilityState={{ expanded: sensorAberto }}
+              onPress={() => definirSensorAberto((aberto) => !aberto)}
+              style={({ pressed }) => [estilos.cabecalhoDoSensor, pressed && estilos.cabecalhoPressionado]}
+            >
               <View style={[estilos.pontoDoSensor, (sensorFisico || sensorSimulado) && estilos.pontoAtivo]} />
               <View style={estilos.detalheDoSensor}>
                 <Text style={TEXTO.rotulo}>SENSOR DO AMBIENTE</Text>
-                <Text style={estilos.statusDoSensor}>{statusDoSensor}</Text>
+                <Text style={estilos.statusDoSensor} numberOfLines={1}>{statusDoSensor}</Text>
               </View>
-            </View>
-            <Text style={TEXTO.apoio}>As leituras deste sensor aparecem somente nas plantas deste jardim.</Text>
+              <Text style={estilos.indicadorDeAbertura} accessibilityElementsHidden>{sensorAberto ? '⌃' : '⌄'}</Text>
+            </Pressable>
 
-            {container.pareamentoDoSensor ? (
-              <View style={estilos.acoesDoSensor}>
-                <BotaoPrincipal
-                  titulo={listaDeSensoresAberta ? 'Fechar lista de sensores' : sensorFisico ? 'Trocar sensor físico' : 'Associar sensor físico'}
-                  variante="secundaria"
-                  largo
-                  aoTocar={() => definirListaDeSensoresAberta((aberta) => !aberta)}
-                />
-                {listaDeSensoresAberta ? (
-                  <>
-                    {sensores.map((sensor) => (
-                      <BotaoPrincipal
-                        key={sensor.id}
-                        titulo={`${sensor.id === jardimAtual?.idSensor ? 'Associado: ' : 'Associar '}${sensor.nome} · ${sensor.id.slice(-5)}`}
-                        variante="secundaria"
-                        largo
-                        aoTocar={() => void alterarSensorFisico(sensor.id)}
-                      />
-                    ))}
-                    <BotaoPrincipal titulo="Parear novo sensor" variante="secundaria" largo
-                      aoTocar={() => navegador.push('/sensor')} />
-                  </>
+            {sensorAberto ? (
+              <View style={estilos.conteudoDoSensor}>
+                <Text style={TEXTO.apoio}>As leituras deste sensor aparecem somente nas plantas deste jardim.</Text>
+
+                {container.pareamentoDoSensor ? (
+                  <View style={estilos.acoesDoSensor}>
+                    <BotaoPrincipal
+                      titulo={listaDeSensoresAberta ? 'Fechar lista de sensores' : sensorFisico ? 'Trocar sensor físico' : 'Associar sensor físico'}
+                      variante="secundaria"
+                      largo
+                      aoTocar={() => definirListaDeSensoresAberta((aberta) => !aberta)}
+                    />
+                    {listaDeSensoresAberta ? (
+                      <>
+                        {sensores.map((sensor) => (
+                          <BotaoPrincipal
+                            key={sensor.id}
+                            titulo={`${sensor.id === jardimAtual?.idSensor ? 'Associado: ' : 'Associar '}${sensor.nome} · ${sensor.id.slice(-5)}`}
+                            variante="secundaria"
+                            largo
+                            aoTocar={() => void alterarSensorFisico(sensor.id)}
+                          />
+                        ))}
+                        <BotaoPrincipal titulo="Parear novo sensor" variante="secundaria" largo
+                          aoTocar={() => navegador.push('/sensor')} />
+                      </>
+                    ) : null}
+                    {jardimAtualTemSensorFisico(jardimAtual?.idSensor) ? (
+                      <BotaoPrincipal titulo="Desassociar sensor físico" variante="secundaria" largo
+                        aoTocar={() => void alterarSensorFisico(null)} />
+                    ) : null}
+                  </View>
                 ) : null}
-                {jardimAtualTemSensorFisico(jardimAtual?.idSensor) ? (
-                  <BotaoPrincipal titulo="Desassociar sensor físico" variante="secundaria" largo
-                    aoTocar={() => void alterarSensorFisico(null)} />
-                ) : null}
+
+                {erroDoSensor ? <Text style={estilos.erroDoSensor} accessibilityRole="alert">{erroDoSensor}</Text> : null}
               </View>
             ) : null}
-
-            {erroDoSensor ? <Text style={estilos.erroDoSensor} accessibilityRole="alert">{erroDoSensor}</Text> : null}
           </View>
         ) : null}
 
@@ -212,33 +228,55 @@ const estilos = StyleSheet.create({
     width: '100%',
     maxWidth: 560,
     alignSelf: 'center',
+    minHeight: ALVO_DE_TOQUE,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginHorizontal: ESPACO.grande,
-    padding: ESPACO.grande,
-    gap: ESPACO.pequeno,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    borderRadius: RAIO.grande,
-    backgroundColor: CORES.superficie,
-  },
-  cabecalhoJardim: { width: '100%', maxWidth: 560, alignSelf: 'center' },
-  nomeDoJardim: { fontFamily: FONTES.titulo, fontSize: 27, lineHeight: 32, color: CORES.texto },
-  cartaoDoSensor: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    marginHorizontal: ESPACO.grande,
-    padding: ESPACO.grande,
+    paddingHorizontal: ESPACO.grande,
+    paddingVertical: ESPACO.medio,
     gap: ESPACO.medio,
     borderWidth: 1,
     borderColor: CORES.bordaSuave,
     borderRadius: RAIO.grande,
     backgroundColor: CORES.superficie,
   },
-  cabecalhoDoSensor: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.medio },
+  cabecalhoJardim: { width: '100%', maxWidth: 560, alignSelf: 'center' },
+  detalheDoCartaoCompacto: { flex: 1, gap: 1 },
+  nomeDoJardim: { fontFamily: FONTES.titulo, fontSize: 20, lineHeight: 24, color: CORES.texto },
+  indicadorDeAbertura: { fontFamily: FONTES.forte, fontSize: 24, lineHeight: 28, color: CORES.acao },
+  cartaoPressionado: { opacity: 0.72, transform: [{ scale: 0.99 }] },
+  cartaoDoSensor: {
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    marginHorizontal: ESPACO.grande,
+    borderWidth: 1,
+    borderColor: CORES.bordaSuave,
+    borderRadius: RAIO.grande,
+    backgroundColor: CORES.superficie,
+    overflow: 'hidden',
+  },
+  cabecalhoDoSensor: {
+    minHeight: ALVO_DE_TOQUE,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ESPACO.medio,
+    paddingHorizontal: ESPACO.grande,
+    paddingVertical: ESPACO.medio,
+  },
+  cabecalhoPressionado: { backgroundColor: CORES.papel },
   pontoDoSensor: { width: 11, height: 11, borderRadius: RAIO.pilula, backgroundColor: CORES.statusSemDados },
   pontoAtivo: { backgroundColor: CORES.statusOk },
   detalheDoSensor: { flex: 1, gap: ESPACO.minimo },
   statusDoSensor: { fontFamily: FONTES.forte, fontSize: 14, color: CORES.texto },
+  conteudoDoSensor: {
+    gap: ESPACO.medio,
+    paddingHorizontal: ESPACO.grande,
+    paddingBottom: ESPACO.grande,
+    borderTopWidth: 1,
+    borderTopColor: CORES.bordaSuave,
+    paddingTop: ESPACO.medio,
+  },
   acoesDoSensor: { gap: ESPACO.pequeno },
   erroDoSensor: { ...TEXTO.apoio, color: CORES.erro },
   fundoDoModal: { flex: 1, justifyContent: 'center', padding: ESPACO.grande, backgroundColor: 'rgba(61, 51, 38, 0.48)' },

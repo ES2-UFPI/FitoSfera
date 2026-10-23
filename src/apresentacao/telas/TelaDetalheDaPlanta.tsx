@@ -220,7 +220,11 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       ) : null}
       {item && item !== 'falhou' ? (
         <ScrollView
-          contentContainerStyle={estilos.conteudo}
+          contentContainerStyle={[
+            estilos.conteudo,
+            { paddingBottom: margens.bottom + ESPACO.folgado },
+          ]}
+          scrollIndicatorInsets={{ bottom: margens.bottom }}
           refreshControl={
             <RefreshControl
               refreshing={atualizandoLeitura}
@@ -322,7 +326,6 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: ESPACO.grande,
     paddingTop: ESPACO.pequeno,
-    paddingBottom: ESPACO.folgado,
     gap: ESPACO.grande,
   },
   planta: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: ESPACO.grande },

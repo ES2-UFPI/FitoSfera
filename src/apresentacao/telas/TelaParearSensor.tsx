@@ -116,7 +116,10 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
       <View style={estilos.topo}>
         <BotaoVoltar />
       </View>
-      <ScrollView contentContainerStyle={estilos.conteudo}>
+      <ScrollView
+        contentContainerStyle={[estilos.conteudo, { paddingBottom: margens.bottom + ESPACO.folgado }]}
+        scrollIndicatorInsets={{ bottom: margens.bottom }}
+      >
         <Text style={TEXTO.titulo} accessibilityRole="header">
           Parear sensor
         </Text>
@@ -193,7 +196,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
 
 const estilos = StyleSheet.create({
   topo: { paddingHorizontal: ESPACO.grande },
-  conteudo: { padding: ESPACO.grande, gap: ESPACO.grande },
+  conteudo: { paddingHorizontal: ESPACO.grande, paddingTop: ESPACO.grande, gap: ESPACO.grande },
   secao: { gap: ESPACO.medio },
   linha: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.medio },
   flexivel: { flex: 1 },
