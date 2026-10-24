@@ -34,7 +34,16 @@ function Linha({ rotulo, valor, detalhe }: { rotulo: string; valor: string; deta
   );
 }
 
-export function CartaoDoHistorico({ estado, children }: { estado: EstadoDoHistorico; children?: ReactNode }) {
+export function CartaoDoHistorico({
+  estado,
+  children,
+  rodape,
+}: {
+  estado: EstadoDoHistorico;
+  children?: ReactNode;
+  /** Vai depois das linhas do histórico; o detalhe usa para o atalho do histórico completo. */
+  rodape?: ReactNode;
+}) {
   return (
     <View style={estilos.cartao}>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
@@ -74,6 +83,8 @@ export function CartaoDoHistorico({ estado, children }: { estado: EstadoDoHistor
           ) : null}
         </>
       ) : null}
+
+      {estado !== undefined && estado !== 'falhou' ? rodape : null}
     </View>
   );
 }
