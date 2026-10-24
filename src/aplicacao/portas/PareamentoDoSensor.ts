@@ -12,10 +12,17 @@ export interface SensorPareado {
   readonly nome: string;
 }
 
+/**
+ * Cada motivo vira uma mensagem própria na tela de pareamento. `falha-na-conexao` fica só para o que o
+ * Bluetooth não soube explicar.
+ */
 export type MotivoDaFalhaDoPareamento =
   | 'permissao-negada'
   | 'bluetooth-desligado'
   | 'falha-na-busca'
+  | 'fora-de-alcance'
+  | 'tempo-esgotado'
+  | 'falha-na-leitura'
   | 'falha-na-conexao'
   | 'sem-leitura';
 

@@ -1,8 +1,15 @@
 import { FalhaNoPareamento, SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
 import { ConexaoDoSensor } from '@/dominio/modelos/EstadoDaConexao';
-import { ClienteBle, ConexaoBle, DispositivoBle, EstadoDoBluetooth } from '@/infraestrutura/sensores/ClienteBle';
 import {
-  ESPERA_PARA_RECONECTAR_MS,
+  ClienteBle,
+  ConexaoBle,
+  DispositivoBle,
+  EstadoDoBluetooth,
+  FalhaBle,
+  TipoDaFalhaBle,
+} from '@/infraestrutura/sensores/ClienteBle';
+import {
+  esperaParaReconectar,
   GuardaDoSensorPareado,
   SensorBluetooth,
 } from '@/infraestrutura/sensores/SensorBluetooth';
@@ -54,10 +61,14 @@ class ClienteFalso implements ClienteBle {
   estado: EstadoDoBluetooth = 'ligado';
   permitir = true;
   falharAoConectar = false;
+  tipoDaFalha: TipoDaFalhaBle = 'fora-de-alcance';
+  tentativasDeConexao = 0;
   conexoes: ConexaoFalsa[] = [];
   proximaConexao = () => new ConexaoFalsa();
   buscaParada = false;
   private aoEncontrar: ((dispositivo: DispositivoBle) => void) | null = null;
+  private aoFalharNaBusca: ((erro: FalhaBle) => void) | null = null;
+  private aoMudarEstado: ((estado: EstadoDoBluetooth) => void) | null = null;
 
   temPermissao = true;
   async pedirPermissoes() {
@@ -70,20 +81,36 @@ class ClienteFalso implements ClienteBle {
   async consultarEstado() {
     return this.estado;
   }
-  procurar(aoEncontrar: (dispositivo: DispositivoBle) => void) {
+  observarEstado(aoMudar: (estado: EstadoDoBluetooth) => void) {
+    this.aoMudarEstado = aoMudar;
+    return () => {
+      this.aoMudarEstado = null;
+    };
+  }
+  procurar(aoEncontrar: (dispositivo: DispositivoBle) => void, aoFalhar: (erro: FalhaBle) => void) {
     this.aoEncontrar = aoEncontrar;
+    this.aoFalharNaBusca = aoFalhar;
     return () => {
       this.buscaParada = true;
     };
   }
   async conectar() {
-    if (this.falharAoConectar) throw new Error('fora de alcance');
+    this.tentativasDeConexao++;
+    if (this.falharAoConectar) throw new FalhaBle(this.tipoDaFalha);
     const conexao = this.proximaConexao();
     this.conexoes.push(conexao);
     return conexao;
   }
   anunciar(dispositivo: DispositivoBle) {
     this.aoEncontrar?.(dispositivo);
+  }
+  falharNaBusca(tipo: TipoDaFalhaBle) {
+    this.aoFalharNaBusca?.(new FalhaBle(tipo));
+  }
+  /** A pessoa liga ou desliga o Bluetooth do celular. */
+  mudarEstado(estado: EstadoDoBluetooth) {
+    this.estado = estado;
+    this.aoMudarEstado?.(estado);
   }
   get ultima() {
     return this.conexoes[this.conexoes.length - 1];
@@ -151,7 +178,7 @@ describe('reconexão ao sensor conhecido', () => {
     cliente.ultima.cair();
     expect(await sensor.consultarEstadoDaConexao()).toBe('desconectado');
 
-    await jest.advanceTimersByTimeAsync(ESPERA_PARA_RECONECTAR_MS);
+    await jest.advanceTimersByTimeAsync(esperaParaReconectar(0));
     expect(cliente.conexoes).toHaveLength(2);
     expect(await sensor.consultarEstadoDaConexao()).toBe('conectado');
   });
@@ -164,7 +191,7 @@ describe('reconexão ao sensor conhecido', () => {
     expect(await sensor.consultarEstadoDaConexao()).toBe('desconectado');
 
     cliente.falharAoConectar = false;
-    await jest.advanceTimersByTimeAsync(ESPERA_PARA_RECONECTAR_MS);
+    await jest.advanceTimersByTimeAsync(esperaParaReconectar(0));
     expect(await sensor.consultarEstadoDaConexao()).toBe('conectado');
   });
 });
@@ -236,7 +263,7 @@ describe('pareamento', () => {
   test('se não conectar, falha com o motivo e não guarda o sensor', async () => {
     const { cliente, guarda, sensor } = montar();
     cliente.falharAoConectar = true;
-    await expect(sensor.parear(SENSOR)).rejects.toMatchObject({ motivo: 'falha-na-conexao' });
+    await expect(sensor.parear(SENSOR)).rejects.toMatchObject({ motivo: 'fora-de-alcance' });
     expect(guarda.sensor).toBeNull();
   });
 
@@ -287,7 +314,12 @@ describe('estado da conexão', () => {
 
     cliente.ultima.cair();
 
-    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: instante });
+    expect(aoMudar).toHaveBeenLastCalledWith({
+      estado: 'desconectado',
+      ultimaComunicacao: instante,
+      problema: 'fora-de-alcance',
+      proximaTentativa: new Date(instante.getTime() + esperaParaReconectar(0)),
+    });
   });
 
   test('sem leitura nenhuma, a última comunicação é desconhecida', async () => {
@@ -297,7 +329,9 @@ describe('estado da conexão', () => {
     sensor.observarConexao(aoMudar);
     await jest.advanceTimersByTimeAsync(0);
 
-    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: null });
+    expect(aoMudar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ estado: 'desconectado', ultimaComunicacao: null, problema: 'fora-de-alcance' }),
+    );
   });
 
   test('sem permissão de Bluetooth, avisa "sem-permissao" e não tenta conectar', async () => {
@@ -307,7 +341,7 @@ describe('estado da conexão', () => {
     sensor.observarConexao(aoMudar);
     await jest.advanceTimersByTimeAsync(0);
 
-    expect(estados(aoMudar)).toEqual(['indisponivel', 'sem-permissao']);
+    expect([...new Set(estados(aoMudar))]).toEqual(['indisponivel', 'sem-permissao']);
     expect(cliente.conexoes).toHaveLength(0);
   });
 
@@ -335,5 +369,157 @@ describe('estado da conexão', () => {
     cliente.ultima.cair();
 
     expect(aoMudar).toHaveBeenCalledTimes(avisos);
+  });
+});
+
+describe('falhas e reconexão automática (#50)', () => {
+  test('a espera entre tentativas cresce em dobro até o teto de 60 s', () => {
+    expect([0, 1, 2, 3, 4, 5, 9].map(esperaParaReconectar)).toEqual([
+      5_000, 10_000, 20_000, 40_000, 60_000, 60_000, 60_000,
+    ]);
+  });
+
+  test('com o sensor longe, tenta de novo esperando cada vez mais', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.falharAoConectar = true;
+    await sensor.lerLeituraAtual();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(cliente.tentativasDeConexao).toBe(1);
+
+    await jest.advanceTimersByTimeAsync(5_000);
+    expect(cliente.tentativasDeConexao).toBe(2);
+
+    await jest.advanceTimersByTimeAsync(9_999);
+    expect(cliente.tentativasDeConexao).toBe(2);
+    await jest.advanceTimersByTimeAsync(1);
+    expect(cliente.tentativasDeConexao).toBe(3);
+
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(cliente.tentativasDeConexao).toBe(4);
+  });
+
+  test('depois de reconectar, a espera volta ao começo na próxima queda', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.falharAoConectar = true;
+    await sensor.lerLeituraAtual();
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(5_000);
+    cliente.falharAoConectar = false;
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(await sensor.consultarEstadoDaConexao()).toBe('conectado');
+
+    cliente.ultima.cair();
+    await jest.advanceTimersByTimeAsync(5_000);
+    expect(await sensor.consultarEstadoDaConexao()).toBe('conectado');
+  });
+
+  test('avisa quando será a próxima tentativa e limpa o aviso ao reconectar', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.ultima.cair();
+    expect(aoMudar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ proximaTentativa: new Date(instante.getTime() + 5_000) }),
+    );
+
+    await jest.advanceTimersByTimeAsync(5_000);
+    const ultima = aoMudar.mock.calls[aoMudar.mock.calls.length - 1][0] as ConexaoDoSensor;
+    expect(ultima.estado).toBe('conectado');
+    expect(ultima.proximaTentativa).toBeUndefined();
+    expect(ultima.problema).toBeUndefined();
+  });
+
+  test('o tempo esgotado na conexão aparece como motivo da desconexão', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.falharAoConectar = true;
+    cliente.tipoDaFalha = 'tempo-esgotado';
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(aoMudar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ estado: 'desconectado', problema: 'tempo-esgotado' }),
+    );
+  });
+
+  describe('Bluetooth desligado', () => {
+    test('ao abrir com o Bluetooth desligado, avisa o motivo e não tenta conectar', async () => {
+      const { cliente, sensor } = montar(SENSOR);
+      cliente.estado = 'desligado';
+      const aoMudar = jest.fn();
+      sensor.observarConexao(aoMudar);
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(aoMudar).toHaveBeenLastCalledWith(
+        expect.objectContaining({ estado: 'desconectado', problema: 'bluetooth-desligado' }),
+      );
+      expect(cliente.tentativasDeConexao).toBe(0);
+    });
+
+    test('ligar o Bluetooth reconecta na hora, sem esperar a tentativa agendada', async () => {
+      const { cliente, sensor } = montar(SENSOR);
+      cliente.estado = 'desligado';
+      await sensor.lerLeituraAtual();
+      await jest.advanceTimersByTimeAsync(0);
+
+      cliente.mudarEstado('ligado');
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(await sensor.consultarEstadoDaConexao()).toBe('conectado');
+    });
+
+    test('desligar o Bluetooth durante o uso derruba a ligação e diz por quê', async () => {
+      const { cliente, sensor } = montar(SENSOR);
+      const aoMudar = jest.fn();
+      sensor.observarConexao(aoMudar);
+      await jest.advanceTimersByTimeAsync(0);
+
+      cliente.estado = 'desligado';
+      cliente.ultima.cair();
+      await jest.advanceTimersByTimeAsync(0);
+
+      expect(aoMudar).toHaveBeenLastCalledWith(
+        expect.objectContaining({ estado: 'desconectado', problema: 'bluetooth-desligado' }),
+      );
+    });
+
+    test('parear com o Bluetooth desligado falha com o motivo certo, sem tentar conectar', async () => {
+      const { cliente, sensor } = montar();
+      cliente.estado = 'desligado';
+
+      await expect(sensor.parear(SENSOR)).rejects.toMatchObject({ motivo: 'bluetooth-desligado' });
+      expect(cliente.tentativasDeConexao).toBe(0);
+    });
+  });
+
+  test.each<[TipoDaFalhaBle, string]>([
+    ['bluetooth-desligado', 'bluetooth-desligado'],
+    ['sem-permissao', 'permissao-negada'],
+    ['tempo-esgotado', 'tempo-esgotado'],
+    ['fora-de-alcance', 'fora-de-alcance'],
+    ['falha-na-leitura', 'falha-na-leitura'],
+    ['desconhecido', 'falha-na-conexao'],
+  ])('ao parear, a falha "%s" do Bluetooth vira o motivo "%s"', async (tipo, motivo) => {
+    const { cliente, sensor } = montar();
+    cliente.falharAoConectar = true;
+    cliente.tipoDaFalha = tipo;
+    await expect(sensor.parear(SENSOR)).rejects.toMatchObject({ motivo });
+  });
+
+  test.each<[TipoDaFalhaBle, string]>([
+    ['sem-permissao', 'permissao-negada'],
+    ['bluetooth-desligado', 'bluetooth-desligado'],
+    ['desconhecido', 'falha-na-busca'],
+  ])('na busca, a falha "%s" do Bluetooth vira o motivo "%s"', async (tipo, motivo) => {
+    const { cliente, sensor } = montar();
+    const aoFalhar = jest.fn();
+    sensor.procurar(jest.fn(), aoFalhar);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.falharNaBusca(tipo);
+
+    expect(aoFalhar.mock.calls[0][0].motivo).toBe(motivo);
   });
 });

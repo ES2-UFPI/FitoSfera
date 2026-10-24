@@ -11,6 +11,7 @@ class ClienteFalso implements ClienteBle {
   async temPermissoes() { return true; }
   async pedirPermissoes() { return true; }
   async consultarEstado() { return 'ligado' as const; }
+  observarEstado() { return () => undefined; }
   procurar() { return () => undefined; }
   async conectar(): Promise<ConexaoBle> {
     return {

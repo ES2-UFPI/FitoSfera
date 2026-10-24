@@ -73,8 +73,31 @@ sensor conecta e espera a primeira leitura (até 20 s); só então é incluído 
 na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua legível após atualizar o app.
 
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
-cair ou o sensor estiver fora de alcance, o app tenta de novo a cada 10 s. A hora da leitura é a da chegada do
-pacote, porque o firmware não tem relógio.
+cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente
+(`esperaParaReconectar`): 5 s, 10 s, 20 s, 40 s e, dali em diante, a cada 60 s. A espera volta ao começo assim que
+uma conexão dá certo. Com o Bluetooth do celular desligado, o app não gasta tentativas: espera a pessoa ligar e
+reconecta na hora. A hora da leitura é a da chegada do pacote, porque o firmware não tem relógio.
+
+## Falhas e mensagens
+
+Os erros da `react-native-ble-plx` são traduzidos em [`ClassificadorDeErroBle.ts`](ClassificadorDeErroBle.ts) para
+um `FalhaBle`, sem o vocabulário da biblioteca. O `SensorBluetooth` transforma esse tipo no motivo que a interface
+mostra: na tela de pareamento, um `MotivoDaFalhaDoPareamento`; durante o uso, o `problema` da `ConexaoDoSensor`,
+que o indicador de conexão exibe junto do horário da próxima tentativa. Os textos ficam em
+[`textosDoSensor.ts`](../../apresentacao/sensor/textosDoSensor.ts), cada um com o que aconteceu e o que fazer.
+
+| Situação | Código da biblioteca | Ao parear | Durante o uso |
+| --- | --- | --- | --- |
+| Bluetooth desligado | `BluetoothPoweredOff` (102), ou o estado `PoweredOff` antes de tentar | `bluetooth-desligado`, com atalho para as configurações do Bluetooth | `bluetooth-desligado`; reconecta ao ligar |
+| Permissão negada | `BluetoothUnauthorized` (101), `LocationServicesDisabled` (601) | `permissao-negada`, com atalho para as configurações do app | estado `sem-permissao` |
+| Fora de alcance | `DeviceConnectionFailed`, `DeviceDisconnected`, `DeviceNotFound`, `DeviceNotConnected` (200–205) | `fora-de-alcance` | `fora-de-alcance`; tenta de novo com espera crescente |
+| Tempo esgotado | `OperationTimedOut` (3) | `tempo-esgotado` | `tempo-esgotado`; tenta de novo |
+| Falha de leitura | descoberta, leitura, escrita ou notificação (300, 400–403) | `falha-na-leitura` | `falha-na-leitura`; tenta de novo |
+| Conectou, mas nenhum pacote em 20 s | — | `sem-leitura` | — |
+| Qualquer outro erro | — | `falha-na-conexao` | `fora-de-alcance` |
+
+O firmware aceita **um celular por vez** e, enquanto houver um conectado, para de anunciar. Por isso a mensagem de
+"fora de alcance" também lembra de conferir se outro celular não está ocupando o sensor.
 
 Para testar com o sensor no desenvolvimento:
 

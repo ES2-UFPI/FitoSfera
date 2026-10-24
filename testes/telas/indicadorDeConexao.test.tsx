@@ -33,7 +33,9 @@ describe('no detalhe da planta', () => {
     act(() => sensor.mudarConexao({ estado: 'desconectado', ultimaComunicacao }));
 
     expect(
-      screen.getByLabelText(`Sensor desconectado. Última comunicação às ${horaEMinuto(ultimaComunicacao)}.`),
+      screen.getByLabelText(
+        `Sensor desconectado. O app tenta reconectar sozinho. Última comunicação às ${horaEMinuto(ultimaComunicacao)}.`,
+      ),
     ).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));
@@ -87,7 +89,47 @@ test('na tela de pareamento, o indicador acompanha a conexão', async () => {
 
   act(() => sensor.mudarConexao({ estado: 'desconectado', ultimaComunicacao: null }));
 
-  expect(screen.getByLabelText('Sensor desconectado. Sem comunicação desde que o app abriu.')).toBeTruthy();
+  expect(
+    screen.getByLabelText('Sensor desconectado. O app tenta reconectar sozinho. Sem comunicação desde que o app abriu.'),
+  ).toBeTruthy();
+});
+
+describe('motivo da desconexão e reconexão automática (#50)', () => {
+  test('com o Bluetooth desligado, orienta a ligar e não promete horário de tentativa', async () => {
+    const sensor = sensorConectado();
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', sensor, agora });
+    await screen.findByLabelText('Sensor conectado.');
+
+    act(() =>
+      sensor.mudarConexao({ estado: 'desconectado', ultimaComunicacao: null, problema: 'bluetooth-desligado' }),
+    );
+
+    expect(
+      screen.getByLabelText(
+        'Sensor desconectado. O Bluetooth do celular está desligado. Ligue para o app voltar a receber leituras. ' +
+          'Sem comunicação desde que o app abriu.',
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
+  });
+
+  test('fora de alcance, explica e mostra quando o app vai tentar de novo', async () => {
+    const sensor = sensorConectado();
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', sensor, agora });
+    await screen.findByLabelText('Sensor conectado.');
+
+    act(() =>
+      sensor.mudarConexao({
+        estado: 'desconectado',
+        ultimaComunicacao: null,
+        problema: 'fora-de-alcance',
+        proximaTentativa: new Date(2026, 9, 24, 14, 5, 30),
+      }),
+    );
+
+    expect(screen.getByText('O sensor está fora de alcance. Confira se ele está ligado e perto do celular.')).toBeTruthy();
+    expect(screen.getByText('Nova tentativa automática às 14:05:30.')).toBeTruthy();
+  });
 });
 
 describe('descreverUltimaComunicacao', () => {

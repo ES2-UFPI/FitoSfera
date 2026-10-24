@@ -13,6 +13,7 @@ test('trocar de jardim mostra apenas as plantas cadastradas nele', async () => {
   expect(await screen.findByLabelText('Varanda. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
   expect(screen.queryByText('Samambaia')).toBeNull();
 
+  fireEvent.press(screen.getByRole('button', { name: 'Mostrar opções do jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Sala' }));
   expect(await screen.findByLabelText('Samambaia. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
@@ -38,6 +39,7 @@ test('sensor associado a um jardim não pode ser associado ao outro', async () =
   fireEvent.press(await screen.findByRole('button', { name: 'Mostrar opções do sensor' }));
   fireEvent.press(await screen.findByRole('button', { name: 'Associar sensor físico' }));
   fireEvent.press(screen.getByRole('button', { name: 'Associar FitoSfera · le-01' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Mostrar opções do jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Sala' }));
   expect(await screen.findByRole('button', { name: 'Trocar ou criar jardim' })).toBeTruthy();
