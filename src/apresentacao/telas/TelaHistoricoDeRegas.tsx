@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_HISTORICO_DE_REGAS, RegaDoHistorico } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
-import { formatarDataEHora } from '../componentes/CartaoDoHistorico';
+import { descreverQuandoRegou, formatarDataEHora } from '../componentes/CartaoDoHistorico';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
@@ -17,12 +17,6 @@ type Estado =
   | { tipo: 'falhou' }
   | { tipo: 'sem-planta' }
   | { tipo: 'pronto'; apelido: string; regas: readonly RegaDoHistorico[] };
-
-export function descreverQuandoRegou(diasAtras: number): string {
-  if (diasAtras === 0) return 'hoje';
-  if (diasAtras === 1) return 'ontem';
-  return `há ${diasAtras} dias`;
-}
 
 /** Quantas regas a lista está mostrando, avisando quando o limite cortou as mais antigas. */
 export function resumirQuantidade(quantidade: number): string {
