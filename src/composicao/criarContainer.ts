@@ -30,6 +30,7 @@ import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
 import { criarSensorBluetooth } from './criarSensorBluetooth';
 import { escolherSensor } from './escolherSensor';
+import { escolherToquesNaNotificacao } from './escolherToquesNaNotificacao';
 
 /** Raiz de composição: o único lugar do app que escolhe as implementações concretas. */
 export function criarContainer(): Container {
@@ -48,6 +49,7 @@ export function criarContainer(): Container {
   const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
   const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados);
   const notificador = escolherNotificador(Platform.OS);
+  const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
 
   return {
     gerenciarJardins: new GerenciarJardins(jardins, gerador,
@@ -65,6 +67,7 @@ export function criarContainer(): Container {
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
+    toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes),
   };
 }

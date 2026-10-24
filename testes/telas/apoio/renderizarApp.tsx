@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { ToqueNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
@@ -9,6 +10,7 @@ import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
+import { useAberturaPelaNotificacao } from '@/apresentacao/notificacoes/useAberturaPelaNotificacao';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
 import RotaAjustes from '../../../app/(abas)/ajustes';
 import RotaAmbiente from '../../../app/(abas)/ambiente';
@@ -29,6 +31,7 @@ import {
   RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
   RepositorioDeRegasEmMemoria,
+  ToquesNaNotificacaoFalso,
 } from '../../apoio/fakes';
 
 /**
@@ -49,6 +52,7 @@ export function renderizarApp(
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    toqueDeAbertura?: ToqueNaNotificacao | null;
     pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
   } = {},
@@ -57,8 +61,9 @@ export function renderizarApp(
   regas: RepositorioDeRegasEmMemoria;
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
+  toques: ToquesNaNotificacaoFalso;
 } {
-  const { container, plantas, regas, notificador, avisos } = criarContainerDeTeste({
+  const { container, plantas, regas, notificador, avisos, toques } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     jardins: opcoes.jardins,
     especies: opcoes.especies,
@@ -70,6 +75,7 @@ export function renderizarApp(
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
     regas: opcoes.regas,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
+    toqueDeAbertura: opcoes.toqueDeAbertura,
     pareamentoDoSensor: opcoes.pareamentoDoSensor,
     permitirNotificacao: opcoes.permitirNotificacao,
   });
@@ -77,9 +83,15 @@ export function renderizarApp(
   function LayoutDeTeste() {
     return (
       <ProvedorDoAplicativo container={container}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <NavegacaoDeTeste />
       </ProvedorDoAplicativo>
     );
+  }
+
+  // O layout real pendura aqui a abertura pela notificação; sem isto, nenhum teste a exercitaria.
+  function NavegacaoDeTeste() {
+    useAberturaPelaNotificacao();
+    return <Stack screenOptions={{ headerShown: false }} />;
   }
 
   renderRouter(
@@ -102,5 +114,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas, regas, notificador, avisos };
+  return { plantas, regas, notificador, avisos, toques };
 }

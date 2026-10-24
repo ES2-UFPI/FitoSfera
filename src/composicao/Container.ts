@@ -12,6 +12,7 @@ import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 
 /** Os casos de uso que a interface pode chamar. */
@@ -29,6 +30,7 @@ export interface Container {
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;
   readonly controleDoSensorDeDesenvolvimento: ControleDoSensorDeDesenvolvimento | null;
+  readonly toquesNaNotificacao: ToquesNaNotificacao;
   readonly pareamentoDoSensor: PareamentoDoSensor | null;
   readonly avaliarLeitura: AvaliarLeitura;
 }
