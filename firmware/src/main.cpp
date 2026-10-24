@@ -38,19 +38,12 @@ volatile bool pedidoDoApp = false;
 DHT dht(PINO_DHT, TIPO_DHT);
 BH1750 sensorLuz(ENDERECO_LUX);
 
-// Quantos celulares podem ficar conectados ao mesmo tempo. Deve ser no máximo
-// CONFIG_BT_NIMBLE_MAX_CONNECTIONS (definido em platformio.ini)
-const size_t MAX_CONEXOES = 3;
-
 bool luzOk = false;
 NimBLEServer* servidorBle = nullptr;
 NimBLECharacteristic* caracteristicaLeitura = nullptr;
 
 class CallbacksDoServidor : public NimBLEServerCallbacks {
-  // O NimBLE para de anunciar a cada conexão; reativa enquanto houver vaga
-  void onConnect(NimBLEServer* servidor) override {
-    if (servidor->getConnectedCount() < MAX_CONEXOES) NimBLEDevice::startAdvertising();
-  }
+  // O NimBLE para de anunciar quando o celular conecta; ao desconectar, volta a anunciar
   void onDisconnect(NimBLEServer*) override { NimBLEDevice::startAdvertising(); }
 };
 
@@ -114,7 +107,7 @@ void publicarLeitura(float temp, float umid, float lux) {
   };
 
   caracteristicaLeitura->setValue(pacote, sizeof(pacote));
-  // Notifica todos os celulares conectados que assinaram a característica
+  // Notifica o celular conectado, se ele tiver assinado a característica
   if (servidorBle->getConnectedCount() > 0) caracteristicaLeitura->notify();
 }
 

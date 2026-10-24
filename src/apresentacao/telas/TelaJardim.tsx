@@ -7,6 +7,7 @@ import { BotaoFlutuante } from '../componentes/BotaoFlutuante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CabecalhoDoJardim } from '../componentes/CabecalhoDoJardim';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { SetaDoDropdown } from '../componentes/SetaDoDropdown';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { Estante } from '../estante/Estante';
 import { EstadoVazio } from './EstadoVazio';
@@ -30,6 +31,7 @@ export function TelaJardim() {
   const [erroDoJardim, definirErroDoJardim] = useState(false);
   const [sensores, definirSensores] = useState<readonly SensorPareado[]>([]);
   const [erroDoSensor, definirErroDoSensor] = useState('');
+  const [jardimAberto, definirJardimAberto] = useState(false);
   const [sensorAberto, definirSensorAberto] = useState(false);
   const [listaDeSensoresAberta, definirListaDeSensoresAberta] = useState(false);
   const margens = useSafeAreaInsets();
@@ -101,20 +103,34 @@ export function TelaJardim() {
 
   return (
     <FundoAconchegante style={{ paddingTop: margens.top }}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Trocar ou criar jardim"
-          accessibilityHint={`Jardim atual: ${nomeDoJardim}`}
-          onPress={() => definirSeletorAberto(true)}
-          style={({ pressed }) => [estilos.cartaoDoJardim, pressed && estilos.cartaoPressionado]}
-        >
-          <View style={estilos.detalheDoCartaoCompacto}>
-            <Text style={TEXTO.rotulo}>JARDIM ATUAL</Text>
-            <Text style={estilos.nomeDoJardim} numberOfLines={1}>{nomeDoJardim}</Text>
-            <Text style={TEXTO.apoio}>{lista.length} {lista.length === 1 ? 'planta' : 'plantas'} neste espaço</Text>
-          </View>
-          <Text style={estilos.indicadorDeAbertura} accessibilityElementsHidden>⌄</Text>
-        </Pressable>
+        <View style={estilos.cartaoDoJardim}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={jardimAberto ? 'Ocultar opções do jardim' : 'Mostrar opções do jardim'}
+            accessibilityHint={`Jardim atual: ${nomeDoJardim}`}
+            accessibilityState={{ expanded: jardimAberto }}
+            onPress={() => definirJardimAberto((aberto) => !aberto)}
+            style={({ pressed }) => [estilos.cabecalhoDoCartao, pressed && estilos.cabecalhoPressionado]}
+          >
+            <View style={estilos.detalheDoCartaoCompacto}>
+              <Text style={TEXTO.rotulo}>JARDIM ATUAL</Text>
+              <Text style={estilos.nomeDoJardim} numberOfLines={1}>{nomeDoJardim}</Text>
+              <Text style={TEXTO.apoio}>{lista.length} {lista.length === 1 ? 'planta' : 'plantas'} neste espaço</Text>
+            </View>
+            <SetaDoDropdown aberto={jardimAberto} />
+          </Pressable>
+
+          {jardimAberto ? (
+            <View style={estilos.conteudoDoCartao}>
+              <BotaoPrincipal
+                titulo="Trocar ou criar jardim"
+                variante="secundaria"
+                largo
+                aoTocar={() => definirSeletorAberto(true)}
+              />
+            </View>
+          ) : null}
+        </View>
 
         <View style={estilos.cabecalhoJardim}>
           <CabecalhoDoJardim quantidade={lista.length} />
@@ -127,18 +143,18 @@ export function TelaJardim() {
               accessibilityLabel={sensorAberto ? 'Ocultar opções do sensor' : 'Mostrar opções do sensor'}
               accessibilityState={{ expanded: sensorAberto }}
               onPress={() => definirSensorAberto((aberto) => !aberto)}
-              style={({ pressed }) => [estilos.cabecalhoDoSensor, pressed && estilos.cabecalhoPressionado]}
+              style={({ pressed }) => [estilos.cabecalhoDoCartao, pressed && estilos.cabecalhoPressionado]}
             >
               <View style={[estilos.pontoDoSensor, (sensorFisico || sensorSimulado) && estilos.pontoAtivo]} />
               <View style={estilos.detalheDoSensor}>
                 <Text style={TEXTO.rotulo}>SENSOR DO AMBIENTE</Text>
                 <Text style={estilos.statusDoSensor} numberOfLines={1}>{statusDoSensor}</Text>
               </View>
-              <Text style={estilos.indicadorDeAbertura} accessibilityElementsHidden>{sensorAberto ? '⌃' : '⌄'}</Text>
+              <SetaDoDropdown aberto={sensorAberto} />
             </Pressable>
 
             {sensorAberto ? (
-              <View style={estilos.conteudoDoSensor}>
+              <View style={estilos.conteudoDoCartao}>
                 <Text style={TEXTO.apoio}>As leituras deste sensor aparecem somente nas plantas deste jardim.</Text>
 
                 {container.pareamentoDoSensor ? (
@@ -228,23 +244,16 @@ const estilos = StyleSheet.create({
     width: '100%',
     maxWidth: 560,
     alignSelf: 'center',
-    minHeight: ALVO_DE_TOQUE,
-    flexDirection: 'row',
-    alignItems: 'center',
     marginHorizontal: ESPACO.grande,
-    paddingHorizontal: ESPACO.grande,
-    paddingVertical: ESPACO.medio,
-    gap: ESPACO.medio,
     borderWidth: 1,
     borderColor: CORES.bordaSuave,
     borderRadius: RAIO.grande,
     backgroundColor: CORES.superficie,
+    overflow: 'hidden',
   },
   cabecalhoJardim: { width: '100%', maxWidth: 560, alignSelf: 'center' },
   detalheDoCartaoCompacto: { flex: 1, gap: 1 },
   nomeDoJardim: { fontFamily: FONTES.titulo, fontSize: 20, lineHeight: 24, color: CORES.texto },
-  indicadorDeAbertura: { fontFamily: FONTES.forte, fontSize: 24, lineHeight: 28, color: CORES.acao },
-  cartaoPressionado: { opacity: 0.72, transform: [{ scale: 0.99 }] },
   cartaoDoSensor: {
     width: '100%',
     maxWidth: 560,
@@ -256,7 +265,7 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.superficie,
     overflow: 'hidden',
   },
-  cabecalhoDoSensor: {
+  cabecalhoDoCartao: {
     minHeight: ALVO_DE_TOQUE,
     flexDirection: 'row',
     alignItems: 'center',
@@ -269,7 +278,7 @@ const estilos = StyleSheet.create({
   pontoAtivo: { backgroundColor: CORES.statusOk },
   detalheDoSensor: { flex: 1, gap: ESPACO.minimo },
   statusDoSensor: { fontFamily: FONTES.forte, fontSize: 14, color: CORES.texto },
-  conteudoDoSensor: {
+  conteudoDoCartao: {
     gap: ESPACO.medio,
     paddingHorizontal: ESPACO.grande,
     paddingBottom: ESPACO.grande,

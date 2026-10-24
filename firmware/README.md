@@ -50,17 +50,13 @@ Desenvolvido em C++ sobre o framework Arduino, com PlatformIO no VSCode como amb
 ### Estrutura
 
 ```
-firmware/
+FitoSfera-Topicos/
 ├── platformio.ini
-├── instrucoes_montagem.md   (ligação dos fios na protoboard)
+├── intrucoes_montagem.md   (ligação dos fios na protoboard)
 ├── README.md
 └── src/
     └── main.cpp
 ```
-
-Para gravar, abra a pasta `firmware/` no VSCode com a extensão PlatformIO e use **Upload**. O app consome o
-contrato abaixo em [`src/infraestrutura/sensores/`](../src/infraestrutura/sensores/README.md); mudar UUIDs ou o
-formato do pacote exige mudar `ContratoDoSensor.ts` e `DecodificadorDoPacote.ts` junto.
 
 ### Configuração
 
@@ -73,6 +69,8 @@ board = esp32dev
 framework = arduino
 monitor_speed = 115200
 upload_speed = 115200
+build_flags =
+    -DCONFIG_BT_NIMBLE_MAX_CONNECTIONS=1
 lib_deps =
     adafruit/DHT sensor library@^1.4.6
     adafruit/Adafruit Unified Sensor@^1.1.14
@@ -140,7 +138,7 @@ function decodificarPacote(bytes: Uint8Array): PacoteDoSensor | null {
 - Antes da primeira leitura válida, a característica fica vazia (0 bytes), o que o aplicativo deve interpretar como "ainda não há leitura".
 - O dispositivo não tem relógio: o aplicativo carimba a hora da medição ao receber o pacote. Uma leitura lida (READ) pode ter até 60 s; para um valor fresco, use o comando e aguarde a notificação.
 - A primeira leitura sai ~2 s após ligar.
-- Até **3 celulares** podem ficar conectados ao mesmo tempo. O ESP32 continua anunciando enquanto houver vaga e volta a anunciar quando uma conexão cai. A notificação de leitura vai para todos que a assinaram, inclusive a resposta ao comando de um deles.
+- Só **1 celular** pode ficar conectado por vez. Enquanto houver uma conexão, o ESP32 não anuncia e não aparece para outros aparelhos. Ele volta a anunciar quando a conexão cai.
 
 ### Decisões de implementação
 
@@ -175,16 +173,9 @@ A montagem seguiu validação incremental, com cada camada testada isoladamente 
 
 **Ausência de referência temporal.** O dispositivo não tem relógio, e a serial mostra só o tempo desde a inicialização. A hora da medição é carimbada pelo aplicativo ao receber o pacote, o que atribui uma defasagem de até 60 s a uma leitura lida direto (READ).
 
-**Sem pareamento nem segurança.** O firmware não faz *bonding*: qualquer celular ao alcance pode conectar e ler os dados, e o dispositivo aceita até 3 conexões simultâneas. O primeiro uso (escolher o dispositivo certo entre os que estiverem por perto) e a restrição ao celular do dono ainda não foram implementados.
+**Sem pareamento nem segurança.** O firmware não faz *bonding*: qualquer celular ao alcance pode conectar e ler os dados, e quem conectar primeiro ocupa a única vaga. O primeiro uso (escolher o dispositivo certo entre os que estiverem por perto) e a restrição ao celular do dono ainda não foram implementados.
 
 **Autonomia.** Sempre ligado, o consumo estimado inviabiliza bateria (menos de 2 dias com 2000 mAh). O ganho dos 80 MHz ainda não foi medido.
 
 **Incerteza do BH1750.** O fabricante declara variação de ±20 % na medição de lux. É adequado para comparar o ambiente com as faixas de luminosidade das espécies, mas não substitui um luxímetro calibrado. Com a sensibilidade reduzida (MTreg = 31) para alcançar sol pleno, a resolução em luz fraca é um pouco menor.
 
----
-
-## Próximas etapas
-
-- Recebimento em segundo plano no aplicativo. O adaptador BLE e o primeiro uso (o app lista os `FitoSfera` por perto e a pessoa escolhe o seu) já existem; ver a #47. No Expo, o BLE exige um *development build*, e não o Expo Go.
-- Restringir a conexão ao celular do dono (pareamento com *bonding*, talvez com um botão que abre o modo de pareamento).
-- Medir a corrente real do circuito e, se necessário, avaliar *light sleep* com BLE conectado, que mantém o dispositivo alcançável. O *deep sleep* economiza mais, mas desliga o rádio entre os ciclos, e o aplicativo não consegue pedir leituras nesse intervalo.

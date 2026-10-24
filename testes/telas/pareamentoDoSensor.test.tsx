@@ -1,11 +1,14 @@
 import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { Linking } from 'react-native';
 import {
   FalhaNoPareamento,
+  MotivoDaFalhaDoPareamento,
   PareamentoDoSensor,
   SensorEncontrado,
   SensorPareado,
 } from '@/aplicacao/portas/PareamentoDoSensor';
 import { Leitura } from '@/dominio/modelos/Leitura';
+import { MENSAGEM_DA_FALHA } from '@/apresentacao/sensor/textosDoSensor';
 import { DURACAO_DA_BUSCA_MS } from '@/apresentacao/telas/TelaParearSensor';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -68,9 +71,8 @@ describe('tela de pareamento', () => {
     pareamento.permitir = false;
     renderizarApp({ url: '/sensor', pareamentoDoSensor: pareamento });
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Sem a permissão de Bluetooth, o app não consegue procurar o sensor.',
-    );
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não tem permissão para usar o Bluetooth/);
+    expect(screen.getByRole('button', { name: 'Abrir configurações' })).toBeTruthy();
     expect(pareamento.passos).toEqual(['permissao']);
   });
 
@@ -111,7 +113,7 @@ describe('tela de pareamento', () => {
 
     fireEvent.press(screen.getByRole('button', { name: 'FitoSfera, final 9C10, sinal forte' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/não mandou leitura/);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/não mandou nenhuma leitura/);
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeTruthy();
   });
 
@@ -123,6 +125,65 @@ describe('tela de pareamento', () => {
     pareamento.falhar(new FalhaNoPareamento('bluetooth-desligado'));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/Bluetooth do celular está desligado/);
+    expect(screen.getByRole('alert')).toHaveTextContent(/Ligue o Bluetooth/);
+    expect(screen.getByRole('button', { name: 'Abrir configurações do Bluetooth' })).toBeTruthy();
+  });
+
+  describe('cada falha tem a sua mensagem e a ação sugerida (#50)', () => {
+    const MOTIVOS_AO_PAREAR: MotivoDaFalhaDoPareamento[] = [
+      'fora-de-alcance',
+      'tempo-esgotado',
+      'falha-na-leitura',
+      'falha-na-conexao',
+      'sem-leitura',
+    ];
+
+    test.each(MOTIVOS_AO_PAREAR)('ao parear, "%s" mostra o que aconteceu e o que fazer', async (motivo) => {
+      const pareamento = new PareamentoFalso();
+      pareamento.falharAoParear = new FalhaNoPareamento(motivo);
+      renderizarApp({ url: '/sensor', pareamentoDoSensor: pareamento });
+      await screen.findByText('Procurando sensores por perto…');
+      pareamento.encontrar({ id: 'AA:BB:CC:DD:9C:10', nome: 'FitoSfera', intensidadeDoSinal: -50 });
+
+      fireEvent.press(screen.getByRole('button', { name: 'FitoSfera, final 9C10, sinal forte' }));
+
+      const alerta = await screen.findByRole('alert');
+      expect(alerta).toHaveTextContent(MENSAGEM_DA_FALHA[motivo].titulo, { exact: false });
+      expect(alerta).toHaveTextContent(MENSAGEM_DA_FALHA[motivo].acao, { exact: false });
+      expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeTruthy();
+    });
+
+    test('nenhuma mensagem se repete: não há texto genérico para motivos diferentes', () => {
+      const titulos = Object.values(MENSAGEM_DA_FALHA).map((mensagem) => mensagem.titulo);
+      const acoes = Object.values(MENSAGEM_DA_FALHA).map((mensagem) => mensagem.acao);
+      expect(new Set(titulos).size).toBe(titulos.length);
+      expect(new Set(acoes).size).toBe(acoes.length);
+    });
+
+    test('sem permissão, o botão leva às configurações do app', async () => {
+      const abrir = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
+      const pareamento = new PareamentoFalso();
+      pareamento.permitir = false;
+      renderizarApp({ url: '/sensor', pareamentoDoSensor: pareamento });
+
+      fireEvent.press(await screen.findByRole('button', { name: 'Abrir configurações' }));
+
+      expect(abrir).toHaveBeenCalled();
+      abrir.mockRestore();
+    });
+
+    test('tentar de novo depois de ligar o Bluetooth volta a procurar', async () => {
+      const pareamento = new PareamentoFalso();
+      renderizarApp({ url: '/sensor', pareamentoDoSensor: pareamento });
+      await screen.findByText('Procurando sensores por perto…');
+      pareamento.falhar(new FalhaNoPareamento('bluetooth-desligado'));
+      await screen.findByRole('alert');
+
+      fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+      expect(await screen.findByText('Procurando sensores por perto…')).toBeTruthy();
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
   });
 
   test('a busca termina sozinha e avisa quando não encontrou nada', async () => {

@@ -3,6 +3,7 @@ import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaCone
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
+import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
 import { formatarDataEHora } from './CartaoDoHistorico';
 
 const APRESENTACAO: Record<EstadoDaConexao, { texto: string; cor: string }> = {
@@ -29,29 +30,51 @@ export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora
     : `Última comunicação em ${horario}`;
 }
 
-function detalhe(conexao: ConexaoDoSensor, agora: Date): string | null {
-  if (conexao.estado === 'desconectado') return descreverUltimaComunicacao(conexao.ultimaComunicacao, agora);
-  if (conexao.estado === 'sem-permissao') return 'Permita o Bluetooth para o app voltar a receber leituras.';
-  return null;
+function horarioComSegundos(instante: Date): string {
+  return [instante.getHours(), instante.getMinutes(), instante.getSeconds()]
+    .map((parte) => String(parte).padStart(2, '0'))
+    .join(':');
+}
+
+/** Com o Bluetooth desligado, o app espera a pessoa ligar: não há horário de tentativa a prometer. */
+export function descreverReconexao(conexao: ConexaoDoSensor): string | null {
+  if (conexao.estado !== 'desconectado' || conexao.problema === 'bluetooth-desligado') return null;
+  return conexao.proximaTentativa
+    ? `Nova tentativa automática às ${horarioComSegundos(conexao.proximaTentativa)}`
+    : 'O app tenta reconectar sozinho';
+}
+
+function detalhes(conexao: ConexaoDoSensor, agora: Date): string[] {
+  if (conexao.estado === 'sem-permissao') return ['Permita o Bluetooth para o app voltar a receber leituras.'];
+  if (conexao.estado !== 'desconectado') return [];
+  return [
+    conexao.problema ? MENSAGEM_DO_PROBLEMA[conexao.problema] : null,
+    descreverReconexao(conexao),
+    descreverUltimaComunicacao(conexao.ultimaComunicacao, agora),
+  ].filter((linha): linha is string => linha !== null);
 }
 
 /** null enquanto a conexão ainda não foi informada: nada aparece, em vez de um estado inventado. */
 export function IndicadorDeConexao({ conexao, agora = new Date() }: { conexao: ConexaoDoSensor | null; agora?: Date }) {
   if (conexao === null) return null;
   const { texto, cor } = APRESENTACAO[conexao.estado];
-  const complemento = detalhe(conexao, agora);
+  const complementos = detalhes(conexao, agora);
   return (
     <View
       style={estilos.indicador}
       accessible
       accessibilityLiveRegion="polite"
-      accessibilityLabel={complemento ? `${frase(texto)} ${frase(complemento)}` : frase(texto)}
+      accessibilityLabel={[texto, ...complementos].map(frase).join(' ')}
       testID="indicador-de-conexao"
     >
       <View style={[estilos.ponto, { backgroundColor: cor }]} />
       <View style={estilos.textos}>
         <Text style={estilos.texto}>{texto}</Text>
-        {complemento ? <Text style={TEXTO.apoio}>{complemento}</Text> : null}
+        {complementos.map((linha) => (
+          <Text key={linha} style={TEXTO.apoio}>
+            {frase(linha)}
+          </Text>
+        ))}
       </View>
     </View>
   );

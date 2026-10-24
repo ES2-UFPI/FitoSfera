@@ -1,7 +1,13 @@
 import { NativeModules, Permission, PermissionsAndroid, Platform } from 'react-native';
 import { BleManager, State } from 'react-native-ble-plx';
+import { classificarErroBle } from './ClassificadorDeErroBle';
 import { ClienteBle, ConexaoBle, EstadoDoBluetooth } from './ClienteBle';
 import { CONTRATO_DO_SENSOR } from './ContratoDoSensor';
+
+function paraEstadoDoBluetooth(estado: State): EstadoDoBluetooth {
+  if (estado === State.PoweredOn) return 'ligado';
+  return estado === State.PoweredOff ? 'desligado' : 'desconhecido';
+}
 
 const { servico, leitura, comando } = CONTRATO_DO_SENSOR;
 const TEMPO_LIMITE_DA_CONEXAO_MS = 15_000;
@@ -37,25 +43,34 @@ export class ClienteBlePlx implements ClienteBle {
   }
 
   async consultarEstado(): Promise<EstadoDoBluetooth> {
-    const estado = await this.gerente.state();
-    if (estado === State.PoweredOn) return 'ligado';
-    return estado === State.PoweredOff ? 'desligado' : 'desconhecido';
+    return paraEstadoDoBluetooth(await this.gerente.state());
   }
 
-  procurar(aoEncontrar: Parameters<ClienteBle['procurar']>[0], aoFalhar: (erro: unknown) => void): () => void {
+  observarEstado(aoMudar: (estado: EstadoDoBluetooth) => void): () => void {
+    const assinatura = this.gerente.onStateChange((estado) => aoMudar(paraEstadoDoBluetooth(estado)));
+    return () => assinatura.remove();
+  }
+
+  procurar(aoEncontrar: Parameters<ClienteBle['procurar']>[0], aoFalhar: Parameters<ClienteBle['procurar']>[1]): () => void {
     this.gerente
       .startDeviceScan([servico], { allowDuplicates: true }, (erro, dispositivo) => {
-        if (erro) aoFalhar(erro);
+        if (erro) aoFalhar(classificarErroBle(erro));
         else if (dispositivo)
           aoEncontrar({ id: dispositivo.id, nome: dispositivo.name ?? dispositivo.localName, rssi: dispositivo.rssi });
       })
-      .catch(aoFalhar);
+      .catch((erro: unknown) => aoFalhar(classificarErroBle(erro)));
     return () => void this.gerente.stopDeviceScan().catch(() => undefined);
   }
 
   async conectar(id: string): Promise<ConexaoBle> {
-    await this.gerente.connectToDevice(id, { timeout: TEMPO_LIMITE_DA_CONEXAO_MS });
-    await this.gerente.discoverAllServicesAndCharacteristicsForDevice(id);
+    try {
+      await this.gerente.connectToDevice(id, { timeout: TEMPO_LIMITE_DA_CONEXAO_MS });
+      await this.gerente.discoverAllServicesAndCharacteristicsForDevice(id);
+    } catch (erro) {
+      // Uma conexão que abriu e falhou na descoberta fica pendurada; fechar libera o sensor para a próxima tentativa.
+      await this.gerente.cancelDeviceConnection(id).catch(() => undefined);
+      throw classificarErroBle(erro);
+    }
     const gerente = this.gerente;
     return {
       monitorar(aoReceber) {

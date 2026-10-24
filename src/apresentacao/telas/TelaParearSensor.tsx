@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   FalhaNoPareamento,
@@ -28,6 +28,18 @@ import { FONTES, TEXTO } from '../tema/tipografia';
 import { TelaEmBreve } from './TelaEmBreve';
 
 export const DURACAO_DA_BUSCA_MS = 15_000;
+
+/** Quando a solução está nas configurações do celular, o botão leva direto até lá. */
+const ATALHO_DAS_CONFIGURACOES: Partial<
+  Record<MotivoDaFalhaDoPareamento, { titulo: string; abrir: () => Promise<void> }>
+> = {
+  'permissao-negada': { titulo: 'Abrir configurações', abrir: () => Linking.openSettings() },
+  'bluetooth-desligado': {
+    titulo: 'Abrir configurações do Bluetooth',
+    abrir: () =>
+      Platform.OS === 'android' ? Linking.sendIntent('android.settings.BLUETOOTH_SETTINGS') : Linking.openSettings(),
+  },
+};
 
 type Etapa =
   | { readonly tipo: 'permissao' }
@@ -111,6 +123,8 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
     }
   }
 
+  const atalho = etapa.tipo === 'falha' ? ATALHO_DAS_CONFIGURACOES[etapa.motivo] : undefined;
+
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <View style={estilos.topo}>
@@ -182,10 +196,21 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
         ) : null}
 
         {etapa.tipo === 'falha' ? (
+          <View style={estilos.secao} accessible accessibilityRole="alert">
+            <Text style={[TEXTO.subtitulo, estilos.erro]}>{MENSAGEM_DA_FALHA[etapa.motivo].titulo}</Text>
+            <Text style={TEXTO.corpo}>{MENSAGEM_DA_FALHA[etapa.motivo].acao}</Text>
+          </View>
+        ) : null}
+        {etapa.tipo === 'falha' ? (
           <View style={estilos.secao}>
-            <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-              {MENSAGEM_DA_FALHA[etapa.motivo]}
-            </Text>
+            {atalho ? (
+              <BotaoPrincipal
+                titulo={atalho.titulo}
+                variante="secundaria"
+                aoTocar={() => void atalho.abrir().catch(() => undefined)}
+                largo
+              />
+            ) : null}
             <BotaoPrincipal titulo="Tentar de novo" aoTocar={() => void comecar()} largo />
           </View>
         ) : null}
