@@ -16,7 +16,20 @@ test('traz a data de cadastro, os dias no jardim e a última rega', async () => 
   expect(historico.cadastradaEm).toEqual(new Date(2026, 9, 17, 14, 0));
   expect(historico.diasNoJardim).toBe(3);
   expect(historico.ultimaRega?.id).toBe('r2');
+  expect(historico.diasDesdeAUltimaRega).toBe(1);
   expect(historico.regasRecentes.map((r) => r.id)).toEqual(['r2', 'r1']);
+});
+
+test('conta os dias desde a última rega pelo calendário: 0 hoje, 1 ontem', async () => {
+  const diasDesdeAUltima = async (regadaEm: Date) =>
+    (await criarContainerDeTeste({ agora, regas: [rega('r1', regadaEm)] }).container.obterHistorico.executar(
+      plantaDeTeste(),
+    )).diasDesdeAUltimaRega;
+
+  // Regada às 23h de ontem já conta como ontem às 9h de hoje, e não como "há poucas horas".
+  expect(await diasDesdeAUltima(new Date(2026, 9, 20, 7, 30))).toBe(0);
+  expect(await diasDesdeAUltima(new Date(2026, 9, 19, 23, 0))).toBe(1);
+  expect(await diasDesdeAUltima(new Date(2026, 9, 18, 8, 0))).toBe(2);
 });
 
 test(`resume só as ${QUANTIDADE_DE_REGAS_RECENTES} regas mais recentes da própria planta`, async () => {
@@ -33,5 +46,11 @@ test('planta antiga, sem data de cadastro e sem regas, não quebra', async () =>
 
   const historico = await container.obterHistorico.executar(plantaDeTeste({ cadastradaEm: null }));
 
-  expect(historico).toEqual({ cadastradaEm: null, diasNoJardim: null, ultimaRega: null, regasRecentes: [] });
+  expect(historico).toEqual({
+    cadastradaEm: null,
+    diasNoJardim: null,
+    ultimaRega: null,
+    diasDesdeAUltimaRega: null,
+    regasRecentes: [],
+  });
 });

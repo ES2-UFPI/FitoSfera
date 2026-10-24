@@ -19,6 +19,13 @@ export function formatarDataEHora(instante: Date): string {
   return `${formatarData(instante)} às ${doisDigitos(instante.getHours())}:${doisDigitos(instante.getMinutes())}`;
 }
 
+/** O quando de uma rega, em tempo relativo: "hoje", "ontem" ou "há N dias". */
+export function descreverQuandoRegou(diasAtras: number): string {
+  if (diasAtras === 0) return 'hoje';
+  if (diasAtras === 1) return 'ontem';
+  return `há ${diasAtras} dias`;
+}
+
 export function descreverTempoNoJardim(dias: number): string {
   if (dias === 0) return 'chegou hoje';
   return dias === 1 ? 'há 1 dia no jardim' : `há ${dias} dias no jardim`;
@@ -68,7 +75,14 @@ export function CartaoDoHistorico({
           />
           <Linha
             rotulo="Última rega"
-            valor={estado.ultimaRega ? formatarDataEHora(estado.ultimaRega.regadaEm) : 'ainda não regada'}
+            valor={
+              estado.ultimaRega ? formatarDataEHora(estado.ultimaRega.regadaEm) : 'nenhuma rega registrada'
+            }
+            detalhe={
+              estado.diasDesdeAUltimaRega !== null
+                ? descreverQuandoRegou(estado.diasDesdeAUltimaRega)
+                : undefined
+            }
           />
           {estado.regasRecentes.length > 0 ? (
             <View style={estilos.linha}>
