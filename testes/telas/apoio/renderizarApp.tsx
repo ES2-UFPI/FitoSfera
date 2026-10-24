@@ -20,6 +20,7 @@ import RotaBuscarEspecie from '../../../app/cadastro/index';
 import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
 import RotaEditarApelido from '../../../app/editar/[id]/apelido';
 import RotaEditarAparencia from '../../../app/editar/[id]/index';
+import RotaHistorico from '../../../app/historico/[id]';
 import RotaPlanta from '../../../app/planta/[id]';
 import RotaSensor from '../../../app/sensor';
 import {
@@ -93,6 +94,7 @@ export function renderizarApp(
       'cadastro/aparencia': RotaMontarAparencia,
       'cadastro/apelido': RotaBatizar,
       'planta/[id]': RotaPlanta,
+      'historico/[id]': RotaHistorico,
       sensor: RotaSensor,
       'editar/[id]/_layout': LayoutDaEdicao,
       'editar/[id]/index': RotaEditarAparencia,

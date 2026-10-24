@@ -256,7 +256,17 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             estado={estadoDoPainel(item, atualizandoLeitura)}
             origem={<IndicadorDeConexao conexao={conexao} />}
           />
-          <CartaoDoHistorico estado={historico}>
+          <CartaoDoHistorico
+            estado={historico}
+            rodape={
+              <BotaoPrincipal
+                titulo="Ver todas as regas"
+                variante="secundaria"
+                aoTocar={() => navegador.push({ pathname: '/historico/[id]', params: { id } })}
+                largo
+              />
+            }
+          >
             <BotaoPrincipal
               titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}
               aoTocar={() => void registrarRega()}

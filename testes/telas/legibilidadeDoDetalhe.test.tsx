@@ -33,6 +33,7 @@ test('o leitor de tela percorre planta, condições, rega e histórico e, por fi
   expect(screen.getAllByRole('button').map((botao) => botao.props.accessibilityLabel)).toEqual([
     'Voltar',
     'Registrar rega',
+    'Ver todas as regas',
     'Editar',
     'Excluir',
   ]);
