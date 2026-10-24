@@ -22,6 +22,7 @@ import { RelogioDoSistema } from '@/infraestrutura/tempo/RelogioDoSistema';
 import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
 import { escolherSensor } from './escolherSensor';
+import { escolherToquesNaNotificacao } from './escolherToquesNaNotificacao';
 
 /** Raiz de composição: o único lugar do app que escolhe as implementações concretas. */
 export function criarContainer(): Container {
@@ -35,6 +36,7 @@ export function criarContainer(): Container {
   // O Expo só embute a variável no app quando ela é lida assim, por extenso.
   const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__);
   const notificador = escolherNotificador(Platform.OS);
+  const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
 
   return {
     listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio),
@@ -47,6 +49,7 @@ export function criarContainer(): Container {
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: sensor instanceof SensorSimulado ? sensor : null,
+    toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio),
   };
 }

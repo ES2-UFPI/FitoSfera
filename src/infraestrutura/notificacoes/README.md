@@ -60,6 +60,37 @@ O texto que a pessoa lê é montado por [`MensagemDoAviso`](../../dominio/servic
 valor medido e uma indicação curta de que ele está acima ou abaixo do ideal. Os limites detalhados ficam no
 painel da planta.
 
+## Toque na notificação
+
+Tocar no aviso abre o detalhe da planta citada. O caminho começa no payload: o `NotificadorExpo` grava
+`data: { idPlanta }` em cada notificação, e é esse id que a navegação usa depois.
+
+Quem avisa a interface é a porta [`ToquesNaNotificacao`](../../aplicacao/portas/ToquesNaNotificacao.ts),
+com duas operações, uma para cada situação:
+
+| Operação | Quando serve |
+| --- | --- |
+| `toqueQueAbriuOApp()` | O app estava **fechado** e o toque foi o que o iniciou. Não havia ouvinte registrado naquele instante, então o Expo guarda a resposta e ela é consultada na abertura. |
+| `aoTocar(ouvinte)` | O app já estava **aberto** ou em segundo plano. Devolve como cancelar a escuta. |
+
+| Plataforma | Implementação |
+| --- | --- |
+| `android` | [`ToquesNaNotificacaoExpo`](ToquesNaNotificacaoExpo.ts), pelo `expo-notifications` |
+| qualquer outra (prévia web, testes) | [`ToquesInativos`](ToquesInativos.ts): nenhum toque abre o app e não há o que ouvir |
+
+A escolha é de [`escolherToquesNaNotificacao.ts`](../../composicao/escolherToquesNaNotificacao.ts), e quem
+usa a porta é o gancho
+[`useAberturaPelaNotificacao`](../../apresentacao/notificacoes/useAberturaPelaNotificacao.ts), montado uma
+vez no `app/_layout.tsx`.
+
+Dois cuidados que o gancho resolve:
+
+- **O mesmo toque pode chegar pelas duas vias** na abertura. Cada toque leva o id da notificação, e o
+  gancho guarda os já tratados para não empilhar a mesma tela duas vezes. Do lado do adaptador, a resposta
+  é esquecida com `clearLastNotificationResponse` assim que é lida.
+- **Planta já excluída** não quebra nada: a navegação acontece, o caso de uso não encontra a planta e o
+  detalhe mostra "Planta não encontrada".
+
 ## Como testar no aparelho
 
 A notificação depende de módulo nativo: ela não aparece na prévia web nem no Expo Go, só num build de
@@ -72,6 +103,10 @@ EXPO_PUBLIC_SENSOR=simulado npx expo run:android
 
 A verificação em segundo plano não cumpre o intervalo pedido num emulador parado; para forçar uma execução, use
 o `expo-background-task` pelo painel de desenvolvimento do Expo.
+
+O toque na notificação também só existe num build de desenvolvimento: fora do Android entram os toques
+inativos, então no Expo Go e na prévia web ele nunca acontece. A cobertura dele é automatizada, em
+`testes/telas/toqueNaNotificacao.test.tsx` e em `testes/unidade/notificacoes.test.ts`.
 
 ## Como acrescentar um canal de aviso
 

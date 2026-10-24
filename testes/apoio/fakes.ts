@@ -9,6 +9,7 @@ import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { ToqueNaNotificacao, ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
@@ -152,6 +153,35 @@ export class NotificadorFalso implements Notificador {
   }
 }
 
+/** Toques de mentira: o teste diz se um toque abriu o app e dispara os toques com o app aberto. */
+export class ToquesNaNotificacaoFalso implements ToquesNaNotificacao {
+  private readonly ouvintes: ((toque: ToqueNaNotificacao) => void)[] = [];
+
+  constructor(private readonly toqueDeAbertura: ToqueNaNotificacao | null = null) {}
+
+  async toqueQueAbriuOApp(): Promise<ToqueNaNotificacao | null> {
+    return this.toqueDeAbertura;
+  }
+
+  aoTocar(ouvinte: (toque: ToqueNaNotificacao) => void): () => void {
+    this.ouvintes.push(ouvinte);
+    return () => {
+      const posicao = this.ouvintes.indexOf(ouvinte);
+      if (posicao >= 0) this.ouvintes.splice(posicao, 1);
+    };
+  }
+
+  /** Simula um toque na notificação com o app já aberto. */
+  tocar(toque: ToqueNaNotificacao): void {
+    for (const ouvinte of [...this.ouvintes]) ouvinte(toque);
+  }
+
+  /** Quantos ouvintes continuam inscritos; zero depois de tudo cancelado. */
+  get inscritos(): number {
+    return this.ouvintes.length;
+  }
+}
+
 export class RepositorioDeAvisosEmMemoria implements RepositorioDeAvisos {
   salvas: ReadonlyMap<string, string>;
 
@@ -216,6 +246,7 @@ export function criarContainerDeTeste(
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
+    toqueDeAbertura?: ToqueNaNotificacao | null;
     permitirNotificacao?: boolean;
   } = {},
 ): {
@@ -224,6 +255,7 @@ export function criarContainerDeTeste(
   regas: RepositorioDeRegasEmMemoria;
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
+  toques: ToquesNaNotificacaoFalso;
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
@@ -237,6 +269,7 @@ export function criarContainerDeTeste(
   const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega, opcoes.regas);
   const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
   const avisos = new RepositorioDeAvisosEmMemoria();
+  const toques = new ToquesNaNotificacaoFalso(opcoes.toqueDeAbertura ?? null);
   const container: Container = {
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
@@ -248,7 +281,8 @@ export function criarContainerDeTeste(
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
+    toquesNaNotificacao: toques,
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
   };
-  return { container, plantas, regas, notificador, avisos };
+  return { container, plantas, regas, notificador, avisos, toques };
 }

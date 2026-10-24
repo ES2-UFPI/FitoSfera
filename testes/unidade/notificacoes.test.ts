@@ -1,6 +1,10 @@
+import { ToqueNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { escolherNotificador } from '@/composicao/escolherNotificador';
+import { escolherToquesNaNotificacao } from '@/composicao/escolherToquesNaNotificacao';
 import { NotificadorExpo } from '@/infraestrutura/notificacoes/NotificadorExpo';
 import { NotificadorInativo } from '@/infraestrutura/notificacoes/NotificadorInativo';
+import { ToquesInativos } from '@/infraestrutura/notificacoes/ToquesInativos';
+import { ToquesNaNotificacaoExpo } from '@/infraestrutura/notificacoes/ToquesNaNotificacaoExpo';
 
 /**
  * Os módulos do Expo entram no `NotificadorExpo` e na `VerificacaoPeriodica` por importação sob demanda, e
@@ -12,6 +16,9 @@ const notificacoesFalsas = {
   setNotificationChannelAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
+  getLastNotificationResponse: jest.fn(),
+  clearLastNotificationResponse: jest.fn(),
+  addNotificationResponseReceivedListener: jest.fn(),
   AndroidImportance: { DEFAULT: 3 },
 };
 
@@ -217,5 +224,133 @@ describe('VerificacaoPeriodica', () => {
     expect(await registrarVerificacaoPeriodica()).toBe(false);
     expect(aviso).toHaveBeenCalled();
     aviso.mockRestore();
+  });
+});
+
+/** Monta a resposta que o Expo entrega num toque, com o payload que o `NotificadorExpo` grava. */
+function respostaDoExpo(data: unknown, identifier = 'n1') {
+  return { notification: { request: { identifier, content: { data } } } };
+}
+
+describe('escolherToquesNaNotificacao (plataforma)', () => {
+  test('no Android entram os toques do Expo, que ouvem de verdade', () => {
+    expect(escolherToquesNaNotificacao('android')).toBeInstanceOf(ToquesNaNotificacaoExpo);
+  });
+
+  test.each(['web', 'ios', ''])('em "%s" entram os toques inativos', (plataforma) => {
+    expect(escolherToquesNaNotificacao(plataforma)).toBeInstanceOf(ToquesInativos);
+  });
+});
+
+describe('ToquesInativos', () => {
+  const toques = new ToquesInativos();
+
+  test('nenhuma notificação abriu o app', async () => {
+    expect(await toques.toqueQueAbriuOApp()).toBeNull();
+  });
+
+  test('cancelar a escuta não quebra, mesmo sem nada para cancelar', () => {
+    expect(() => toques.aoTocar()()).not.toThrow();
+  });
+});
+
+describe('ToquesNaNotificacaoExpo, o toque que abriu o app', () => {
+  test('o id da planta vem do payload, junto com o id da notificação', async () => {
+    notificacoesFalsas.getLastNotificationResponse.mockReturnValue(respostaDoExpo({ idPlanta: 'p1' }, 'n7'));
+
+    expect(await new ToquesNaNotificacaoExpo().toqueQueAbriuOApp()).toEqual({
+      idPlanta: 'p1',
+      idDaNotificacao: 'n7',
+    });
+  });
+
+  test('o toque tratado é esquecido, para uma remontagem não abrir a mesma planta de novo', async () => {
+    notificacoesFalsas.getLastNotificationResponse.mockReturnValue(respostaDoExpo({ idPlanta: 'p1' }));
+
+    await new ToquesNaNotificacaoExpo().toqueQueAbriuOApp();
+
+    expect(notificacoesFalsas.clearLastNotificationResponse).toHaveBeenCalled();
+  });
+
+  test('abertura comum, sem toque nenhum', async () => {
+    notificacoesFalsas.getLastNotificationResponse.mockReturnValue(null);
+
+    expect(await new ToquesNaNotificacaoExpo().toqueQueAbriuOApp()).toBeNull();
+    expect(notificacoesFalsas.clearLastNotificationResponse).not.toHaveBeenCalled();
+  });
+
+  test.each([{ data: undefined }, { data: {} }, { data: { idPlanta: 42 } }, { data: { idPlanta: '' } }])(
+    'payload sem id de planta utilizável é ignorado ($data)',
+    async ({ data }) => {
+      notificacoesFalsas.getLastNotificationResponse.mockReturnValue(respostaDoExpo(data));
+
+      expect(await new ToquesNaNotificacaoExpo().toqueQueAbriuOApp()).toBeNull();
+    },
+  );
+
+  test('falha ao consultar não derruba a abertura do app', async () => {
+    const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    notificacoesFalsas.getLastNotificationResponse.mockImplementation(() => {
+      throw new Error('o sistema recusou');
+    });
+
+    expect(await new ToquesNaNotificacaoExpo().toqueQueAbriuOApp()).toBeNull();
+    expect(aviso).toHaveBeenCalled();
+    aviso.mockRestore();
+  });
+});
+
+describe('ToquesNaNotificacaoExpo, os toques com o app aberto', () => {
+  /** O adaptador só assina depois que o `import()` sob demanda resolve. */
+  const aguardarInscricao = () => new Promise((resolver) => setImmediate(resolver));
+
+  function inscrever() {
+    const remove = jest.fn();
+    const recebidos: ToqueNaNotificacao[] = [];
+    notificacoesFalsas.addNotificationResponseReceivedListener.mockReturnValue({ remove });
+    const cancelar = new ToquesNaNotificacaoExpo().aoTocar((toque) => recebidos.push(toque));
+    return { recebidos, remove, cancelar };
+  }
+
+  /** Entrega uma resposta ao ouvinte que o adaptador registrou no Expo. */
+  function entregar(resposta: unknown) {
+    notificacoesFalsas.addNotificationResponseReceivedListener.mock.calls[0][0](resposta);
+  }
+
+  test('o toque vira um aviso com a planta citada', async () => {
+    const { recebidos } = inscrever();
+    await aguardarInscricao();
+
+    entregar(respostaDoExpo({ idPlanta: 'p2' }, 'n9'));
+
+    expect(recebidos).toEqual([{ idPlanta: 'p2', idDaNotificacao: 'n9' }]);
+  });
+
+  test('toque sem id de planta não avisa ninguém', async () => {
+    const { recebidos } = inscrever();
+    await aguardarInscricao();
+
+    entregar(respostaDoExpo({}));
+
+    expect(recebidos).toEqual([]);
+  });
+
+  test('cancelar remove a inscrição', async () => {
+    const { remove, cancelar } = inscrever();
+    await aguardarInscricao();
+
+    cancelar();
+
+    expect(remove).toHaveBeenCalled();
+  });
+
+  test('cancelar antes de o módulo chegar não deixa inscrição para trás', async () => {
+    const { remove, cancelar } = inscrever();
+
+    cancelar();
+    await aguardarInscricao();
+
+    expect(notificacoesFalsas.addNotificationResponseReceivedListener).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
   });
 });

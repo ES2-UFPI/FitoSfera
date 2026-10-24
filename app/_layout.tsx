@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CamadaDaAbertura } from '@/apresentacao/abertura/CamadaDaAbertura';
 import { ProvedorDoAplicativo, useAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
+import { useAberturaPelaNotificacao } from '@/apresentacao/notificacoes/useAberturaPelaNotificacao';
 import { ligarVerificacaoEmSegundoPlano } from '@/composicao/verificacaoEmSegundoPlano';
 import { CORES } from '@/apresentacao/tema/cores';
 
@@ -49,6 +50,9 @@ function Navegacao() {
   useEffect(() => {
     void ligarVerificacaoEmSegundoPlano(container);
   }, [container]);
+
+  // Tocar na notificação de desvio abre o detalhe da planta citada.
+  useAberturaPelaNotificacao();
 
   return (
     <>
