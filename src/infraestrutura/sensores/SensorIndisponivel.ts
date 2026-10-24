@@ -1,4 +1,4 @@
-import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 
@@ -18,5 +18,10 @@ export class SensorIndisponivel implements SensorDeAmbiente {
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
     return 'indisponivel';
+  }
+
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao {
+    aoMudar({ estado: 'indisponivel', ultimaComunicacao: null });
+    return () => undefined;
   }
 }

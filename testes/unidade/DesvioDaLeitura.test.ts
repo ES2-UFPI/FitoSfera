@@ -77,3 +77,9 @@ describe('assinaturaDosDesvios', () => {
     );
   });
 });
+
+test('leitura sem luminosidade não gera desvio de luz, mas mantém os outros', () => {
+  expect(detectarDesvios(leitura({ luminosidadeLux: null, umidadePercentual: 30 }), FAIXAS)).toEqual([
+    { grandeza: 'umidadeDoAr', sentido: 'abaixo', valor: 30, faixa: FAIXAS.umidadeDoAr },
+  ]);
+});

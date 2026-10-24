@@ -2,9 +2,11 @@ import { Stack } from 'expo-router';
 import { renderRouter } from 'expo-router/testing-library';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToqueNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
+import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
@@ -20,7 +22,9 @@ import RotaBuscarEspecie from '../../../app/cadastro/index';
 import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
 import RotaEditarApelido from '../../../app/editar/[id]/apelido';
 import RotaEditarAparencia from '../../../app/editar/[id]/index';
+import RotaHistorico from '../../../app/historico/[id]';
 import RotaPlanta from '../../../app/planta/[id]';
+import RotaSensor from '../../../app/sensor';
 import {
   criarContainerDeTeste,
   NotificadorFalso,
@@ -37,6 +41,7 @@ import {
 export function renderizarApp(
   opcoes: {
     plantas?: Planta[];
+    jardins?: Jardim[];
     especies?: readonly EspecieVegetal[];
     url?: string;
     falharAoLer?: boolean;
@@ -48,6 +53,7 @@ export function renderizarApp(
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     toqueDeAbertura?: ToqueNaNotificacao | null;
+    pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
   } = {},
 ): {
@@ -59,6 +65,7 @@ export function renderizarApp(
 } {
   const { container, plantas, regas, notificador, avisos, toques } = criarContainerDeTeste({
     plantas: opcoes.plantas,
+    jardins: opcoes.jardins,
     especies: opcoes.especies,
     falharAoLer: opcoes.falharAoLer,
     falhaAoCadastrar: opcoes.falhaAoCadastrar,
@@ -69,6 +76,7 @@ export function renderizarApp(
     regas: opcoes.regas,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
     toqueDeAbertura: opcoes.toqueDeAbertura,
+    pareamentoDoSensor: opcoes.pareamentoDoSensor,
     permitirNotificacao: opcoes.permitirNotificacao,
   });
 
@@ -98,6 +106,8 @@ export function renderizarApp(
       'cadastro/aparencia': RotaMontarAparencia,
       'cadastro/apelido': RotaBatizar,
       'planta/[id]': RotaPlanta,
+      'historico/[id]': RotaHistorico,
+      sensor: RotaSensor,
       'editar/[id]/_layout': LayoutDaEdicao,
       'editar/[id]/index': RotaEditarAparencia,
       'editar/[id]/apelido': RotaEditarApelido,

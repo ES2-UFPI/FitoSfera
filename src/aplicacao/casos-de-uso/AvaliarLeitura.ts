@@ -5,6 +5,7 @@ import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
+import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { assinaturaDosDesvios, detectarDesvios } from '@/dominio/regras/DesvioDaLeitura';
 import { leituraEstaDesatualizada } from '@/dominio/regras/StatusDaPlanta';
 import { montarMensagemDoAviso } from '@/dominio/servicos/MensagemDoAviso';
@@ -21,26 +22,39 @@ export class AvaliarLeitura {
     private readonly notificador: Notificador,
     private readonly avisos: RepositorioDeAvisos,
     private readonly relogio: Relogio,
+    private readonly fontes?: FontesDeJardim,
   ) {}
 
   /** Os avisos entregues nesta verificação, na ordem das plantas; vazio quando não havia o que avisar. */
-  async executar(): Promise<readonly Aviso[]> {
+  async executar(idJardim?: string): Promise<readonly Aviso[]> {
     // Antes da leitura: é esta chamada que abre o pedido de permissão na primeira execução, e sem sensor
     // configurado nunca haveria leitura para chegar até aqui.
     if (!(await this.notificador.garantirPermissao())) return [];
 
-    const leitura = await this.lerSensor();
+    const leitura = this.fontes ? null : await this.lerSensor();
     // Sem leitura, ou com uma velha demais, não dá para dizer que o desvio acabou nem que começou.
-    if (leitura === null || leituraEstaDesatualizada(leitura, this.relogio.agora())) return [];
+    if (!this.fontes && (leitura === null || leituraEstaDesatualizada(leitura, this.relogio.agora()))) return [];
 
-    const plantas = await this.listarPlantas();
+    const plantas = (await this.listarPlantas()).filter((planta) => idJardim === undefined || planta.idJardim === idJardim);
     const avisadas = await this.lerAvisadas();
     const assinaturas = new Map<string, string>();
     const entregues: Aviso[] = [];
+    const porJardim = new Map<string, Leitura | null>();
 
     for (const planta of plantas) {
+      if (this.fontes && !porJardim.has(planta.idJardim)) {
+        try {
+          porJardim.set(planta.idJardim, await (await this.fontes.obter(planta.idJardim)).lerLeituraAtual());
+        } catch { porJardim.set(planta.idJardim, null); }
+      }
+      const leituraDaPlanta = this.fontes ? porJardim.get(planta.idJardim) ?? null : leitura;
+      if (leituraDaPlanta === null || leituraEstaDesatualizada(leituraDaPlanta, this.relogio.agora())) {
+        const anterior = avisadas.get(planta.id);
+        if (anterior !== undefined) assinaturas.set(planta.id, anterior);
+        continue;
+      }
       // Planta sem faixa (espécie que veio sem ela) não tem com o que comparar: nunca desvia.
-      const desvios = planta.faixasRecomendadas === null ? [] : detectarDesvios(leitura, planta.faixasRecomendadas);
+      const desvios = planta.faixasRecomendadas === null ? [] : detectarDesvios(leituraDaPlanta, planta.faixasRecomendadas);
       const assinatura = assinaturaDosDesvios(desvios);
       // Dentro da faixa: a planta sai do mapa, e um desvio igual mais tarde volta a avisar.
       if (assinatura === '') continue;

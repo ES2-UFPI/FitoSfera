@@ -7,3 +7,4 @@ coverage/
 android/
 ios/
 *.log
+firmware/.pio/

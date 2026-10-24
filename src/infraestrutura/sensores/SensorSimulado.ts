@@ -2,7 +2,7 @@ import {
   ConfiguracaoDoSensorDeDesenvolvimento,
   ControleDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
-import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Relogio } from '@/dominio/portas/Relogio';
@@ -21,6 +21,8 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     desconectado: false,
   };
   private readonly observadores = new Set<(leitura: Leitura) => void>();
+  private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
+  private ultimaComunicacao: Date | null = null;
 
   constructor(
     private readonly relogio: Relogio,
@@ -50,20 +52,36 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     return this.configuracao.desconectado ? 'desconectado' : 'conectado';
   }
 
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao {
+    this.observadoresDaConexao.add(aoMudar);
+    aoMudar(this.conexao());
+    return () => this.observadoresDaConexao.delete(aoMudar);
+  }
+
   obterConfiguracao(): ConfiguracaoDoSensorDeDesenvolvimento {
     return { ...this.configuracao };
   }
 
   definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): void {
+    const mudouAConexao = this.configuracao.desconectado !== configuracao.desconectado;
     this.configuracao = { ...configuracao };
     const leitura = this.medir();
     if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
+    if (mudouAConexao) this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
+  }
+
+  private conexao(): ConexaoDoSensor {
+    return {
+      estado: this.configuracao.desconectado ? 'desconectado' : 'conectado',
+      ultimaComunicacao: this.ultimaComunicacao,
+    };
   }
 
   /** Uma onda por dia: mais luz e calor perto do meio-dia, mais umidade de madrugada. */
   private medir(): Leitura | null {
     const agora = this.relogio.agora();
     if (this.configuracao.desconectado) return null;
+    this.ultimaComunicacao = agora;
     const onda = Math.sin((2 * Math.PI * (agora.getTime() % UM_DIA_MS)) / UM_DIA_MS);
     const umidadeAutomatica = Math.round(60 - 10 * onda);
     const temperaturaAutomatica = Math.round((24 + 4 * onda) * 10) / 10;

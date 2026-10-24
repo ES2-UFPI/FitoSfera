@@ -11,7 +11,7 @@ import { IconeLuz, IconeTemperatura, IconeUmidade } from './IconesDasCondicoes';
 export interface LeituraDoPainel {
   readonly umidadePercentual: number;
   readonly temperaturaCelsius: number;
-  readonly luminosidadeLux: number;
+  readonly luminosidadeLux: number | null;
   readonly medidaEm: Date;
 }
 
@@ -42,6 +42,8 @@ export type EstadoDoPainel =
 
 interface Props {
   readonly estado: EstadoDoPainel;
+  /** De onde vêm os dados, logo abaixo do título: o indicador da conexão do sensor. */
+  readonly origem?: ReactNode;
 }
 
 function formatarNumero(valor: number): string {
@@ -166,7 +168,7 @@ function Indicadores({
 }
 
 /** Painel puramente visual: recebe o estado pronto e não conhece sensores nem casos de uso. */
-export function PainelDeCondicoes({ estado }: Props) {
+export function PainelDeCondicoes({ estado, origem }: Props) {
   return (
     <View style={estilos.painel}>
       <View style={estilos.cabecalho}>
@@ -179,6 +181,7 @@ export function PainelDeCondicoes({ estado }: Props) {
           </View>
         ) : null}
       </View>
+      {origem}
 
       {estado.tipo === 'carregando' ? (
         <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">

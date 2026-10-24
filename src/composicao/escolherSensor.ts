@@ -5,21 +5,24 @@ import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
 
 /**
  * Escolhe o sensor pelo valor de `EXPO_PUBLIC_SENSOR`. Sem valor, o desenvolvimento usa o simulado e a produção
- * fica indisponível: o app publicado nunca finge ter leituras. Um sensor novo (BLE, por exemplo) entra aqui sem
- * mexer em `aplicacao/` nem em `apresentacao/`.
+ * usa o Bluetooth. Quando o Bluetooth não existe no app (Expo Go, web), `criarBluetooth` devolve null e o sensor
+ * fica indisponível: o app nunca finge ter leituras.
  */
 export function escolherSensor(
   variavel: string | undefined,
   relogio: Relogio,
   emDesenvolvimento = false,
+  criarBluetooth: () => SensorDeAmbiente | null = () => null,
 ): SensorDeAmbiente {
   const escolha = variavel?.trim().toLowerCase();
   switch (escolha) {
     case 'simulado':
       return new SensorSimulado(relogio);
+    case 'bluetooth':
+      return criarBluetooth() ?? new SensorIndisponivel();
     case undefined:
     case '':
-      return emDesenvolvimento ? new SensorSimulado(relogio) : new SensorIndisponivel();
+      return emDesenvolvimento ? new SensorSimulado(relogio) : (criarBluetooth() ?? new SensorIndisponivel());
     default:
       return new SensorIndisponivel();
   }

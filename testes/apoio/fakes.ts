@@ -1,22 +1,27 @@
+import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
+import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToqueNaNotificacao, ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
+import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { Container } from '@/composicao/Container';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
-import { EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
+import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
@@ -25,6 +30,7 @@ import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador'
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
+import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -55,6 +61,23 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
   async remover(id: string) {
     const posicao = this.salvas.findIndex((planta) => planta.id === id);
     if (posicao >= 0) this.salvas.splice(posicao, 1);
+  }
+}
+
+export class RepositorioDeJardinsEmMemoria implements RepositorioDeJardins {
+  jardins: Jardim[];
+  selecionado = JARDIM_PRINCIPAL.id;
+
+  constructor(iniciais: readonly Jardim[] = [JARDIM_PRINCIPAL]) { this.jardins = [...iniciais]; }
+
+  async listar(): Promise<readonly Jardim[]> { return [...this.jardins]; }
+  async obterSelecionado(): Promise<string> { return this.selecionado; }
+  async salvar(jardim: Jardim): Promise<void> {
+    this.jardins = [...this.jardins.filter((item) => item.id !== jardim.id), jardim];
+  }
+  async selecionar(id: string): Promise<void> {
+    if (!this.jardins.some((item) => item.id === id)) throw new Error('Jardim não encontrado.');
+    this.selecionado = id;
   }
 }
 
@@ -127,8 +150,28 @@ export class SensorFixo implements SensorDeAmbiente {
   }
 
   async consultarEstadoDaConexao(): Promise<EstadoDaConexao> {
-    if (this.leitura === 'falha') return 'desconectado';
-    return this.leitura === null ? 'indisponivel' : 'conectado';
+    return this.conexaoAtual().estado;
+  }
+
+  private conexao: ConexaoDoSensor | null = null;
+  private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
+
+  observarConexao(aoMudar: (conexao: ConexaoDoSensor) => void): CancelarObservacao {
+    this.observadoresDaConexao.add(aoMudar);
+    aoMudar(this.conexaoAtual());
+    return () => this.observadoresDaConexao.delete(aoMudar);
+  }
+
+  private conexaoAtual(): ConexaoDoSensor {
+    if (this.conexao !== null) return this.conexao;
+    if (this.leitura === 'falha') return { estado: 'desconectado', ultimaComunicacao: null };
+    if (this.leitura === null) return { estado: 'indisponivel', ultimaComunicacao: null };
+    return { estado: 'conectado', ultimaComunicacao: this.leitura.medidaEm };
+  }
+
+  mudarConexao(conexao: ConexaoDoSensor): void {
+    this.conexao = conexao;
+    this.observadoresDaConexao.forEach((observador) => observador(conexao));
   }
 }
 
@@ -217,6 +260,7 @@ export class GeradorSequencial implements GeradorDeIdentificador {
 export function plantaDeTeste(
   parcial: Partial<{
     id: string;
+    idJardim: string;
     idEspecie: string;
     apelido: string;
     aparencia: Aparencia;
@@ -237,6 +281,7 @@ export function plantaDeTeste(
 export function criarContainerDeTeste(
   opcoes: {
     plantas?: Planta[];
+    jardins?: Jardim[];
     especies?: readonly EspecieVegetal[];
     falharAoLer?: boolean;
     falhaAoCadastrar?: boolean;
@@ -247,6 +292,7 @@ export function criarContainerDeTeste(
     regas?: readonly Rega[];
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     toqueDeAbertura?: ToqueNaNotificacao | null;
+    pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
   } = {},
 ): {
@@ -271,17 +317,21 @@ export function criarContainerDeTeste(
   const avisos = new RepositorioDeAvisosEmMemoria();
   const toques = new ToquesNaNotificacaoFalso(opcoes.toqueDeAbertura ?? null);
   const container: Container = {
+    gerenciarJardins: new GerenciarJardins(new RepositorioDeJardinsEmMemoria(opcoes.jardins), gerador),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     obterLeituraAtual: new ObterLeituraAtual(leituras),
+    conexaoDoSensor: new AcompanharConexaoDoSensor(leituras),
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
+    listarRegas: new ListarRegasDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
+    pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
   };
   return { container, plantas, regas, notificador, avisos, toques };

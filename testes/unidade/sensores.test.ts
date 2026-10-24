@@ -149,4 +149,53 @@ describe('escolherSensor (variável EXPO_PUBLIC_SENSOR)', () => {
   test('uma escolha explícita pode desativar o simulador em desenvolvimento', () => {
     expect(escolherSensor('indisponivel', relogio, true)).toBeInstanceOf(SensorIndisponivel);
   });
+
+  describe('bluetooth', () => {
+    const bluetooth = new SensorIndisponivel();
+    const criarBluetooth = () => bluetooth;
+
+    test.each(['bluetooth', ' Bluetooth '])('"%s" escolhe o sensor Bluetooth', (valor) => {
+      expect(escolherSensor(valor, relogio, true, criarBluetooth)).toBe(bluetooth);
+    });
+
+    test('sem valor, a produção usa o Bluetooth e o desenvolvimento continua no simulado', () => {
+      expect(escolherSensor(undefined, relogio, false, criarBluetooth)).toBe(bluetooth);
+      expect(escolherSensor(undefined, relogio, true, criarBluetooth)).toBeInstanceOf(SensorSimulado);
+    });
+
+    test('sem o módulo nativo (Expo Go, web), o Bluetooth vira indisponível', () => {
+      expect(escolherSensor('bluetooth', relogio, true, () => null)).toBeInstanceOf(SensorIndisponivel);
+      expect(escolherSensor(undefined, relogio, false, () => null)).toBeInstanceOf(SensorIndisponivel);
+    });
+  });
+});
+
+describe('observarConexao', () => {
+  test('o indisponível avisa "indisponivel" na hora', () => {
+    const aoMudar = jest.fn();
+    new SensorIndisponivel().observarConexao(aoMudar);
+    expect(aoMudar).toHaveBeenCalledWith({ estado: 'indisponivel', ultimaComunicacao: null });
+  });
+
+  test('o simulado avisa quando é desligado e religado, com a hora da última leitura', async () => {
+    const instante = new Date('2026-10-22T13:00:00.000Z');
+    const sensor = new SensorSimulado(new RelogioParado(instante));
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    await sensor.lerLeituraAtual();
+
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, desconectado: true });
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'desconectado', ultimaComunicacao: instante });
+
+    sensor.definirConfiguracao(CONFIGURACAO_AUTOMATICA);
+    expect(aoMudar).toHaveBeenLastCalledWith({ estado: 'conectado', ultimaComunicacao: instante });
+  });
+
+  test('mudar só os níveis do simulado não avisa a conexão de novo', () => {
+    const sensor = new SensorSimulado(new RelogioParado());
+    const aoMudar = jest.fn();
+    sensor.observarConexao(aoMudar);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, umidade: 'alto' });
+    expect(aoMudar).toHaveBeenCalledTimes(1);
+  });
 });

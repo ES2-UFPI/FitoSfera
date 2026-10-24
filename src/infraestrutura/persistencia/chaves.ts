@@ -16,6 +16,11 @@ export const CHAVES = {
   regasIlegiveisDaPlanta: (idPlanta: string) => `fitosfera:v2:regas:${idPlanta}:ilegivel`,
   /** Assinatura do desvio já avisado de cada planta, para a notificação não se repetir. */
   avisos: 'fitosfera:v2:avisos',
+  /** O sensor BLE escolhido na tela de pareamento: `{ id, nome }`. */
+  sensorPareado: 'fitosfera:v2:sensor-pareado',
+  /** Jardins, sensor associado e seleção ativa; ausente em instalações antigas. */
+  jardins: 'fitosfera:v2:jardins',
+  sensoresPareados: 'fitosfera:v2:sensores-pareados',
 } as const;
 
 /** Chaves da versão 1 (plantas sem faixas recomendadas). Só a migração lê; nada mais grava nelas. */
