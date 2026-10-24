@@ -67,6 +67,7 @@ export function criarContainer(): Container {
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
+    toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes),
   };
 }
