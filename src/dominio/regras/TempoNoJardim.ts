@@ -1,11 +1,19 @@
 const UM_DIA_MS = 24 * 60 * 60_000;
 
-/** Dias de calendário entre dois instantes, contados pela meia-noite local. */
-function diasEntre(inicio: Date, fim: Date): number {
+/**
+ * Dias de calendário de `inicio` até `fim`, contados pela meia-noite local. Negativo quando `fim` vem antes:
+ * é o que permite dizer que um prazo está atrasado.
+ */
+export function diasDeCalendarioEntre(inicio: Date, fim: Date): number {
   const primeiroDia = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
   const ultimoDia = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate());
   // Arredonda para absorver o dia de 23 ou 25 horas da troca de horário de verão.
-  return Math.max(0, Math.round((ultimoDia.getTime() - primeiroDia.getTime()) / UM_DIA_MS));
+  return Math.round((ultimoDia.getTime() - primeiroDia.getTime()) / UM_DIA_MS);
+}
+
+/** O mesmo, sem contar para trás: tempo decorrido nunca é negativo. */
+function diasEntre(inicio: Date, fim: Date): number {
+  return Math.max(0, diasDeCalendarioEntre(inicio, fim));
 }
 
 /**

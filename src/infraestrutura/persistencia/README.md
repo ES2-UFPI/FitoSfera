@@ -48,7 +48,8 @@ de segurança:
     "umidadeDoAr": { "minimo": 50, "maximo": 70 },
     "temperatura": { "minimo": 20, "maximo": 28 },
     "luminosidade": { "minimo": 25000, "maximo": 80000 }
-  }
+  },
+  "intervaloDeRegaEmDias": 3
 }
 ```
 
@@ -65,6 +66,13 @@ exigiu uma nova versão do schema.
 depois não muda plantas já cadastradas. Fica `null` quando a espécie não tinha faixa: o cadastro acontece
 normalmente e a planta aparece como "sem dados". Faixas malformadas também são lidas como `null`, sem perder a
 planta.
+
+`intervaloDeRegaEmDias` é uma cópia do intervalo de rega da espécie, feita no cadastro (#31), e é dele que sai
+a data da próxima rega. Como `idJardim`, o campo novo **não exigiu uma nova versão do schema**: registro gravado
+antes de ele existir, ou com valor que não serve (zero, negativo, fracionado, texto), é lido como `null`, e quem
+calcula a próxima rega busca o intervalo na espécie do catálogo — de onde ele teria sido copiado. O campo passa a
+ser gravado na próxima vez que o registro for salvo. Planta cuja espécie saiu do catálogo e que não tem a cópia
+fica sem próxima rega, e o lembrete não cobra nada.
 
 A conversão entre o modelo `Planta` do domínio e esse JSON fica em [`MapeadorDePlanta.ts`](MapeadorDePlanta.ts).
 O domínio não conhece o formato gravado.

@@ -266,6 +266,7 @@ export function plantaDeTeste(
     aparencia: Aparencia;
     faixasRecomendadas: FaixasRecomendadas | null;
     cadastradaEm: Date | null;
+    intervaloDeRegaEmDias: number | null;
   }> = {},
 ): Planta {
   return Planta.criar({
@@ -327,7 +328,7 @@ export function criarContainerDeTeste(
     editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
-    obterHistorico: new ObterHistoricoDaPlanta(regas, relogio),
+    obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
