@@ -23,6 +23,8 @@ export class Planta {
     readonly cadastradaEm: Date | null,
     /** Copiadas da espécie no cadastro; null quando a espécie não tinha faixa. */
     readonly faixasRecomendadas: FaixasRecomendadas | null,
+    /** Copiado da espécie no cadastro; null em planta gravada antes de o app guardar o intervalo. */
+    readonly intervaloDeRegaEmDias: number | null,
   ) {}
 
   static criar(dados: {
@@ -33,6 +35,7 @@ export class Planta {
     aparencia: Aparencia;
     cadastradaEm?: Date | null;
     faixasRecomendadas?: FaixasRecomendadas | null;
+    intervaloDeRegaEmDias?: number | null;
   }): Planta {
     const apelido = dados.apelido.trim();
     // Conta caracteres visíveis (code points): um emoji vale um, não dois.
@@ -46,10 +49,11 @@ export class Planta {
       dados.aparencia,
       dados.cadastradaEm ?? null,
       dados.faixasRecomendadas ?? null,
+      dados.intervaloDeRegaEmDias ?? null,
     );
   }
 
-  /** Espécie, data de cadastro e faixas não mudam na edição. */
+  /** Espécie, data de cadastro, faixas e intervalo de rega não mudam na edição. */
   editar(alteracoes: { apelido: string; aparencia: Aparencia }): Planta {
     return Planta.criar({ ...this, ...alteracoes });
   }

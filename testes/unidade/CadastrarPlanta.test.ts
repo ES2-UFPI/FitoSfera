@@ -93,6 +93,11 @@ describe('faixas recomendadas', () => {
     expect((await cadastrar.executar(pedido())).faixasRecomendadas).toEqual(FAIXAS_DE_TESTE);
   });
 
+  test('a planta cadastrada guarda o intervalo de rega da espécie', async () => {
+    const { cadastrar } = montar();
+    expect((await cadastrar.executar(pedido())).intervaloDeRegaEmDias).toBe(3);
+  });
+
   test('alterar o catálogo depois não altera plantas já cadastradas', async () => {
     const aparelho = new ArmazenamentoEmMemoria();
     const abrirApp = () =>

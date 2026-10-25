@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
+import { SituacaoDaRega } from '@/dominio/regras/ProximaRega';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
@@ -24,6 +25,17 @@ export function descreverQuandoRegou(diasAtras: number): string {
   if (diasAtras === 0) return 'hoje';
   if (diasAtras === 1) return 'ontem';
   return `há ${diasAtras} dias`;
+}
+
+/** Quando a próxima rega vence, em tempo relativo. Undefined quando não há prazo para anunciar. */
+export function descreverProximaRega({ proximaEm, diasAteAProxima }: SituacaoDaRega): string | undefined {
+  if (proximaEm === null || diasAteAProxima === null) return undefined;
+  if (diasAteAProxima < 0) {
+    const atraso = -diasAteAProxima;
+    return atraso === 1 ? 'atrasada há 1 dia' : `atrasada há ${atraso} dias`;
+  }
+  if (diasAteAProxima === 0) return 'é hoje';
+  return diasAteAProxima === 1 ? 'é amanhã' : `em ${diasAteAProxima} dias`;
 }
 
 export function descreverTempoNoJardim(dias: number): string {
@@ -83,6 +95,15 @@ export function CartaoDoHistorico({
                 ? descreverQuandoRegou(estado.diasDesdeAUltimaRega)
                 : undefined
             }
+          />
+          <Linha
+            rotulo="Próxima rega"
+            valor={
+              estado.proximaRega.proximaEm
+                ? formatarData(estado.proximaRega.proximaEm)
+                : 'sem intervalo conhecido'
+            }
+            detalhe={descreverProximaRega(estado.proximaRega)}
           />
           {estado.regasRecentes.length > 0 ? (
             <View style={estilos.linha}>

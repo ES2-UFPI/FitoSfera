@@ -12,8 +12,27 @@ test('ida e volta preserva todos os campos', () => {
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
     cadastradaEm: new Date('2026-10-17T14:00:00.000Z'),
     faixasRecomendadas: FAIXAS_DE_TESTE,
+    intervaloDeRegaEmDias: 3,
   });
   expect(deRegistro(JSON.parse(JSON.stringify(paraRegistro(planta))))).toEqual(planta);
+});
+
+test.each([
+  ['ausente', undefined],
+  ['nulo', null],
+  ['zero', 0],
+  ['negativo', -3],
+  ['fracionado', 2.5],
+  ['em texto', '3'],
+])('intervalo de rega %s deixa a planta sem intervalo, sem perder o registro', (_, intervalo) => {
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', intervaloDeRegaEmDias: intervalo });
+  expect(planta?.apelido).toBe('Tom');
+  expect(planta?.intervaloDeRegaEmDias).toBeNull();
+});
+
+test('o intervalo gravado é lido de volta', () => {
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', intervaloDeRegaEmDias: 7 });
+  expect(planta?.intervaloDeRegaEmDias).toBe(7);
 });
 
 test.each([

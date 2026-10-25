@@ -52,5 +52,62 @@ test('planta antiga, sem data de cadastro e sem regas, não quebra', async () =>
     ultimaRega: null,
     diasDesdeAUltimaRega: null,
     regasRecentes: [],
+    proximaRega: { proximaEm: null, diasAteAProxima: null, precisaRegar: false },
+  });
+});
+
+describe('a próxima rega', () => {
+  // As espécies de teste usam intervalo de 3 dias.
+  test('conta da última rega, e registrar uma rega adia o prazo', async () => {
+    const planta = plantaDeTeste({ cadastradaEm: new Date(2026, 9, 10, 8, 0), intervaloDeRegaEmDias: 3 });
+    const comRegaAntiga = criarContainerDeTeste({ agora, regas: [rega('r1', new Date(2026, 9, 15, 8, 0))] });
+    const comRegaDeHoje = criarContainerDeTeste({ agora, regas: [rega('r1', new Date(2026, 9, 20, 8, 0))] });
+
+    expect((await comRegaAntiga.container.obterHistorico.executar(planta)).proximaRega).toMatchObject({
+      diasAteAProxima: -2,
+      precisaRegar: true,
+    });
+    expect((await comRegaDeHoje.container.obterHistorico.executar(planta)).proximaRega).toMatchObject({
+      diasAteAProxima: 3,
+      precisaRegar: false,
+    });
+  });
+
+  test('planta sem rega registrada conta da data de cadastro', async () => {
+    const { container } = criarContainerDeTeste({ agora });
+    const planta = plantaDeTeste({ cadastradaEm: new Date(2026, 9, 18, 8, 0), intervaloDeRegaEmDias: 3 });
+
+    expect((await container.obterHistorico.executar(planta)).proximaRega.proximaEm).toEqual(
+      new Date(2026, 9, 21, 8, 0),
+    );
+  });
+
+  test('planta antiga, sem o intervalo gravado, usa o da espécie no catálogo', async () => {
+    const { container } = criarContainerDeTeste({ agora });
+    const antiga = plantaDeTeste({ cadastradaEm: new Date(2026, 9, 18, 8, 0), intervaloDeRegaEmDias: null });
+
+    expect((await container.obterHistorico.executar(antiga)).proximaRega.proximaEm).toEqual(
+      new Date(2026, 9, 21, 8, 0),
+    );
+  });
+
+  test('espécie fora do catálogo deixa a próxima rega desconhecida, sem cobrar', async () => {
+    const { container } = criarContainerDeTeste({ agora });
+    const orfa = plantaDeTeste({ idEspecie: 'sumiu', cadastradaEm: new Date(2026, 9, 1, 8, 0), intervaloDeRegaEmDias: null });
+
+    expect((await container.obterHistorico.executar(orfa)).proximaRega).toEqual({
+      proximaEm: null,
+      diasAteAProxima: null,
+      precisaRegar: false,
+    });
+  });
+
+  test('o intervalo gravado na planta vence o do catálogo', async () => {
+    const { container } = criarContainerDeTeste({ agora });
+    const planta = plantaDeTeste({ cadastradaEm: new Date(2026, 9, 18, 8, 0), intervaloDeRegaEmDias: 10 });
+
+    expect((await container.obterHistorico.executar(planta)).proximaRega.proximaEm).toEqual(
+      new Date(2026, 9, 28, 8, 0),
+    );
   });
 });

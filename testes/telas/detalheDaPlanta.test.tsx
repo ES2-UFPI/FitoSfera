@@ -184,6 +184,46 @@ describe('histórico da planta', () => {
     expect(screen.queryByText('REGAS RECENTES')).toBeNull();
   });
 
+  describe('próxima rega', () => {
+    // As espécies de teste usam intervalo de 3 dias, e a planta de teste não grava intervalo próprio.
+    const cadastradaEm = new Date(2026, 9, 18, 8, 0);
+
+    test('sem rega registrada, conta da data de cadastro', async () => {
+      renderizarApp({ plantas: [plantaDeTeste({ cadastradaEm })], url: '/planta/p1', agora });
+      expect(await screen.findByLabelText('Próxima rega: 21/10/2026, é amanhã.')).toBeTruthy();
+    });
+
+    test('registrar uma rega adia o próximo lembrete na hora', async () => {
+      renderizarApp({ plantas: [plantaDeTeste({ cadastradaEm })], url: '/planta/p1', agora });
+      expect(await screen.findByLabelText('Próxima rega: 21/10/2026, é amanhã.')).toBeTruthy();
+
+      fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));
+
+      expect(await screen.findByLabelText('Próxima rega: 23/10/2026, em 3 dias.')).toBeTruthy();
+    });
+
+    test('planta regada há muito tempo mostra o atraso', async () => {
+      renderizarApp({
+        plantas: [plantaDeTeste({ cadastradaEm })],
+        regas: [{ id: 'r1', idPlanta: 'p1', regadaEm: new Date(2026, 9, 14, 8, 0) }],
+        url: '/planta/p1',
+        agora,
+      });
+
+      expect(await screen.findByLabelText('Próxima rega: 17/10/2026, atrasada há 3 dias.')).toBeTruthy();
+    });
+
+    test('espécie fora do catálogo não inventa prazo', async () => {
+      renderizarApp({
+        plantas: [plantaDeTeste({ idEspecie: 'sumiu', cadastradaEm })],
+        url: '/planta/p1',
+        agora,
+      });
+
+      expect(await screen.findByLabelText('Próxima rega: sem intervalo conhecido.')).toBeTruthy();
+    });
+  });
+
   test('registrar uma rega atualiza a última rega na hora', async () => {
     renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
     expect(await screen.findByLabelText('Última rega: nenhuma rega registrada.')).toBeTruthy();

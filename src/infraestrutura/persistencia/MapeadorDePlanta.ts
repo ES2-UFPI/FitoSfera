@@ -12,6 +12,8 @@ export interface RegistroDePlanta {
   cadastradaEm: string | null;
   /** Faixas copiadas da espécie no cadastro (desde a versão 2), ou null quando a espécie não tinha faixa. */
   faixasRecomendadas: FaixasRecomendadas | null;
+  /** Intervalo de rega copiado da espécie, em dias; null em registro gravado antes deste campo existir. */
+  intervaloDeRegaEmDias: number | null;
 }
 
 export function paraRegistro(planta: Planta): RegistroDePlanta {
@@ -23,16 +25,15 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
     aparencia: { ...planta.aparencia },
     cadastradaEm: planta.cadastradaEm?.toISOString() ?? null,
     faixasRecomendadas: planta.faixasRecomendadas,
+    intervaloDeRegaEmDias: planta.intervaloDeRegaEmDias,
   };
 }
 
 /** Devolve null para o que não dá para ler, em vez de derrubar a listagem inteira. */
 export function deRegistro(bruto: unknown): Planta | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas } = bruto as Record<
-    string,
-    unknown
-  >;
+  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas, intervaloDeRegaEmDias } =
+    bruto as Record<string, unknown>;
   if (typeof id !== 'string' || typeof idEspecie !== 'string' || typeof apelido !== 'string') return null;
   try {
     return Planta.criar({
@@ -43,6 +44,7 @@ export function deRegistro(bruto: unknown): Planta | null {
       aparencia: normalizarAparencia(aparencia),
       cadastradaEm: lerData(cadastradaEm),
       faixasRecomendadas: lerFaixas(faixasRecomendadas),
+      intervaloDeRegaEmDias: lerIntervalo(intervaloDeRegaEmDias),
     });
   } catch {
     return null;
@@ -54,6 +56,16 @@ function lerData(bruto: unknown): Date | null {
   if (typeof bruto !== 'string') return null;
   const data = new Date(bruto);
   return Number.isNaN(data.getTime()) ? null : data;
+}
+
+/**
+ * Registro antigo, sem intervalo, ou com intervalo que não dá para usar: a planta continua, e quem calcula a
+ * próxima rega busca o intervalo na espécie do catálogo. Como `idJardim`, o campo novo não exige nova versão
+ * do schema; ele é gravado na próxima vez que o registro for salvo.
+ */
+function lerIntervalo(bruto: unknown): number | null {
+  if (typeof bruto !== 'number' || !Number.isInteger(bruto) || bruto <= 0) return null;
+  return bruto;
 }
 
 /** Faixas ausentes ou malformadas deixam a planta sem faixas (status "sem dados"), sem perder o registro. */

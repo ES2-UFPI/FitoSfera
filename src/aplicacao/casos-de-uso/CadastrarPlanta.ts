@@ -15,7 +15,8 @@ export class EspecieNaoEncontrada extends Error {
 
 /**
  * Grava no jardim a espécie escolhida na busca. Cada cadastro ganha um identificador novo, então a mesma
- * espécie cadastrada duas vezes vira duas plantas distintas. A planta leva uma cópia das faixas da espécie.
+ * espécie cadastrada duas vezes vira duas plantas distintas. A planta leva uma cópia das faixas e do
+ * intervalo de rega da espécie.
  */
 export class CadastrarPlanta {
   constructor(
@@ -33,6 +34,7 @@ export class CadastrarPlanta {
       id: this.gerador.gerar(),
       cadastradaEm: this.relogio.agora(),
       faixasRecomendadas: copiarFaixas(especie.faixasIdeais),
+      intervaloDeRegaEmDias: especie.intervaloDeRegaEmDias,
     });
     await this.plantas.adicionar(planta);
     return planta;
