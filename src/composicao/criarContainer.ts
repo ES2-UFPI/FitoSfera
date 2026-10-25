@@ -19,6 +19,7 @@ import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/Armazena
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
+import { RepositorioDePreferenciasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePreferenciasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
@@ -39,6 +40,7 @@ export function criarContainer(): Container {
   const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
+  const preferencias = new RepositorioDePreferenciasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
   const relogio = new RelogioDoSistema();
   const gerador = new GeradorDeIdentificadorAleatorio();
@@ -68,6 +70,6 @@ export function criarContainer(): Container {
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
     toquesNaNotificacao,
-    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes),
+    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias),
   };
 }

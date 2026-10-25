@@ -1,12 +1,15 @@
+import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
+import { RepositorioDePreferencias } from '@/dominio/portas/RepositorioDePreferencias';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { assinaturaDosDesvios, detectarDesvios } from '@/dominio/regras/DesvioDaLeitura';
+import { estaNaJanela } from '@/dominio/regras/HorarioDoLembrete';
 import { leituraEstaDesatualizada } from '@/dominio/regras/StatusDaPlanta';
 import { montarMensagemDoAviso } from '@/dominio/servicos/MensagemDoAviso';
 
@@ -23,6 +26,8 @@ export class AvaliarLeitura {
     private readonly avisos: RepositorioDeAvisos,
     private readonly relogio: Relogio,
     private readonly fontes?: FontesDeJardim,
+    /** Sem repositório, vale a janela padrão: o app nunca fica sem horário permitido. */
+    private readonly preferencias?: RepositorioDePreferencias,
   ) {}
 
   /** Os avisos entregues nesta verificação, na ordem das plantas; vazio quando não havia o que avisar. */
@@ -35,6 +40,10 @@ export class AvaliarLeitura {
     // Sem leitura, ou com uma velha demais, não dá para dizer que o desvio acabou nem que começou.
     if (!this.fontes && (leitura === null || leituraEstaDesatualizada(leitura, this.relogio.agora()))) return [];
 
+    const agora = this.relogio.agora();
+    // Fora da janela nada é entregue, e o desvio não é marcado como avisado: a próxima verificação dentro
+    // dela entrega. Se até lá o desvio tiver passado, a assinatura fica vazia e ninguém é incomodado.
+    const podeNotificarAgora = estaNaJanela(await this.lerJanela(), agora);
     const plantas = (await this.listarPlantas()).filter((planta) => idJardim === undefined || planta.idJardim === idJardim);
     const avisadas = await this.lerAvisadas();
     const assinaturas = new Map<string, string>();
@@ -48,7 +57,7 @@ export class AvaliarLeitura {
         } catch { porJardim.set(planta.idJardim, null); }
       }
       const leituraDaPlanta = this.fontes ? porJardim.get(planta.idJardim) ?? null : leitura;
-      if (leituraDaPlanta === null || leituraEstaDesatualizada(leituraDaPlanta, this.relogio.agora())) {
+      if (leituraDaPlanta === null || leituraEstaDesatualizada(leituraDaPlanta, agora)) {
         const anterior = avisadas.get(planta.id);
         if (anterior !== undefined) assinaturas.set(planta.id, anterior);
         continue;
@@ -67,17 +76,28 @@ export class AvaliarLeitura {
 
       const { titulo, corpo } = montarMensagemDoAviso(planta.apelido, desvios);
       const aviso: Aviso = { idPlanta: planta.id, titulo, corpo };
-      if (await this.entregar(aviso)) {
+      if (podeNotificarAgora && (await this.entregar(aviso))) {
         assinaturas.set(planta.id, assinatura);
         entregues.push(aviso);
       } else if (anterior !== undefined) {
-        // A entrega falhou: mantém o que a pessoa já tinha visto e tenta de novo na próxima verificação.
+        // Adiado pela janela, ou entrega falhou: mantém o que a pessoa já tinha visto e tenta na próxima.
         assinaturas.set(planta.id, anterior);
       }
     }
 
     await this.gravarAvisadas(assinaturas);
     return entregues;
+  }
+
+  /** Preferência que não dá para ler vale como a padrão: melhor a janela conhecida do que notificar sempre. */
+  private async lerJanela(): Promise<JanelaDeLembretes> {
+    if (this.preferencias === undefined) return JANELA_PADRAO;
+    try {
+      return await this.preferencias.obterJanelaDeLembretes();
+    } catch (falha) {
+      console.warn('Não deu para ler a janela de lembretes; vale a padrão.', falha);
+      return JANELA_PADRAO;
+    }
   }
 
   private async lerSensor(): Promise<Leitura | null> {

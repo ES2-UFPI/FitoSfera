@@ -19,12 +19,19 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:sensores-pareados` | Lista de sensores Bluetooth (`id`, `nome`), independentes da associação aos jardins. | `RepositorioDeSensoresPareadosAsyncStorage` |
 | `fitosfera:v2:sensor-pareado` | Formato antigo de sensor único, lido apenas enquanto a lista nova não foi gravada. | Compatibilidade com instalações anteriores |
 | `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
+| `fitosfera:v2:preferencias` | Preferências de notificação: `{ "janelaDeLembretes": { "inicio": { "hora", "minuto" }, "fim": { … } } }`. Ausente ou ilegível vale como a janela padrão. | `RepositorioDePreferenciasAsyncStorage` |
 
-Chaves reservadas para as próximas histórias, ainda sem código:
+### Janela de lembretes (`fitosfera:v2:preferencias`)
 
-| Chave | Conteúdo previsto |
-| --- | --- |
-| `fitosfera:v2:preferencias` | Preferências da pessoa, como notificações. |
+```json
+{ "janelaDeLembretes": { "inicio": { "hora": 8, "minuto": 0 }, "fim": { "hora": 21, "minuto": 0 } } }
+```
+
+A faixa de horas em que o app pode notificar (#28). `fim` antes de `inicio` descreve uma janela que atravessa a
+meia-noite; `inicio` igual a `fim` libera o dia inteiro. Hora precisa ser um inteiro de 0 a 23 e minuto de 0 a
+59: qualquer outra coisa é lida como ausente e vale a janela padrão (8h às 21h), definida em
+[`JanelaDeLembretes`](../../dominio/modelos/JanelaDeLembretes.ts). Como em `avisos`, conteúdo ilegível não gera
+cópia `:ilegivel` — o único dado aqui é a própria preferência, e o pior que acontece é ela voltar ao padrão.
 
 Chaves de versões anteriores, que só a migração lê. Elas não são apagadas depois da migração e ficam como cópia
 de segurança:

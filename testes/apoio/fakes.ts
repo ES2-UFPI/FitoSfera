@@ -23,7 +23,9 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
+import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
+import { RepositorioDePreferencias } from '@/dominio/portas/RepositorioDePreferencias';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
@@ -241,6 +243,23 @@ export class RepositorioDeAvisosEmMemoria implements RepositorioDeAvisos {
   }
 }
 
+/** Preferências de mentira: a janela combinada, ou uma leitura que falha. */
+export class RepositorioDePreferenciasEmMemoria implements RepositorioDePreferencias {
+  constructor(
+    private janela: JanelaDeLembretes = JANELA_PADRAO,
+    private readonly falharAoLer = false,
+  ) {}
+
+  async obterJanelaDeLembretes(): Promise<JanelaDeLembretes> {
+    if (this.falharAoLer) throw new Error('armazenamento indisponível');
+    return this.janela;
+  }
+
+  async definirJanelaDeLembretes(janela: JanelaDeLembretes): Promise<void> {
+    this.janela = janela;
+  }
+}
+
 export class RelogioParado implements Relogio {
   constructor(private readonly instante: Date = new Date(2026, 9, 17, 14, 0)) {}
 
@@ -295,6 +314,7 @@ export function criarContainerDeTeste(
     toqueDeAbertura?: ToqueNaNotificacao | null;
     pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
+    janelaDeLembretes?: JanelaDeLembretes;
   } = {},
 ): {
   container: Container;
@@ -333,7 +353,8 @@ export function criarContainerDeTeste(
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
-    avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio),
+    avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined,
+      new RepositorioDePreferenciasEmMemoria(opcoes.janelaDeLembretes)),
   };
   return { container, plantas, regas, notificador, avisos, toques };
 }
