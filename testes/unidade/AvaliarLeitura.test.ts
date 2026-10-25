@@ -49,7 +49,7 @@ test('leitura fora da faixa gera notificação, com a planta e o que saiu da fai
   expect(entregues).toEqual([
     {
       idPlanta: 'p1',
-      titulo: 'Tomatinho precisa de atenção',
+      titulo: 'Tomatinho precisa sair do sol',
       corpo: 'A temperatura está em 31 °C, acima do ideal.',
     },
   ]);

@@ -107,7 +107,7 @@ test('forçar um cenário de desvio envia a notificação correspondente', async
   expect(notificador.entregues[0]).toEqual(
     expect.objectContaining({
       idPlanta: 'p1',
-      titulo: 'Tomatinho precisa de atenção',
+      titulo: 'Tomatinho precisa de água',
       corpo: expect.stringContaining('A umidade do ar está em 10%, abaixo do ideal'),
     }),
   );
