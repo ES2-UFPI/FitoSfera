@@ -21,6 +21,8 @@ export const CHAVES = {
   /** Jardins, sensor associado e seleção ativa; ausente em instalações antigas. */
   jardins: 'fitosfera:v2:jardins',
   sensoresPareados: 'fitosfera:v2:sensores-pareados',
+  /** Preferências de notificação: por enquanto, a janela de horários dos lembretes. */
+  preferencias: 'fitosfera:v2:preferencias',
 } as const;
 
 /** Chaves da versão 1 (plantas sem faixas recomendadas). Só a migração lê; nada mais grava nelas. */

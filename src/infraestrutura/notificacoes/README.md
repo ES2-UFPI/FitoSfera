@@ -41,6 +41,25 @@ O intervalo de 15 minutos é uma intenção, não uma garantia: o Android impõe
 decide o instante exato pela bateria e pela rede. Aparelho com economia de bateria agressiva pode não registrar
 a tarefa; nesse caso a verificação só acontece quando a pessoa abre o app.
 
+## Janela de horários
+
+A pessoa escolhe a faixa de horas em que aceita ser avisada, e o app não notifica fora dela (#28). A janela é
+modelada em [`JanelaDeLembretes`](../../dominio/modelos/JanelaDeLembretes.ts) e a regra em
+[`HorarioDoLembrete`](../../dominio/regras/HorarioDoLembrete.ts); a preferência é gravada em
+`fitosfera:v2:preferencias`. Enquanto a pessoa não escolher, vale das **8h às 21h**.
+
+`fim` antes de `inicio` é uma janela que atravessa a meia-noite (22h às 7h), e `inicio` igual a `fim` libera o
+dia inteiro. Os dois limites contam como dentro, como nas faixas recomendadas.
+
+**O aviso fora da janela é adiado, não agendado.** O desvio detectado de madrugada não vira notificação com
+hora marcada: ele simplesmente não é entregue, e a assinatura **não** é gravada como avisada. A próxima
+verificação periódica que cair dentro da janela detecta o mesmo desvio e aí sim notifica. A consequência é a
+desejada: se o desvio tiver passado quando a janela abrir, a assinatura fica vazia e ninguém é incomodado por
+um problema que já se resolveu. Agendar a notificação na detecção avisaria de algo que não existe mais.
+
+Como o adiamento depende da verificação periódica, ele herda o intervalo dela: a entrega acontece na primeira
+verificação depois de a janela abrir, não no minuto exato da abertura.
+
 ## Aviso que não se repete
 
 A regra de desvio é [`DesvioDaLeitura`](../../dominio/regras/DesvioDaLeitura.ts), no domínio. Ela usa a mesma
