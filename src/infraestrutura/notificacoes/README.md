@@ -37,6 +37,11 @@ A tarefa é definida na carga do módulo, e não dentro de um efeito de tela: qu
 abrir nenhuma tela, é só isso que roda, e é aí que o sistema procura a tarefa. Ali não existe o container do
 `ProvedorDoAplicativo`, então a tarefa monta o seu próprio.
 
+Por isso o módulo é importado pelo ponto de entrada do app, [`index.ts`](../../../index.ts) (o `main` do
+`package.json`), **antes** do `expo-router/entry`. Sem tela, o roteador não carrega as rotas: se a definição
+dependesse do `app/_layout.tsx`, ela não existiria quando o Android executasse a tarefa. O teste
+`testes/unidade/pontoDeEntrada.test.ts` garante essa ordem.
+
 A definição também precisa ser síncrona. Por isso, só ali os módulos entram por `require` dentro de um `try`, e
 não por `import()`: com um `await` antes do `defineTask`, o Android procura a tarefa antes de ela existir, avisa
 "No task registered for key expo-task-manager" e descarta a execução.
