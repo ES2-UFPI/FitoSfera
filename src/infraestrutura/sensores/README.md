@@ -5,7 +5,8 @@ operações:
 
 | Operação | O que faz |
 | --- | --- |
-| `lerLeituraAtual()` | Devolve a leitura mais recente (`Leitura`), ou `null` quando ainda não há nenhuma. |
+| `lerLeituraAtual()` | Devolve na hora a leitura mais recente (`Leitura`), ou `null` quando ainda não há nenhuma. |
+| `aguardarLeitura()` | Devolve a leitura guardada se for recente; senão, liga ao sensor se preciso e espera a próxima, até o tempo limite. `null` quando nada chega. Usada pela verificação de avisos. |
 | `observarLeituras(aoReceber)` | Avisa cada leitura nova; devolve uma função que encerra a observação. |
 | `consultarEstadoDaConexao()` | Devolve o `EstadoDaConexao`: `indisponivel`, `sem-permissao`, `desconectado`, `conectando` ou `conectado`. |
 | `observarConexao(aoMudar)` | Avisa na hora e a cada mudança a `ConexaoDoSensor`: o estado e a hora da última comunicação (a chegada da última leitura). |

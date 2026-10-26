@@ -22,3 +22,14 @@ test('notifica cada planta só com o sensor de seu jardim', async () => {
     new RelogioParado(agora), fontes);
   expect((await uso.executar()).map((aviso) => aviso.idPlanta)).toEqual(['p2']);
 });
+
+test('com o sensor do jardim ainda conectando, espera a leitura dele para avisar', async () => {
+  const agora = new Date(2026, 9, 22, 14);
+  const plantas = new RepositorioDePlantasEmMemoria([plantaDeTeste({ id: 'p2', idJardim: 'sala', apelido: 'Sala' })]);
+  const seco = new SensorFixo({ umidadePercentual: 10, temperaturaCelsius: 24, luminosidadeLux: 9000, medidaEm: agora });
+  seco.entregarSoAoAguardar = true;
+  const fontes: FontesDeJardim = { obter: async () => seco };
+  const uso = new AvaliarLeitura(plantas, seco, new NotificadorFalso(true), new RepositorioDeAvisosEmMemoria(),
+    new RelogioParado(agora), fontes);
+  expect((await uso.executar()).map((aviso) => aviso.idPlanta)).toEqual(['p2']);
+});

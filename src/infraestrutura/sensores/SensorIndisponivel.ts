@@ -11,6 +11,10 @@ export class SensorIndisponivel implements SensorDeAmbiente {
     return null;
   }
 
+  async aguardarLeitura(): Promise<Leitura | null> {
+    return null;
+  }
+
   /** Sem sensor, nenhuma leitura chega: o aviso nunca é chamado. */
   observarLeituras(_aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     return () => undefined;

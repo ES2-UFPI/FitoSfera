@@ -130,10 +130,17 @@ export class RepositorioQueFalhaAoGravar extends RepositorioDePlantasEmMemoria {
 export class SensorFixo implements SensorDeAmbiente {
   private readonly observadores = new Set<(leitura: Leitura) => void>();
   falharAoLerAtual = false;
+  /** Imita o Bluetooth recém-aberto: ainda sem leitura guardada, ela só chega para quem aguarda. */
+  entregarSoAoAguardar = false;
 
   constructor(private readonly leitura: Leitura | null | 'falha' = null) {}
 
   async lerLeituraAtual(): Promise<Leitura | null> {
+    if (this.leitura === 'falha' || this.falharAoLerAtual) throw new Error('sensor fora do ar');
+    return this.entregarSoAoAguardar ? null : this.leitura;
+  }
+
+  async aguardarLeitura(): Promise<Leitura | null> {
     if (this.leitura === 'falha' || this.falharAoLerAtual) throw new Error('sensor fora do ar');
     return this.leitura;
   }
