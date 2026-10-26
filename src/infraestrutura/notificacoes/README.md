@@ -37,6 +37,10 @@ A tarefa é definida na carga do módulo, e não dentro de um efeito de tela: qu
 abrir nenhuma tela, é só isso que roda, e é aí que o sistema procura a tarefa. Ali não existe o container do
 `ProvedorDoAplicativo`, então a tarefa monta o seu próprio.
 
+A definição também precisa ser síncrona. Por isso, só ali os módulos entram por `require` dentro de um `try`, e
+não por `import()`: com um `await` antes do `defineTask`, o Android procura a tarefa antes de ela existir, avisa
+"No task registered for key expo-task-manager" e descarta a execução.
+
 O intervalo de 15 minutos é uma intenção, não uma garantia: o Android impõe um mínimo de cerca de 15 minutos e
 decide o instante exato pela bateria e pela rede. Aparelho com economia de bateria agressiva pode não registrar
 a tarefa; nesse caso a verificação só acontece quando a pessoa abre o app.

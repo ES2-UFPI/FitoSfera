@@ -142,23 +142,31 @@ describe('VerificacaoPeriodica', () => {
   test('fora do Android não há verificação em segundo plano', async () => {
     const { definirTarefaDeVerificacao } = await carregar();
 
-    expect(await definirTarefaDeVerificacao('web', trabalho)).toBe(false);
+    expect(definirTarefaDeVerificacao('web', trabalho)).toBe(false);
     expect(gerenciadorDeTarefasFalso.defineTask).not.toHaveBeenCalled();
   });
 
   test('no Android a tarefa é definida uma vez, por mais que o módulo seja chamado de novo', async () => {
     const { definirTarefaDeVerificacao, NOME_DA_TAREFA } = await carregar();
 
-    expect(await definirTarefaDeVerificacao('android', trabalho)).toBe(true);
-    expect(await definirTarefaDeVerificacao('android', trabalho)).toBe(true);
+    expect(definirTarefaDeVerificacao('android', trabalho)).toBe(true);
+    expect(definirTarefaDeVerificacao('android', trabalho)).toBe(true);
     expect(gerenciadorDeTarefasFalso.defineTask).toHaveBeenCalledTimes(1);
     expect(gerenciadorDeTarefasFalso.defineTask).toHaveBeenCalledWith(NOME_DA_TAREFA, expect.any(Function));
+  });
+
+  test('a tarefa já está definida no retorno, sem esperar nada: o Android a procura logo na carga', async () => {
+    const { definirTarefaDeVerificacao } = await carregar();
+
+    definirTarefaDeVerificacao('android', trabalho);
+
+    expect(gerenciadorDeTarefasFalso.defineTask).toHaveBeenCalledTimes(1);
   });
 
   test('a tarefa roda o trabalho e diz ao sistema que deu certo', async () => {
     const { definirTarefaDeVerificacao } = await carregar();
     const avaliar = jest.fn().mockResolvedValue(undefined);
-    await definirTarefaDeVerificacao('android', avaliar);
+    definirTarefaDeVerificacao('android', avaliar);
 
     const [, tarefa] = gerenciadorDeTarefasFalso.defineTask.mock.calls[0];
     expect(await tarefa()).toBe(tarefaDeFundoFalsa.BackgroundTaskResult.Success);
@@ -168,7 +176,7 @@ describe('VerificacaoPeriodica', () => {
   test('trabalho que falha não sobe: o sistema só ouve que a execução falhou', async () => {
     const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { definirTarefaDeVerificacao } = await carregar();
-    await definirTarefaDeVerificacao('android', () => Promise.reject(new Error('sem leitura')));
+    definirTarefaDeVerificacao('android', () => Promise.reject(new Error('sem leitura')));
 
     const [, tarefa] = gerenciadorDeTarefasFalso.defineTask.mock.calls[0];
     await expect(tarefa()).resolves.toBe(tarefaDeFundoFalsa.BackgroundTaskResult.Failed);
@@ -188,7 +196,7 @@ describe('VerificacaoPeriodica', () => {
       await carregar();
     tarefaDeFundoFalsa.getStatusAsync.mockResolvedValue(tarefaDeFundoFalsa.BackgroundTaskStatus.Available);
     gerenciadorDeTarefasFalso.isTaskRegisteredAsync.mockResolvedValue(false);
-    await definirTarefaDeVerificacao('android', trabalho);
+    definirTarefaDeVerificacao('android', trabalho);
 
     expect(await registrarVerificacaoPeriodica()).toBe(true);
     expect(tarefaDeFundoFalsa.registerTaskAsync).toHaveBeenCalledWith(NOME_DA_TAREFA, {
@@ -200,7 +208,7 @@ describe('VerificacaoPeriodica', () => {
     const { definirTarefaDeVerificacao, registrarVerificacaoPeriodica } = await carregar();
     tarefaDeFundoFalsa.getStatusAsync.mockResolvedValue(tarefaDeFundoFalsa.BackgroundTaskStatus.Available);
     gerenciadorDeTarefasFalso.isTaskRegisteredAsync.mockResolvedValue(true);
-    await definirTarefaDeVerificacao('android', trabalho);
+    definirTarefaDeVerificacao('android', trabalho);
 
     expect(await registrarVerificacaoPeriodica()).toBe(true);
     expect(tarefaDeFundoFalsa.registerTaskAsync).not.toHaveBeenCalled();
@@ -209,7 +217,7 @@ describe('VerificacaoPeriodica', () => {
   test('aparelho que bloqueia a execução em segundo plano não registra nada', async () => {
     const { definirTarefaDeVerificacao, registrarVerificacaoPeriodica } = await carregar();
     tarefaDeFundoFalsa.getStatusAsync.mockResolvedValue(tarefaDeFundoFalsa.BackgroundTaskStatus.Restricted);
-    await definirTarefaDeVerificacao('android', trabalho);
+    definirTarefaDeVerificacao('android', trabalho);
 
     expect(await registrarVerificacaoPeriodica()).toBe(false);
     expect(tarefaDeFundoFalsa.registerTaskAsync).not.toHaveBeenCalled();
@@ -219,7 +227,7 @@ describe('VerificacaoPeriodica', () => {
     const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { definirTarefaDeVerificacao, registrarVerificacaoPeriodica } = await carregar();
     tarefaDeFundoFalsa.getStatusAsync.mockRejectedValue(new Error('o sistema recusou'));
-    await definirTarefaDeVerificacao('android', trabalho);
+    definirTarefaDeVerificacao('android', trabalho);
 
     expect(await registrarVerificacaoPeriodica()).toBe(false);
     expect(aviso).toHaveBeenCalled();
