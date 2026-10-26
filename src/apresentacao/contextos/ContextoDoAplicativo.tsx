@@ -46,6 +46,8 @@ export function ProvedorDoAplicativo({
 
   const selecionarJardim = useCallback(async (id: string) => {
     await container.gerenciarJardins.selecionar(id);
+    // Escolher o jardim que já está aberto não muda a seleção, então nada recarregaria a estante esvaziada abaixo.
+    if (selecaoAtual.current === id) return;
     selecaoAtual.current = id;
     definirPlantas(null);
     definirSelecionado(id);

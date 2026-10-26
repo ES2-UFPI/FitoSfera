@@ -1,4 +1,4 @@
-import { fireEvent, screen } from 'expo-router/testing-library';
+import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { plantaDeTeste } from '../apoio/fakes';
@@ -18,6 +18,23 @@ test('trocar de jardim mostra apenas as plantas cadastradas nele', async () => {
   fireEvent.press(screen.getByRole('button', { name: 'Sala' }));
   expect(await screen.findByLabelText('Samambaia. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
   expect(screen.queryByText('Varanda')).toBeNull();
+});
+
+test('tocar no jardim que já está aberto mantém as plantas na estante', async () => {
+  renderizarApp({
+    jardins: [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }],
+    plantas: [plantaDeTeste({ id: 'p1', apelido: 'Alecrim' })],
+  });
+  expect(await screen.findByLabelText('Alecrim. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
+
+  fireEvent.press(screen.getByRole('button', { name: 'Mostrar opções do jardim' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
+  fireEvent.press(screen.getByRole('button', { name: 'Jardim principal', selected: true }));
+  // O seletor fecha quando a troca termina; a partir daí, a estante não pode ficar esperando uma recarga.
+  await waitFor(() => expect(screen.queryByRole('header', { name: 'Seus jardins' })).toBeNull());
+
+  expect(await screen.findByLabelText('Alecrim. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
+  expect(screen.getByText('1 planta neste espaço')).toBeTruthy();
 });
 
 test('sensor associado a um jardim não pode ser associado ao outro', async () => {
