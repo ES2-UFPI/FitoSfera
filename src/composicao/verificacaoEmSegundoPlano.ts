@@ -9,7 +9,8 @@ import { criarContainer } from './criarContainer';
 /**
  * Define a tarefa de segundo plano já na carga do módulo, e não dentro de um efeito de tela: quando o
  * Android acorda o app sem abrir nenhuma tela, é só isto que roda. Ali não existe o container do
- * `ProvedorDoAplicativo`, então a tarefa monta o seu próprio.
+ * `ProvedorDoAplicativo`, então a tarefa monta o seu próprio. Este módulo é importado pelo `index.ts`, antes
+ * do roteador, porque sem tela as rotas (e o `app/_layout.tsx`) não carregam.
  */
 definirTarefaDeVerificacao(Platform.OS, async () => {
   await criarContainer().avaliarLeitura.executar();
