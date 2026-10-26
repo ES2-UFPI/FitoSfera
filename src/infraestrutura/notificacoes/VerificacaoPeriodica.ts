@@ -13,20 +13,18 @@ let tarefaDefinida = false;
  * Define a tarefa que o sistema executa em segundo plano. Precisa ser chamada assim que o pacote JavaScript
  * carrega, inclusive quando o Android acorda o app sem tela, porque é aí que o sistema procura a tarefa.
  *
- * Os módulos entram sob demanda, pelo mesmo motivo do `NotificadorExpo`: fora de um build nativo eles não
- * existem, e uma importação estática derrubaria a prévia web e os testes. A plataforma chega por parâmetro,
- * como em `escolherNotificador`, para esta decisão poder ser testada sem React Native.
+ * Por isso a definição é síncrona: com um `await import()` antes do `defineTask`, o Android procurava a tarefa
+ * antes de ela existir ("No task registered for key expo-task-manager") e a verificação não rodava.
+ *
+ * Os módulos entram por `require` dentro do `try`, pelo mesmo motivo do `NotificadorExpo`: fora de um build
+ * nativo eles não existem, e uma importação estática derrubaria a prévia web e os testes. A plataforma chega
+ * por parâmetro, como em `escolherNotificador`, para esta decisão poder ser testada sem React Native.
  */
-export async function definirTarefaDeVerificacao(
-  plataforma: string,
-  trabalho: () => Promise<void>,
-): Promise<boolean> {
+export function definirTarefaDeVerificacao(plataforma: string, trabalho: () => Promise<void>): boolean {
   if (plataforma !== 'android' || tarefaDefinida) return tarefaDefinida;
   try {
-    const [GerenciadorDeTarefas, TarefaDeFundo] = await Promise.all([
-      import('expo-task-manager'),
-      import('expo-background-task'),
-    ]);
+    const GerenciadorDeTarefas = require('expo-task-manager') as typeof import('expo-task-manager');
+    const TarefaDeFundo = require('expo-background-task') as typeof import('expo-background-task');
     GerenciadorDeTarefas.defineTask(NOME_DA_TAREFA, async () => {
       try {
         await trabalho();
