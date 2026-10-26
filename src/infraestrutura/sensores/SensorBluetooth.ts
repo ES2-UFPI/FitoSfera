@@ -24,6 +24,9 @@ export interface GuardaDoSensorPareado {
 export const ESPERA_INICIAL_PARA_RECONECTAR_MS = 5_000;
 export const ESPERA_MAXIMA_PARA_RECONECTAR_MS = 60_000;
 
+/** O firmware publica uma leitura por minuto: até duas publicações perdidas, a guardada ainda serve. */
+export const IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS = 2 * 60_000;
+
 /**
  * Quanto esperar antes da tentativa de número `tentativa` (a partir de 0): 5 s, 10 s, 20 s, 40 s e, dali em
  * diante, 60 s. Com o sensor longe por muito tempo, o app não gasta bateria tentando a cada poucos segundos.
@@ -73,6 +76,7 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   private ultimaLeitura: Leitura | null = null;
   private ultimaComunicacao: Date | null = null;
   private inicio: Promise<void> | null = null;
+  private tentativaEmCurso: Promise<void> | null = null;
   private reconexao: ReturnType<typeof setTimeout> | null = null;
   private encerrarConexao: (() => void) | null = null;
   private readonly observadores = new Set<(leitura: Leitura) => void>();
@@ -88,6 +92,27 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   async lerLeituraAtual(): Promise<Leitura | null> {
     this.garantirInicio();
     return this.ultimaLeitura;
+  }
+
+  /**
+   * Para a verificação de avisos: um sensor recém-criado (abertura do app, tarefa de fundo) ainda não tem
+   * leitura, e `lerLeituraAtual` devolveria null antes mesmo de a conexão abrir. Aqui a espera cobre a conexão,
+   * a leitura da característica e, se ela vier vazia ou antiga, a resposta ao pedido de leitura imediata.
+   */
+  async aguardarLeitura(): Promise<Leitura | null> {
+    await this.garantirInicio();
+    if (this.pareado === null) return null;
+    const guardada = this.ultimaLeitura;
+    if (guardada !== null && this.relogio.agora().getTime() - guardada.medidaEm.getTime() <= IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS)
+      return guardada;
+
+    const proxima = this.esperarLeitura();
+    if (this.conexao !== null) void this.conexao.pedirLeitura().catch(() => undefined);
+    else {
+      this.cancelarReconexao();
+      void this.conectarAoPareado();
+    }
+    return proxima.promessa;
   }
 
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
@@ -218,7 +243,15 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     void this.conectarAoPareado();
   }
 
-  private async conectarAoPareado(): Promise<void> {
+  /** Quem pede durante uma tentativa espera por ela, em vez de abrir uma segunda conexão com o mesmo sensor. */
+  private conectarAoPareado(): Promise<void> {
+    this.tentativaEmCurso ??= this.tentarConectar().finally(() => {
+      this.tentativaEmCurso = null;
+    });
+    return this.tentativaEmCurso;
+  }
+
+  private async tentarConectar(): Promise<void> {
     const pareado = this.pareado;
     if (pareado === null || this.conexao !== null) return;
     if (!(await this.cliente.temPermissoes().catch(() => false))) {

@@ -523,3 +523,78 @@ describe('falhas e reconexão automática (#50)', () => {
     expect(aoFalhar.mock.calls[0][0].motivo).toBe(motivo);
   });
 });
+
+describe('aguardarLeitura, usada pela verificação de avisos', () => {
+  test('num sensor recém-criado, conecta e devolve a leitura, enquanto lerLeituraAtual ainda não tem nada', async () => {
+    const { sensor } = montar(SENSOR);
+    const recemCriado = montar(SENSOR).sensor;
+    expect(await recemCriado.lerLeituraAtual()).toBeNull();
+
+    expect(await sensor.aguardarLeitura()).toEqual({
+      temperaturaCelsius: 25.14,
+      umidadePercentual: 58,
+      luminosidadeLux: 1000,
+      medidaEm: instante,
+    });
+  });
+
+  test('com a característica ainda vazia, espera a notificação pedida pelo comando', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.proximaConexao = () => {
+      const conexao = new ConexaoFalsa();
+      conexao.valorLido = null;
+      conexao.responderAoPedido = SEM_LUZ;
+      return conexao;
+    };
+    expect(await sensor.aguardarLeitura()).toEqual(expect.objectContaining({ luminosidadeLux: null }));
+  });
+
+  test('sem leitura dentro do tempo limite, devolve null', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.proximaConexao = () => {
+      const conexao = new ConexaoFalsa();
+      conexao.valorLido = null;
+      return conexao;
+    };
+    const resultado = sensor.aguardarLeitura();
+    await jest.advanceTimersByTimeAsync(20_000);
+    expect(await resultado).toBeNull();
+  });
+
+  test('sem sensor pareado, devolve null sem tentar conectar', async () => {
+    const { cliente, sensor } = montar();
+    expect(await sensor.aguardarLeitura()).toBeNull();
+    expect(cliente.tentativasDeConexao).toBe(0);
+  });
+
+  test('com uma leitura recente guardada, devolve ela sem pedir outra ao sensor', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    await sensor.aguardarLeitura();
+    const pedidos = cliente.ultima.pedidos;
+
+    expect(await sensor.aguardarLeitura()).toEqual(expect.objectContaining({ temperaturaCelsius: 25.14 }));
+    expect(cliente.ultima.pedidos).toBe(pedidos);
+  });
+
+  test('com a leitura guardada já antiga, pede uma nova ao sensor conectado', async () => {
+    let agora = instante;
+    const cliente = new ClienteFalso();
+    const sensor = new SensorBluetooth(cliente, new GuardaEmMemoria(SENSOR), { agora: () => agora });
+    await sensor.aguardarLeitura();
+    const pedidos = cliente.ultima.pedidos;
+    cliente.ultima.responderAoPedido = SEM_LUZ;
+
+    agora = new Date(instante.getTime() + 10 * 60_000);
+    const nova = await sensor.aguardarLeitura();
+
+    expect(cliente.ultima.pedidos).toBe(pedidos + 1);
+    expect(nova).toEqual(expect.objectContaining({ luminosidadeLux: null, medidaEm: agora }));
+  });
+
+  test('pedidos ao mesmo tempo abrem uma conexão só', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    sensor.observarLeituras(() => undefined);
+    await Promise.all([sensor.aguardarLeitura(), sensor.aguardarLeitura()]);
+    expect(cliente.tentativasDeConexao).toBe(1);
+  });
+});

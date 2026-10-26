@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CamadaDaAbertura } from '@/apresentacao/abertura/CamadaDaAbertura';
 import { ProvedorDoAplicativo, useAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import { useAberturaPelaNotificacao } from '@/apresentacao/notificacoes/useAberturaPelaNotificacao';
+import { acompanharLeiturasComOAppAberto } from '@/composicao/verificacaoComOAppAberto';
 import { ligarVerificacaoEmSegundoPlano } from '@/composicao/verificacaoEmSegundoPlano';
 import { CORES } from '@/apresentacao/tema/cores';
 
@@ -46,9 +47,11 @@ export default function LayoutRaiz() {
 function Navegacao() {
   const { plantas, container } = useAplicativo();
 
-  // Na primeira abertura é aqui que o app pede a permissão de notificação.
+  // Na primeira abertura é aqui que o app pede a permissão de notificação. Enquanto o app está aberto, as
+  // leituras também são avaliadas a cada minuto, sem esperar a tarefa de segundo plano.
   useEffect(() => {
     void ligarVerificacaoEmSegundoPlano(container);
+    return acompanharLeiturasComOAppAberto(container);
   }, [container]);
 
   // Tocar na notificação de desvio abre o detalhe da planta citada.

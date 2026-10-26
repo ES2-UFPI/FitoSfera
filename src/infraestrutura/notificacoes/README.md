@@ -25,13 +25,25 @@ testes. Toda falha de carregamento vira "não notifiquei", nunca um erro que sob
 ## Quem dispara a verificação
 
 O caso de uso [`AvaliarLeitura`](../../aplicacao/casos-de-uso/AvaliarLeitura.ts) compara a leitura com a faixa
-de cada planta e notifica os desvios novos. Ele roda em dois momentos, e nunca lança: em segundo plano não há
+de cada planta e notifica os desvios novos. Ele roda em três momentos, e nunca lança: em segundo plano não há
 tela para mostrar erro, e uma falha derrubaria a verificação inteira.
 
 | Momento | Quem chama |
 | --- | --- |
 | Abertura do app — é esta execução que pede a permissão | `ligarVerificacaoEmSegundoPlano`, em [`verificacaoEmSegundoPlano.ts`](../../composicao/verificacaoEmSegundoPlano.ts), a partir de `app/_layout.tsx` |
+| A cada minuto, com o app aberto | `acompanharLeiturasComOAppAberto`, em [`verificacaoComOAppAberto.ts`](../../composicao/verificacaoComOAppAberto.ts), a partir de `app/_layout.tsx`; nunca sobrepõe duas verificações |
 | A cada ~15 minutos, com o app fechado | A tarefa de [`VerificacaoPeriodica`](VerificacaoPeriodica.ts), registrada no `expo-background-task` |
+
+### A leitura usada na verificação
+
+A verificação pede a leitura com `aguardarLeitura()`, e não com `lerLeituraAtual()`. Na abertura do app e na
+tarefa de fundo o sensor Bluetooth acabou de ser criado e ainda está conectando: `lerLeituraAtual()` responderia
+"sem leitura" na hora, e nenhum aviso sairia com o sensor real. `aguardarLeitura()` devolve a leitura guardada se
+ela tiver até 2 minutos; senão conecta, lê e, se preciso, pede uma leitura imediata ao sensor, esperando até o
+tempo limite de 20 s.
+
+A central Bluetooth é uma só por processo (`criarSensorBluetooth`): a tarefa de fundo monta o seu próprio
+container, mas reaproveita a conexão que o app já tem aberta, em vez de tentar uma segunda conexão com o sensor.
 
 A tarefa é definida na carga do módulo, e não dentro de um efeito de tela: quando o Android acorda o app sem
 abrir nenhuma tela, é só isso que roda, e é aí que o sistema procura a tarefa. Ali não existe o container do

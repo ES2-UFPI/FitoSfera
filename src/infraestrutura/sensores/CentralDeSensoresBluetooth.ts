@@ -27,6 +27,11 @@ export class CentralDeSensoresBluetooth implements PareamentoDoSensor, SensorDeA
     return sensor ? this.obterSensor(sensor.id).lerLeituraAtual() : null;
   }
 
+  async aguardarLeitura(): Promise<Leitura | null> {
+    const sensor = await this.obterPareado();
+    return sensor ? this.obterSensor(sensor.id).aguardarLeitura() : null;
+  }
+
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     return this.observarAtual((sensor) => sensor.observarLeituras(aoReceber));
   }

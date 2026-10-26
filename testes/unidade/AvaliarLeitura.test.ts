@@ -36,12 +36,14 @@ function montar(
     agora?: Date;
     janela?: JanelaDeLembretes;
     falharAoLerJanela?: boolean;
+    soAoAguardar?: boolean;
   } = {},
 ) {
   const plantas = new RepositorioDePlantasEmMemoria(opcoes.plantas ?? [plantaDeTeste({ id: 'p1' })]);
   const notificador = new NotificadorFalso(opcoes.permitido ?? true, opcoes.falharAoNotificar);
   const avisos = new RepositorioDeAvisosEmMemoria(opcoes.avisadas);
   const sensor = new SensorFixo(opcoes.leitura === undefined ? leitura() : opcoes.leitura);
+  sensor.entregarSoAoAguardar = opcoes.soAoAguardar ?? false;
   const preferencias = new RepositorioDePreferenciasEmMemoria(opcoes.janela, opcoes.falharAoLerJanela);
   const caso = new AvaliarLeitura(plantas, sensor, notificador, avisos,
     new RelogioParado(opcoes.agora ?? AGORA), undefined, preferencias);
@@ -286,4 +288,21 @@ test('planta que saiu do jardim some da memória de avisos', async () => {
   await caso.executar();
 
   expect([...avisos.salvas.keys()]).toEqual(['p1']);
+});
+
+describe('sensor que ainda está conectando, como o Bluetooth ao abrir o app ou na tarefa de fundo', () => {
+  test('espera a leitura do sensor em vez de desistir por falta de leitura', async () => {
+    const { caso, notificador } = montar({ leitura: quente(AGORA), soAoAguardar: true });
+
+    const entregues = await caso.executar();
+
+    expect(entregues).toHaveLength(1);
+    expect(notificador.entregues).toEqual(entregues);
+  });
+
+  test('se o sensor não entregar nada, não avisa', async () => {
+    const { caso, notificador } = montar({ leitura: null, soAoAguardar: true });
+    expect(await caso.executar()).toEqual([]);
+    expect(notificador.entregues).toEqual([]);
+  });
 });

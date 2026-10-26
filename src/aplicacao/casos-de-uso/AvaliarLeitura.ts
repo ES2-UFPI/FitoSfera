@@ -53,7 +53,7 @@ export class AvaliarLeitura {
     for (const planta of plantas) {
       if (this.fontes && !porJardim.has(planta.idJardim)) {
         try {
-          porJardim.set(planta.idJardim, await (await this.fontes.obter(planta.idJardim)).lerLeituraAtual());
+          porJardim.set(planta.idJardim, await (await this.fontes.obter(planta.idJardim)).aguardarLeitura());
         } catch { porJardim.set(planta.idJardim, null); }
       }
       const leituraDaPlanta = this.fontes ? porJardim.get(planta.idJardim) ?? null : leitura;
@@ -102,7 +102,8 @@ export class AvaliarLeitura {
 
   private async lerSensor(): Promise<Leitura | null> {
     try {
-      return await this.sensor.lerLeituraAtual();
+      // Aguarda: na abertura do app e na tarefa de fundo o sensor Bluetooth ainda está conectando.
+      return await this.sensor.aguardarLeitura();
     } catch {
       return null;
     }
