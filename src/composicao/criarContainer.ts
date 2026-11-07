@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
+import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -71,5 +72,6 @@ export function criarContainer(): Container {
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
     toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias),
+    ajustarPreferencias: new AjustarPreferencias(preferencias),
   };
 }

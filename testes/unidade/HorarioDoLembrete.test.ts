@@ -1,5 +1,5 @@
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
-import { estaNaJanela, proximoHorarioPermitido } from '@/dominio/regras/HorarioDoLembrete';
+import { deslocarHorario, estaNaJanela, proximoHorarioPermitido } from '@/dominio/regras/HorarioDoLembrete';
 
 const janela = (inicio: [number, number], fim: [number, number]): JanelaDeLembretes => ({
   inicio: { hora: inicio[0], minuto: inicio[1] },
@@ -97,4 +97,29 @@ test('a janela padrão vai das 8h às 21h e não cobre a madrugada', () => {
   expect(JANELA_PADRAO).toEqual({ inicio: { hora: 8, minuto: 0 }, fim: { hora: 21, minuto: 0 } });
   expect(estaNaJanela(JANELA_PADRAO, em(3))).toBe(false);
   expect(estaNaJanela(JANELA_PADRAO, em(10))).toBe(true);
+});
+
+describe('deslocar um horário', () => {
+  test('anda para frente e para trás dentro do dia', () => {
+    expect(deslocarHorario({ hora: 8, minuto: 0 }, 30)).toEqual({ hora: 8, minuto: 30 });
+    expect(deslocarHorario({ hora: 8, minuto: 0 }, -30)).toEqual({ hora: 7, minuto: 30 });
+    expect(deslocarHorario({ hora: 8, minuto: 0 }, 90)).toEqual({ hora: 9, minuto: 30 });
+  });
+
+  test('dá a volta na meia-noite nos dois sentidos', () => {
+    expect(deslocarHorario({ hora: 23, minuto: 45 }, 30)).toEqual({ hora: 0, minuto: 15 });
+    expect(deslocarHorario({ hora: 0, minuto: 15 }, -30)).toEqual({ hora: 23, minuto: 45 });
+    expect(deslocarHorario({ hora: 0, minuto: 0 }, -30)).toEqual({ hora: 23, minuto: 30 });
+  });
+
+  test('zero não muda nada, e um dia inteiro volta ao mesmo horário', () => {
+    expect(deslocarHorario({ hora: 14, minuto: 20 }, 0)).toEqual({ hora: 14, minuto: 20 });
+    expect(deslocarHorario({ hora: 14, minuto: 20 }, 24 * 60)).toEqual({ hora: 14, minuto: 20 });
+    expect(deslocarHorario({ hora: 14, minuto: 20 }, -24 * 60)).toEqual({ hora: 14, minuto: 20 });
+  });
+
+  test('o horário deslocado continua servindo para a janela', () => {
+    const inicio = deslocarHorario(JANELA_PADRAO.inicio, -60);
+    expect(estaNaJanela({ ...JANELA_PADRAO, inicio }, em(7, 30))).toBe(true);
+  });
 });
