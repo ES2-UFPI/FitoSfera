@@ -78,7 +78,9 @@ test('mostra os cenários apenas quando há um sensor de desenvolvimento', async
 });
 
 test('o relógio de simulação avança e volta ao horário real sem afetar o relógio do app', async () => {
-  const controle = new SensoresSimuladosDosJardins(new RelogioParado(new Date('2026-10-18T13:00:00Z')));
+  // A interface mostra a hora local; use datas locais para o teste ser independente do fuso do runner de CI.
+  const horarioInicial = new Date(2026, 9, 18, 10, 0);
+  const controle = new SensoresSimuladosDosJardins(new RelogioParado(horarioInicial));
   const { container } = renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
   const listarJardim = jest.spyOn(container.listarJardim, 'executar');
 
@@ -87,7 +89,7 @@ test('o relógio de simulação avança e volta ao horário real sem afetar o re
   expect(screen.getByText('18/10/2026 11:00')).toBeTruthy();
   await waitFor(() => expect(listarJardim).toHaveBeenCalled());
   await expect(controle.obterSensor('jardim-principal').lerLeituraAtual()).resolves.toEqual(expect.objectContaining({
-    medidaEm: new Date('2026-10-18T14:00:00Z'),
+    medidaEm: new Date(2026, 9, 18, 11, 0),
   }));
 
   fireEvent.press(screen.getByRole('button', { name: 'Voltar ao horário atual' }));
