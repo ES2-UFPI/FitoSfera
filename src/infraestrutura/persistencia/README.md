@@ -27,9 +27,11 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 { "janelaDeLembretes": { "inicio": { "hora": 8, "minuto": 0 }, "fim": { "hora": 21, "minuto": 0 } } }
 ```
 
-A faixa de horas em que o app pode notificar (#28). `fim` antes de `inicio` descreve uma janela que atravessa a
-meia-noite; `inicio` igual a `fim` libera o dia inteiro. Hora precisa ser um inteiro de 0 a 23 e minuto de 0 a
-59: qualquer outra coisa é lida como ausente e vale a janela padrão (8h às 21h), definida em
+A faixa de horas em que o app pode notificar (#28). Quem escolhe é a tela **Ajustes → Mudar o horário dos
+lembretes** (#54), que grava a cada ajuste pelo caso de uso `AjustarPreferencias`. `fim` antes de `inicio`
+descreve uma janela que atravessa a meia-noite; `inicio` igual a `fim` libera o dia inteiro. Hora precisa ser
+um inteiro de 0 a 23 e minuto de 0 a 59: qualquer outra coisa é lida como ausente e vale a janela padrão
+(8h às 21h), definida em
 [`JanelaDeLembretes`](../../dominio/modelos/JanelaDeLembretes.ts). Como em `avisos`, conteúdo ilegível não gera
 cópia `:ilegivel` — o único dado aqui é a própria preferência, e o pior que acontece é ela voltar ao padrão.
 

@@ -13,8 +13,8 @@ import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { CORES } from '../tema/cores';
 import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
+import { CartaoDosLembretes } from '../lembretes/CartaoDosLembretes';
 import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
-import { TelaEmBreve } from './TelaEmBreve';
 
 type Grandeza = 'umidade' | 'temperatura' | 'luminosidade';
 type IconeDaGrandeza = ComponentType<{
@@ -107,10 +107,6 @@ export function TelaAjustes() {
     await recarregarJardim();
   }
 
-  if (controle === null && pareamento === null) {
-    return <TelaEmBreve titulo="Ajustes" descricao="Aqui você vai escolher o horário dos lembretes e o sensor." />;
-  }
-
   return (
     <FundoAconchegante>
       <ScrollView
@@ -120,6 +116,7 @@ export function TelaAjustes() {
         <Text style={TEXTO.titulo} accessibilityRole="header">
           Ajustes
         </Text>
+        <CartaoDosLembretes />
         {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
         {controle ? (
           <CartaoDoSensorDeDesenvolvimento
