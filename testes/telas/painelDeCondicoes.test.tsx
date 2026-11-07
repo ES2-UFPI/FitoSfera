@@ -40,19 +40,19 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   expect(screen.getByTestId('icone-luz')).toBeTruthy();
 });
 
-test('leitura desatualizada mostra "sem dados" em vez dos valores antigos', () => {
-  render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, desatualizada: true }} />);
+test('leitura desatualizada mantém os últimos valores e os identifica como armazenados', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, faixasRecomendadas, desatualizada: true }} />);
 
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
-  expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('58')).toBeNull();
-  expect(screen.queryByText('24,5')).toBeNull();
-  expect(screen.queryByText('720')).toBeNull();
-  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Temperatura: sem dados recentes\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Luz: sem dados recentes\./)).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
+  expect(screen.getByText('24,5')).toBeTruthy();
+  expect(screen.getByText('720')).toBeTruthy();
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
+  expect(screen.getByLabelText(/^Umidade: 58 por cento\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Temperatura: 24,5 graus Celsius\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Luz: 720 lux\./)).toBeTruthy();
 });
 
 test('mostra o estado de carregamento sem inventar valores', () => {
@@ -173,8 +173,8 @@ test('leitura desatualizada não é avaliada contra a faixa', () => {
   );
 
   expect(screen.queryByText(/do ideal$/)).toBeNull();
-  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
-  expect(screen.queryByText('40')).toBeNull();
+  expect(screen.getByLabelText('Umidade: 40 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+  expect(screen.getByText('40')).toBeTruthy();
 });
 
 test('sem faixa recomendada não indica situação', () => {

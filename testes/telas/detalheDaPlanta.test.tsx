@@ -44,7 +44,7 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
   expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento. Dentro do ideal.')).toBeTruthy();
 });
 
-test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valores antigos', async () => {
+test('leitura mais antiga que 30 minutos mantém os valores armazenados com aviso de desatualização', async () => {
   renderizarApp({
     plantas: [plantaDeTeste()],
     url: '/planta/p1',
@@ -59,9 +59,9 @@ test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valo
 
   expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
-  expect(screen.queryByText('58')).toBeNull();
+  expect(screen.getByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
 });
 
 test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
@@ -84,7 +84,7 @@ test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
   expect(screen.getByLabelText(/^Luz: 850 lux\./)).toBeTruthy();
 });
 
-test('puxar para atualizar consulta o sensor e oculta os valores antigos marcados como desatualizados na falha', async () => {
+test('puxar para atualizar mantém os últimos valores e os marca como desatualizados se falhar', async () => {
   const sensor = new SensorFixo({
     umidadePercentual: 61,
     temperaturaCelsius: 25,
@@ -103,12 +103,11 @@ test('puxar para atualizar consulta o sensor e oculta os valores antigos marcado
   const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   fireEvent(screen.UNSAFE_getByType(RefreshControl), 'refresh');
 
-  expect(await screen.findByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('61')).toBeNull();
-  expect(screen.queryByText('25')).toBeNull();
-  expect(screen.queryByText('9000')).toBeNull();
-  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
+  expect(await screen.findByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('61')).toBeTruthy();
+  expect(screen.getByText('25')).toBeTruthy();
+  expect(screen.getByText('9000')).toBeTruthy();
+  expect(screen.getByLabelText(/^Umidade: 61 por cento\./)).toBeTruthy();
   aviso.mockRestore();
 });
 

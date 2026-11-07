@@ -69,6 +69,7 @@ function Indicador({
   descricaoDaUnidade,
   icone,
   faixaRecomendada,
+  avaliarSituacao = true,
 }: {
   rotulo: string;
   valor: number | null;
@@ -76,8 +77,11 @@ function Indicador({
   descricaoDaUnidade: string;
   icone: ReactNode;
   faixaRecomendada?: FaixaDoPainel;
+  avaliarSituacao?: boolean;
 }) {
-  const situacao = valor !== null && faixaRecomendada ? compararMedicaoComFaixa(valor, faixaRecomendada) : null;
+  const situacao = avaliarSituacao && valor !== null && faixaRecomendada
+    ? compararMedicaoComFaixa(valor, faixaRecomendada)
+    : null;
   const apresentacao = situacao === null ? null : APRESENTACAO_DA_SITUACAO[situacao];
   const foraDoIdeal = situacao !== null && situacao !== 'ideal';
   const valorFormatado = valor === null ? null : formatarNumero(valor);
@@ -129,9 +133,11 @@ const FONTE_QUE_EMPILHA = 1.3;
 function Indicadores({
   leitura,
   faixas,
+  avaliarSituacoes = true,
 }: {
   leitura: LeituraDoPainel | null;
   faixas?: FaixasRecomendadasDoPainel;
+  avaliarSituacoes?: boolean;
 }) {
   const { fontScale } = useWindowDimensions();
   return (
@@ -146,6 +152,7 @@ function Indicadores({
         descricaoDaUnidade="por cento"
         icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
         faixaRecomendada={faixas?.umidadePercentual}
+        avaliarSituacao={avaliarSituacoes}
       />
       <Indicador
         rotulo="Temperatura"
@@ -154,6 +161,7 @@ function Indicadores({
         descricaoDaUnidade="graus Celsius"
         icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
         faixaRecomendada={faixas?.temperaturaCelsius}
+        avaliarSituacao={avaliarSituacoes}
       />
       <Indicador
         rotulo="Luz"
@@ -162,6 +170,7 @@ function Indicadores({
         descricaoDaUnidade="lux"
         icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
         faixaRecomendada={faixas?.luminosidadeLux}
+        avaliarSituacao={avaliarSituacoes}
       />
     </View>
   );
@@ -218,13 +227,13 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
           {estado.desatualizada ? (
             <View style={estilos.aviso} accessible accessibilityRole="alert">
               <Text style={estilos.simboloDoAviso}>!</Text>
-              <Text style={estilos.textoDoAviso}>Leitura desatualizada</Text>
+              <Text style={estilos.textoDoAviso}>Últimos dados armazenados · leitura desatualizada</Text>
             </View>
           ) : null}
-          {/* Leitura velha não passa por atual: os valores somem e só as faixas ideais ficam. */}
           <Indicadores
-            leitura={estado.desatualizada ? null : estado.leitura}
+            leitura={estado.leitura}
             faixas={estado.faixasRecomendadas}
+            avaliarSituacoes={!estado.desatualizada}
           />
         </>
       ) : null}
