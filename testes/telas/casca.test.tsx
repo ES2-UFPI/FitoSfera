@@ -22,7 +22,8 @@ test('a tela Ambiente, escondida da barra, ainda mostra "Em breve" pelo endereç
   expect(screen.getByRole('header', { name: 'Ambiente' })).toBeTruthy();
 });
 
-test('a aba Ajustes mostra "Em breve"', async () => {
+test('a aba Ajustes abre no horário dos lembretes, sem mais "Em breve"', async () => {
   renderizarApp({ url: '/ajustes' });
-  expect(await screen.findByText('Em breve')).toBeTruthy();
+  expect(await screen.findByRole('header', { name: 'Lembretes' })).toBeTruthy();
+  expect(screen.queryByText('Em breve')).toBeNull();
 });

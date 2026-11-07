@@ -1,4 +1,5 @@
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
+import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -250,11 +251,12 @@ export class RepositorioDeAvisosEmMemoria implements RepositorioDeAvisos {
   }
 }
 
-/** Preferências de mentira: a janela combinada, ou uma leitura que falha. */
+/** Preferências de mentira: a janela combinada, ou uma leitura/gravação que falha. */
 export class RepositorioDePreferenciasEmMemoria implements RepositorioDePreferencias {
   constructor(
     private janela: JanelaDeLembretes = JANELA_PADRAO,
     private readonly falharAoLer = false,
+    private readonly falharAoGravar = false,
   ) {}
 
   async obterJanelaDeLembretes(): Promise<JanelaDeLembretes> {
@@ -263,7 +265,13 @@ export class RepositorioDePreferenciasEmMemoria implements RepositorioDePreferen
   }
 
   async definirJanelaDeLembretes(janela: JanelaDeLembretes): Promise<void> {
+    if (this.falharAoGravar) throw new Error('armazenamento indisponível');
     this.janela = janela;
+  }
+
+  /** O que está guardado agora, para o teste conferir o que a tela gravou. */
+  get janelaGravada(): JanelaDeLembretes {
+    return this.janela;
   }
 }
 
@@ -322,6 +330,8 @@ export function criarContainerDeTeste(
     pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
     janelaDeLembretes?: JanelaDeLembretes;
+    falharAoLerPreferencias?: boolean;
+    falharAoGravarPreferencias?: boolean;
   } = {},
 ): {
   container: Container;
@@ -330,6 +340,7 @@ export function criarContainerDeTeste(
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
   toques: ToquesNaNotificacaoFalso;
+  preferencias: RepositorioDePreferenciasEmMemoria;
 } {
   const plantas = opcoes.falharAoLer
     ? new RepositorioQueFalhaAoLer(opcoes.plantas)
@@ -344,6 +355,11 @@ export function criarContainerDeTeste(
   const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
   const avisos = new RepositorioDeAvisosEmMemoria();
   const toques = new ToquesNaNotificacaoFalso(opcoes.toqueDeAbertura ?? null);
+  const preferencias = new RepositorioDePreferenciasEmMemoria(
+    opcoes.janelaDeLembretes,
+    opcoes.falharAoLerPreferencias,
+    opcoes.falharAoGravarPreferencias,
+  );
   const container: Container = {
     gerenciarJardins: new GerenciarJardins(new RepositorioDeJardinsEmMemoria(opcoes.jardins), gerador),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
@@ -360,8 +376,8 @@ export function criarContainerDeTeste(
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
-    avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined,
-      new RepositorioDePreferenciasEmMemoria(opcoes.janelaDeLembretes)),
+    avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined, preferencias),
+    ajustarPreferencias: new AjustarPreferencias(preferencias),
   };
-  return { container, plantas, regas, notificador, avisos, toques };
+  return { container, plantas, regas, notificador, avisos, toques, preferencias };
 }

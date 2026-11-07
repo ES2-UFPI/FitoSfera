@@ -4,6 +4,7 @@ import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDo
 import { ToqueNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Jardim } from '@/dominio/modelos/Jardim';
@@ -23,6 +24,7 @@ import LayoutDaEdicao from '../../../app/editar/[id]/_layout';
 import RotaEditarApelido from '../../../app/editar/[id]/apelido';
 import RotaEditarAparencia from '../../../app/editar/[id]/index';
 import RotaHistorico from '../../../app/historico/[id]';
+import RotaLembretes from '../../../app/lembretes';
 import RotaPlanta from '../../../app/planta/[id]';
 import RotaSensor from '../../../app/sensor';
 import {
@@ -30,6 +32,7 @@ import {
   NotificadorFalso,
   RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
+  RepositorioDePreferenciasEmMemoria,
   RepositorioDeRegasEmMemoria,
   ToquesNaNotificacaoFalso,
 } from '../../apoio/fakes';
@@ -55,6 +58,9 @@ export function renderizarApp(
     toqueDeAbertura?: ToqueNaNotificacao | null;
     pareamentoDoSensor?: PareamentoDoSensor | null;
     permitirNotificacao?: boolean;
+    janelaDeLembretes?: JanelaDeLembretes;
+    falharAoLerPreferencias?: boolean;
+    falharAoGravarPreferencias?: boolean;
   } = {},
 ): {
   plantas: RepositorioDePlantasEmMemoria;
@@ -62,8 +68,9 @@ export function renderizarApp(
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
   toques: ToquesNaNotificacaoFalso;
+  preferencias: RepositorioDePreferenciasEmMemoria;
 } {
-  const { container, plantas, regas, notificador, avisos, toques } = criarContainerDeTeste({
+  const { container, plantas, regas, notificador, avisos, toques, preferencias } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     jardins: opcoes.jardins,
     especies: opcoes.especies,
@@ -78,6 +85,9 @@ export function renderizarApp(
     toqueDeAbertura: opcoes.toqueDeAbertura,
     pareamentoDoSensor: opcoes.pareamentoDoSensor,
     permitirNotificacao: opcoes.permitirNotificacao,
+    janelaDeLembretes: opcoes.janelaDeLembretes,
+    falharAoLerPreferencias: opcoes.falharAoLerPreferencias,
+    falharAoGravarPreferencias: opcoes.falharAoGravarPreferencias,
   });
 
   function LayoutDeTeste() {
@@ -108,11 +118,12 @@ export function renderizarApp(
       'planta/[id]': RotaPlanta,
       'historico/[id]': RotaHistorico,
       sensor: RotaSensor,
+      lembretes: RotaLembretes,
       'editar/[id]/_layout': LayoutDaEdicao,
       'editar/[id]/index': RotaEditarAparencia,
       'editar/[id]/apelido': RotaEditarApelido,
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas, regas, notificador, avisos, toques };
+  return { plantas, regas, notificador, avisos, toques, preferencias };
 }
