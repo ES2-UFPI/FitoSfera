@@ -39,6 +39,7 @@ export function criarMigracaoParaVersao2(especies: RepositorioDeEspecies): Migra
 export const MIGRACOES: readonly Migracao[] = [
   MIGRACAO_PARA_VERSAO_1,
   criarMigracaoParaVersao2(new RepositorioDeEspeciesLocal()),
+  { paraVersao: 3, aplicar: async () => undefined },
 ];
 
 interface ChavesDasPlantas {

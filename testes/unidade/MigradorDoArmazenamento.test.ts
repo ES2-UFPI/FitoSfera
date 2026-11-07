@@ -18,7 +18,7 @@ describe('da versão 0 para a 1 (e daí até a atual)', () => {
   test('instalação nova só grava a versão atual', async () => {
     const armazenamento = new ArmazenamentoEmMemoria();
     await new MigradorDoArmazenamento(armazenamento).migrar();
-    expect(Object.fromEntries(armazenamento.valores)).toEqual({ 'fitosfera:versao-do-schema': '2' });
+    expect(Object.fromEntries(armazenamento.valores)).toEqual({ 'fitosfera:versao-do-schema': '3' });
   });
 
   test('o jardim gravado antes do versionamento continua aparecendo depois da atualização', async () => {
@@ -30,7 +30,7 @@ describe('da versão 0 para a 1 (e daí até a atual)', () => {
 
     expect((await repo.listar()).map((planta) => planta.apelido)).toEqual(['Tomatinho', 'Manjericão']);
     expect(armazenamento.valores.get('fitosfera:v1:plantas')).toBe(antigas);
-    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('2');
+    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('3');
     // A chave antiga fica como cópia de segurança.
     expect(armazenamento.valores.get('@fitosfera/plantas')).toBe(antigas);
   });
@@ -62,12 +62,12 @@ describe('da versão 0 para a 1 (e daí até a atual)', () => {
     expect(await repo.listar()).toEqual([]);
     await repo.adicionar(Planta.criar({ id: 'p1', idEspecie: 'tomate', apelido: 'Nova', aparencia: APARENCIA_INICIAL }));
     expect(armazenamento.valores.get('fitosfera:v2:plantas:ilegivel')).toBe('{quebrado');
-    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('2');
+    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('3');
   });
 
   test('já na versão atual, não mexe em nada', async () => {
     const armazenamento = new ArmazenamentoEmMemoria({
-      'fitosfera:versao-do-schema': '2',
+      'fitosfera:versao-do-schema': '3',
       '@fitosfera/plantas': JSON.stringify([registro('p9', 'Esquecida')]),
     });
     await new MigradorDoArmazenamento(armazenamento).migrar();
@@ -135,7 +135,7 @@ describe('da versão 1 para a 2: faixas recomendadas nas plantas já cadastradas
     expect(armazenamento.valores.size).toBe(0);
   });
 
-  test('pelo migrador, um jardim da versão 1 abre na versão 2 com as faixas do catálogo embutido', async () => {
+  test('pelo migrador, um jardim da versão 1 abre na versão atual com as faixas do catálogo embutido', async () => {
     const armazenamento = new ArmazenamentoEmMemoria({
       'fitosfera:versao-do-schema': '1',
       'fitosfera:v1:plantas': JSON.stringify([registro('p1', 'Tomatinho')]),
@@ -147,7 +147,7 @@ describe('da versão 1 para a 2: faixas recomendadas nas plantas já cadastradas
     const tomate = await new RepositorioDeEspeciesLocal().obterPorId('tomate');
     expect(planta.faixasRecomendadas).toEqual(copiarFaixas(tomate?.faixasIdeais ?? null));
     expect(planta.faixasRecomendadas).not.toBeNull();
-    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('2');
+    expect(armazenamento.valores.get('fitosfera:versao-do-schema')).toBe('3');
   });
 });
 
