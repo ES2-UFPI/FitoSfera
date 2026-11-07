@@ -1,10 +1,13 @@
 import { JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
+import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { RepositorioDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeLeiturasAsyncStorage';
 import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
 import { SensoresSimuladosDosJardins } from '@/infraestrutura/sensores/SensoresSimuladosDosJardins';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
-import { RelogioParado } from '../apoio/fakes';
+import { plantaDeTeste, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
+import { ESPECIES_DE_TESTE } from '../apoio/especiesDeTeste';
 
 test('sem associação não compartilha o sensor simulado com todos os jardins', async () => {
   const jardins = new RepositorioDeJardinsAsyncStorage(new ArmazenamentoEmMemoria());
@@ -32,4 +35,36 @@ test('enxerga a associação ao simulador feita depois da primeira consulta, mes
   await jardins.salvar({ ...JARDIM_PRINCIPAL, idSensor: `simulado:${JARDIM_PRINCIPAL.id}` });
 
   expect(await (await fontes.obter(JARDIM_PRINCIPAL.id)).lerLeituraAtual()).toMatchObject({ umidadePercentual: 90 });
+});
+
+test('usa o relógio virtual para marcar como desatualizado o cache quando o simulador está desconectado', async () => {
+  const agora = new Date('2026-10-22T13:00:00Z');
+  const armazenamento = new ArmazenamentoEmMemoria();
+  const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
+  await jardins.salvar({ ...JARDIM_PRINCIPAL, idSensor: `simulado:${JARDIM_PRINCIPAL.id}` });
+  const simulados = new SensoresSimuladosDosJardins(new RelogioParado(agora));
+  const fontes = new FontesDosJardins(
+    jardins,
+    null,
+    simulados,
+    new RepositorioDeLeiturasAsyncStorage(armazenamento),
+  );
+  await (await fontes.obter(JARDIM_PRINCIPAL.id)).lerLeituraAtual();
+  simulados.definirConfiguracao({
+    umidade: 'automatico', temperatura: 'automatico', luminosidade: 'automatico', desconectado: true,
+  }, JARDIM_PRINCIPAL.id);
+  simulados.ajustarHorarioSimulado(31 * 60_000, JARDIM_PRINCIPAL.id);
+
+  const detalle = new ObterPlantaDoJardim(
+    new RepositorioDePlantasEmMemoria([plantaDeTeste()]),
+    new RepositorioDeEspeciesLocal(ESPECIES_DE_TESTE),
+    await fontes.obter(JARDIM_PRINCIPAL.id),
+    new RelogioParado(agora),
+    fontes,
+  );
+  const item = await detalle.executar('p1', JARDIM_PRINCIPAL.id);
+
+  expect(item?.ultimaLeitura).not.toBeNull();
+  expect(item?.leituraDesatualizada).toBe(true);
+  expect(item?.status).toBe('sem-dados');
 });

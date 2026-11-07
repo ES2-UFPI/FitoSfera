@@ -34,13 +34,14 @@ function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | unde
   };
 }
 
-function estadoDoPainel(item: PlantaNoJardim, atualizando = false): EstadoDoPainel {
+function estadoDoPainel(item: PlantaNoJardim, atualizando = false, offline = false): EstadoDoPainel {
   const faixasRecomendadas = faixasDoPainel(item);
   if (item.ultimaLeitura !== null) {
     return {
       tipo: 'leitura',
       leitura: item.ultimaLeitura,
       desatualizada: item.leituraDesatualizada,
+      offline,
       faixasRecomendadas,
       atualizando,
     };
@@ -253,8 +254,17 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             </View>
           </View>
           <PainelDeCondicoes
-            estado={estadoDoPainel(item, atualizandoLeitura)}
-            origem={<IndicadorDeConexao conexao={conexao} />}
+            estado={estadoDoPainel(
+              item,
+              atualizandoLeitura,
+              conexao !== null && conexao.estado !== 'conectado' && conexao.estado !== 'conectando',
+            )}
+            origem={(
+              <IndicadorDeConexao
+                conexao={conexao}
+                agora={container.controleDoSensorDeDesenvolvimento?.obterHorarioSimulado(idJardimSelecionado)}
+              />
+            )}
           />
           <CartaoDoHistorico
             estado={historico}

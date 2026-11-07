@@ -55,6 +55,19 @@ test('leitura desatualizada mantém os últimos valores e os identifica como arm
   expect(screen.getByLabelText(/^Luz: 720 lux\./)).toBeTruthy();
 });
 
+test('sem conexão, identifica o cache e não classifica os valores como atuais', () => {
+  render(
+    <PainelDeCondicoes
+      estado={{ tipo: 'leitura', leitura, faixasRecomendadas, offline: true }}
+    />,
+  );
+
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(screen.getByText('Últimos dados armazenados · sensor sem conexão')).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
+});
+
 test('mostra o estado de carregamento sem inventar valores', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'carregando' }} />);
 

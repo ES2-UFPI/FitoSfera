@@ -36,6 +36,7 @@ export type EstadoDoPainel =
       readonly leitura: LeituraDoPainel;
       readonly faixasRecomendadas?: FaixasRecomendadasDoPainel;
       readonly demonstracao?: boolean;
+      readonly offline?: boolean;
       readonly desatualizada?: boolean;
       readonly atualizando?: boolean;
     };
@@ -224,16 +225,20 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
               <Text style={TEXTO.apoio}>Atualizando condições…</Text>
             </View>
           ) : null}
-          {estado.desatualizada ? (
+          {estado.offline || estado.desatualizada ? (
             <View style={estilos.aviso} accessible accessibilityRole="alert">
               <Text style={estilos.simboloDoAviso}>!</Text>
-              <Text style={estilos.textoDoAviso}>Últimos dados armazenados · leitura desatualizada</Text>
+              <Text style={estilos.textoDoAviso}>
+                {estado.offline
+                  ? `Últimos dados armazenados · sensor sem conexão${estado.desatualizada ? ' · leitura desatualizada' : ''}`
+                  : 'Últimos dados armazenados · leitura desatualizada'}
+              </Text>
             </View>
           ) : null}
           <Indicadores
             leitura={estado.leitura}
             faixas={estado.faixasRecomendadas}
-            avaliarSituacoes={!estado.desatualizada}
+            avaliarSituacoes={!estado.desatualizada && !estado.offline}
           />
         </>
       ) : null}

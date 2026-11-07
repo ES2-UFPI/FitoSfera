@@ -29,4 +29,10 @@ export class FontesDosJardins implements FontesDeJardim {
     }
     return sensor;
   }
+
+  async obterHorarioDeReferencia(idJardim: string): Promise<Date | null> {
+    const jardim = (await this.jardins.listar()).find((item) => item.id === idJardim);
+    const simulado = jardim?.idSensor === 'simulado' || jardim?.idSensor === `simulado:${idJardim}`;
+    return simulado ? this.simulados?.obterHorarioSimulado(idJardim) ?? null : null;
+  }
 }
