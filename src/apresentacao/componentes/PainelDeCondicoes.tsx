@@ -230,7 +230,7 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
               <Text style={estilos.simboloDoAviso}>!</Text>
               <Text style={estilos.textoDoAviso}>
                 {estado.offline
-                  ? `Últimos dados armazenados · sensor sem conexão${estado.desatualizada ? ' · leitura desatualizada' : ''}`
+                  ? `Últimos dados armazenados · leitura desatualizada · sensor sem conexão${estado.desatualizada ? '' : ' · aguardando nova leitura'}`
                   : 'Últimos dados armazenados · leitura desatualizada'}
               </Text>
             </View>

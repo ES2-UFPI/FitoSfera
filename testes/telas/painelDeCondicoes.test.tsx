@@ -63,7 +63,9 @@ test('sem conexão, identifica o cache e não classifica os valores como atuais'
   );
 
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Últimos dados armazenados · sensor sem conexão')).toBeTruthy();
+  expect(
+    screen.getByText('Últimos dados armazenados · leitura desatualizada · sensor sem conexão · aguardando nova leitura'),
+  ).toBeTruthy();
   expect(screen.getByText('58')).toBeTruthy();
   expect(screen.queryByText(/do ideal$/)).toBeNull();
 });

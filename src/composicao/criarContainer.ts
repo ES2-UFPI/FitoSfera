@@ -22,7 +22,7 @@ import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/R
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { RepositorioDePreferenciasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePreferenciasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
-import { RepositorioDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeLeiturasAsyncStorage';
+import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
 import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
@@ -41,7 +41,7 @@ export function criarContainer(): Container {
   const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
   const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
-  const leituras = new RepositorioDeLeiturasAsyncStorage(armazenamento);
+  const leituras = new CacheDeLeiturasAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
   const preferencias = new RepositorioDePreferenciasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();

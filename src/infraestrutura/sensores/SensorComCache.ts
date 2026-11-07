@@ -1,5 +1,5 @@
 import { Leitura } from '@/dominio/modelos/Leitura';
-import { RepositorioDeLeituras } from '@/dominio/portas/RepositorioDeLeituras';
+import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 
@@ -7,7 +7,7 @@ import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaCone
 export class SensorComCache implements SensorDeAmbiente {
   constructor(
     private readonly sensor: SensorDeAmbiente,
-    private readonly leituras: RepositorioDeLeituras,
+    private readonly leituras: CacheDeLeituras,
     private readonly idJardim: string,
   ) {}
 

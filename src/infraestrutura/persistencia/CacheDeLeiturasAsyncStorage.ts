@@ -1,10 +1,10 @@
 import { Leitura } from '@/dominio/modelos/Leitura';
-import { RepositorioDeLeituras } from '@/dominio/portas/RepositorioDeLeituras';
+import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
 import { ArmazenamentoChaveValor } from './ArmazenamentoChaveValor';
 import { CHAVES } from './chaves';
 
 /** Persiste a última leitura por jardim; dados inválidos são ignorados sem afetar o restante do app. */
-export class RepositorioDeLeiturasAsyncStorage implements RepositorioDeLeituras {
+export class CacheDeLeiturasAsyncStorage implements CacheDeLeituras {
   constructor(private readonly armazenamento: ArmazenamentoChaveValor) {}
 
   async obter(idJardim: string): Promise<Leitura | null> {

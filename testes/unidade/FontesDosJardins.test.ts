@@ -2,7 +2,7 @@ import { JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
-import { RepositorioDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeLeiturasAsyncStorage';
+import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
 import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
 import { SensoresSimuladosDosJardins } from '@/infraestrutura/sensores/SensoresSimuladosDosJardins';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
@@ -29,7 +29,7 @@ test('enxerga a associação ao simulador feita depois da primeira consulta, mes
   await jardins.salvar({ ...JARDIM_PRINCIPAL, idSensor: null });
   const simulados = new SensoresSimuladosDosJardins(new RelogioParado(new Date(2026, 9, 22)));
   simulados.definirConfiguracao({ umidade: 'alto', temperatura: 'automatico', luminosidade: 'automatico', desconectado: false });
-  const fontes = new FontesDosJardins(jardins, null, simulados, new RepositorioDeLeiturasAsyncStorage(armazenamento));
+  const fontes = new FontesDosJardins(jardins, null, simulados, new CacheDeLeiturasAsyncStorage(armazenamento));
 
   expect(await (await fontes.obter(JARDIM_PRINCIPAL.id)).lerLeituraAtual()).toBeNull();
   await jardins.salvar({ ...JARDIM_PRINCIPAL, idSensor: `simulado:${JARDIM_PRINCIPAL.id}` });
@@ -47,7 +47,7 @@ test('usa o relógio virtual para marcar como desatualizado o cache quando o sim
     jardins,
     null,
     simulados,
-    new RepositorioDeLeiturasAsyncStorage(armazenamento),
+    new CacheDeLeiturasAsyncStorage(armazenamento),
   );
   await (await fontes.obter(JARDIM_PRINCIPAL.id)).lerLeituraAtual();
   simulados.definirConfiguracao({

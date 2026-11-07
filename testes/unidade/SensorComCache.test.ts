@@ -1,6 +1,6 @@
 import { SensorComCache } from '@/infraestrutura/sensores/SensorComCache';
 import { Leitura } from '@/dominio/modelos/Leitura';
-import { RepositorioDeLeituras } from '@/dominio/portas/RepositorioDeLeituras';
+import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
 import { SensorFixo } from '../apoio/fakes';
 
 const leitura = { umidadePercentual: 55, temperaturaCelsius: 24, luminosidadeLux: 1200,
@@ -8,7 +8,7 @@ const leitura = { umidadePercentual: 55, temperaturaCelsius: 24, luminosidadeLux
 
 function montar(sensor: SensorFixo) {
   let cache: Leitura | null = null;
-  const repositorio: RepositorioDeLeituras = {
+  const repositorio: CacheDeLeituras = {
     obter: async () => cache,
     salvar: async (_id, valor) => { cache = valor; },
   };

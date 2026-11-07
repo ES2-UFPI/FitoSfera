@@ -1,4 +1,4 @@
-import { RepositorioDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeLeiturasAsyncStorage';
+import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
 
 const leitura = { umidadePercentual: 57, temperaturaCelsius: 24.5, luminosidadeLux: null,
@@ -6,13 +6,13 @@ const leitura = { umidadePercentual: 57, temperaturaCelsius: 24.5, luminosidadeL
 
 test('guarda a última leitura isolada por jardim e restaura a data como Date', async () => {
   const armazenamento = new ArmazenamentoEmMemoria();
-  const repo = new RepositorioDeLeiturasAsyncStorage(armazenamento);
+  const repo = new CacheDeLeiturasAsyncStorage(armazenamento);
   await repo.salvar('sala 1', leitura);
-  expect(await new RepositorioDeLeiturasAsyncStorage(armazenamento).obter('sala 1')).toEqual(leitura);
+  expect(await new CacheDeLeiturasAsyncStorage(armazenamento).obter('sala 1')).toEqual(leitura);
   expect(await repo.obter('sala-1')).toBeNull();
 });
 
 test.each(['{quebrado', 'null', '{"medidaEm":"inválida"}'])('ignora conteúdo inválido %p', async (bruto) => {
   const armazenamento = new ArmazenamentoEmMemoria({ 'fitosfera:v3:leitura:sala': bruto });
-  expect(await new RepositorioDeLeiturasAsyncStorage(armazenamento).obter('sala')).toBeNull();
+  expect(await new CacheDeLeiturasAsyncStorage(armazenamento).obter('sala')).toBeNull();
 });

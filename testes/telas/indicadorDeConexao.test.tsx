@@ -37,7 +37,9 @@ describe('no detalhe da planta', () => {
         `Sensor desconectado. O app tenta reconectar sozinho. Última comunicação há 3 min (às ${horaEMinuto(ultimaComunicacao)}).`,
       ),
     ).toBeTruthy();
-    expect(screen.getByText('Últimos dados armazenados · sensor sem conexão')).toBeTruthy();
+    expect(
+      screen.getByText('Últimos dados armazenados · leitura desatualizada · sensor sem conexão · aguardando nova leitura'),
+    ).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));
     expect(await screen.findByText('✓ Rega registrada agora.')).toBeTruthy();
