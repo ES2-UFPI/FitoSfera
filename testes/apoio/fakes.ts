@@ -1,5 +1,6 @@
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
+import { AtualizarLeituras } from '@/aplicacao/casos-de-uso/AtualizarLeituras';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -360,8 +361,9 @@ export function criarContainerDeTeste(
     opcoes.falharAoLerPreferencias,
     opcoes.falharAoGravarPreferencias,
   );
+  const jardins = new RepositorioDeJardinsEmMemoria(opcoes.jardins);
   const container: Container = {
-    gerenciarJardins: new GerenciarJardins(new RepositorioDeJardinsEmMemoria(opcoes.jardins), gerador),
+    gerenciarJardins: new GerenciarJardins(jardins, gerador),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     obterLeituraAtual: new ObterLeituraAtual(leituras),
@@ -378,6 +380,7 @@ export function criarContainerDeTeste(
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined, preferencias),
     ajustarPreferencias: new AjustarPreferencias(preferencias),
+    atualizarLeituras: new AtualizarLeituras(jardins, { obter: async () => leituras }),
   };
   return { container, plantas, regas, notificador, avisos, toques, preferencias };
 }

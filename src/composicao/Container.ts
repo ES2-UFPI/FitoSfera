@@ -1,5 +1,6 @@
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
+import { AtualizarLeituras } from '@/aplicacao/casos-de-uso/AtualizarLeituras';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -35,4 +36,5 @@ export interface Container {
   readonly pareamentoDoSensor: PareamentoDoSensor | null;
   readonly avaliarLeitura: AvaliarLeitura;
   readonly ajustarPreferencias: AjustarPreferencias;
+  readonly atualizarLeituras: AtualizarLeituras;
 }
