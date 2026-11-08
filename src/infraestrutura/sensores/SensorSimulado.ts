@@ -23,6 +23,7 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
   private readonly observadores = new Set<(leitura: Leitura) => void>();
   private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
   private ultimaComunicacao: Date | null = null;
+  private deslocamentoDoRelogioMs = 0;
 
   constructor(
     private readonly relogio: Relogio,
@@ -75,6 +76,26 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     if (mudouAConexao) this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
   }
 
+  obterHorarioSimulado(): Date {
+    return new Date(this.relogio.agora().getTime() + this.deslocamentoDoRelogioMs);
+  }
+
+  ajustarHorarioSimulado(deltaMs: number): Date {
+    this.deslocamentoDoRelogioMs += deltaMs;
+    const leitura = this.medir();
+    if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
+    this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
+    return this.obterHorarioSimulado();
+  }
+
+  redefinirHorarioSimulado(): Date {
+    this.deslocamentoDoRelogioMs = 0;
+    const leitura = this.medir();
+    if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
+    this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
+    return this.obterHorarioSimulado();
+  }
+
   private conexao(): ConexaoDoSensor {
     return {
       estado: this.configuracao.desconectado ? 'desconectado' : 'conectado',
@@ -84,7 +105,7 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
 
   /** Uma onda por dia: mais luz e calor perto do meio-dia, mais umidade de madrugada. */
   private medir(): Leitura | null {
-    const agora = this.relogio.agora();
+    const agora = this.obterHorarioSimulado();
     if (this.configuracao.desconectado) return null;
     this.ultimaComunicacao = agora;
     const onda = Math.sin((2 * Math.PI * (agora.getTime() % UM_DIA_MS)) / UM_DIA_MS);

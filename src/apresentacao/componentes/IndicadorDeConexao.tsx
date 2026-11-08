@@ -25,9 +25,20 @@ function mesmoDia(a: Date, b: Date): boolean {
 export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora: Date): string {
   if (ultimaComunicacao === null) return 'Sem comunicação desde que o app abriu';
   const horario = formatarDataEHora(ultimaComunicacao);
-  return mesmoDia(ultimaComunicacao, agora)
-    ? `Última comunicação ${horario.slice(horario.indexOf('às'))}`
-    : `Última comunicação em ${horario}`;
+  const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / 60_000));
+  const decorrido = minutos < 1
+    ? 'há menos de 1 minuto'
+    : minutos < 60
+      ? `há ${minutos} min`
+      : minutos < 1_440
+        ? `há ${Math.floor(minutos / 60)} h`
+        : Math.floor(minutos / 1_440) === 1
+          ? 'há 1 dia'
+          : `há ${Math.floor(minutos / 1_440)} dias`;
+  const quando = mesmoDia(ultimaComunicacao, agora)
+    ? horario.slice(horario.indexOf('às'))
+    : `em ${horario}`;
+  return `Última comunicação ${decorrido} (${quando})`;
 }
 
 function horarioComSegundos(instante: Date): string {

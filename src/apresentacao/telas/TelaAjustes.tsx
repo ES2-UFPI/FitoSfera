@@ -92,6 +92,11 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
   );
 }
 
+function formatarHorarioSimulado(horario: Date): string {
+  const doisDigitos = (valor: number) => String(valor).padStart(2, '0');
+  return `${doisDigitos(horario.getDate())}/${doisDigitos(horario.getMonth() + 1)}/${horario.getFullYear()} ${doisDigitos(horario.getHours())}:${doisDigitos(horario.getMinutes())}`;
+}
+
 export function TelaAjustes() {
   const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
@@ -126,6 +131,7 @@ export function TelaAjustes() {
             nomeDoJardim={jardimAtual?.nome ?? 'Jardim principal'}
             simuladorAssociado={simuladorAssociado}
             aoAlternarAssociacao={alternarAssociacaoSimulada}
+            aoAtualizarLeituras={recarregarJardim}
           />
         ) : null}
       </ScrollView>
@@ -139,12 +145,14 @@ function CartaoDoSensorDeDesenvolvimento({
   nomeDoJardim,
   simuladorAssociado,
   aoAlternarAssociacao,
+  aoAtualizarLeituras,
 }: {
   controle: ControleDoSensorDeDesenvolvimento;
   idJardim: string;
   nomeDoJardim: string;
   simuladorAssociado: boolean;
   aoAlternarAssociacao(): Promise<void>;
+  aoAtualizarLeituras(): Promise<void>;
 }) {
   const { container } = useAplicativo();
   const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(() =>
@@ -152,6 +160,7 @@ function CartaoDoSensorDeDesenvolvimento({
   );
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
   const [falhaAoAssociar, definirFalhaAoAssociar] = useState(false);
+  const [horarioSimulado, definirHorarioSimulado] = useState(() => controle.obterHorarioSimulado(idJardim));
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -172,6 +181,16 @@ function CartaoDoSensorDeDesenvolvimento({
   function definirNivel(grandeza: Grandeza, nivel: NivelDoSensorDeDesenvolvimento) {
     aplicar({ ...configuracao, [grandeza]: nivel, desconectado: false });
     definirMenuAberto(null);
+  }
+
+  function ajustarHorario(deltaMs: number) {
+    definirHorarioSimulado(controleAtivo.ajustarHorarioSimulado(deltaMs, idJardim));
+    void aoAtualizarLeituras();
+  }
+
+  function voltarAoHorarioAtual() {
+    definirHorarioSimulado(controleAtivo.redefinirHorarioSimulado(idJardim));
+    void aoAtualizarLeituras();
   }
 
   return (
@@ -217,6 +236,20 @@ function CartaoDoSensorDeDesenvolvimento({
       </View>
 
       <Text style={TEXTO.corpo}>Use um atalho ou combine as condições para testar o aplicativo sem hardware.</Text>
+      <View style={estilos.relogioSimulado}>
+        <Text style={estilos.tituloDaExplicacao}>Relógio da simulação</Text>
+        <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
+          {formatarHorarioSimulado(horarioSimulado)}
+        </Text>
+        <Text style={TEXTO.apoio}>Avance o tempo para testar a variação das leituras e dados antigos. Isso não altera o horário do app.</Text>
+        <View style={estilos.opcoesDeTempo}>
+          <BotaoDeOpcao titulo="−1 hora" aoTocar={() => ajustarHorario(-3_600_000)} />
+          <BotaoDeOpcao titulo="+1 hora" aoTocar={() => ajustarHorario(3_600_000)} />
+          <BotaoDeOpcao titulo="−1 dia" aoTocar={() => ajustarHorario(-86_400_000)} />
+          <BotaoDeOpcao titulo="+1 dia" aoTocar={() => ajustarHorario(86_400_000)} />
+        </View>
+        <BotaoPrincipal titulo="Voltar ao horário atual" variante="secundaria" aoTocar={voltarAoHorarioAtual} />
+      </View>
       <View style={estilos.explicacaoDoAutomatico}>
         <Text style={estilos.tituloDaExplicacao}>O que significa automático?</Text>
         <Text style={TEXTO.apoio}>
@@ -347,12 +380,12 @@ function MenuDaGrandeza({
 
 function BotaoDeOpcao({
   titulo,
-  selecionado,
+  selecionado = false,
   desabilitado = false,
   aoTocar,
 }: {
   titulo: string;
-  selecionado: boolean;
+  selecionado?: boolean;
   desabilitado?: boolean;
   aoTocar(): void;
 }) {
@@ -424,6 +457,16 @@ const estilos = StyleSheet.create({
     borderRadius: RAIO.medio,
     backgroundColor: CORES.fundoTopo,
   },
+  relogioSimulado: {
+    padding: ESPACO.medio,
+    gap: ESPACO.pequeno,
+    borderRadius: RAIO.medio,
+    borderWidth: 1,
+    borderColor: CORES.bordaSuave,
+    backgroundColor: CORES.superficie,
+  },
+  horarioSimulado: { fontFamily: FONTES.titulo, fontSize: 22, color: CORES.acao },
+  opcoesDeTempo: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
   tituloDaExplicacao: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.texto },
   opcoes: { gap: ESPACO.pequeno },
   opcao: {

@@ -25,6 +25,10 @@ class ControleFixo implements ControleDoSensorDeDesenvolvimento {
   definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento) {
     this.configuracao = { ...configuracao };
   }
+
+  obterHorarioSimulado() { return new Date('2026-10-18T13:00:00Z'); }
+  ajustarHorarioSimulado() { return new Date('2026-10-18T14:00:00Z'); }
+  redefinirHorarioSimulado() { return new Date('2026-10-18T13:00:00Z'); }
 }
 
 test('each garden has its own simulated readings and controls', () => {
@@ -71,6 +75,25 @@ test('mostra os cenários apenas quando há um sensor de desenvolvimento', async
   expect(screen.getByTestId('icone-menu-temperatura')).toBeTruthy();
   expect(screen.getByTestId('icone-menu-luminosidade')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Umidade: Baixo' })).toBeNull();
+});
+
+test('o relógio de simulação avança e volta ao horário real sem afetar o relógio do app', async () => {
+  // A interface mostra a hora local; use datas locais para o teste ser independente do fuso do runner de CI.
+  const horarioInicial = new Date(2026, 9, 18, 10, 0);
+  const controle = new SensoresSimuladosDosJardins(new RelogioParado(horarioInicial));
+  const { container } = renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+  const listarJardim = jest.spyOn(container.listarJardim, 'executar');
+
+  expect(await screen.findByText('18/10/2026 10:00')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', { name: '+1 hora' }));
+  expect(screen.getByText('18/10/2026 11:00')).toBeTruthy();
+  await waitFor(() => expect(listarJardim).toHaveBeenCalled());
+  await expect(controle.obterSensor('jardim-principal').lerLeituraAtual()).resolves.toEqual(expect.objectContaining({
+    medidaEm: new Date(2026, 9, 18, 11, 0),
+  }));
+
+  fireEvent.press(screen.getByRole('button', { name: 'Voltar ao horário atual' }));
+  expect(screen.getByText('18/10/2026 10:00')).toBeTruthy();
 });
 
 test('o atalho combina calor, tempo seco e sol alto', async () => {

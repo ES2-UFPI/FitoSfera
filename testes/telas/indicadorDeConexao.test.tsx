@@ -34,8 +34,11 @@ describe('no detalhe da planta', () => {
 
     expect(
       screen.getByLabelText(
-        `Sensor desconectado. O app tenta reconectar sozinho. Última comunicação às ${horaEMinuto(ultimaComunicacao)}.`,
+        `Sensor desconectado. O app tenta reconectar sozinho. Última comunicação há 3 min (às ${horaEMinuto(ultimaComunicacao)}).`,
       ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText('Últimos dados armazenados · leitura desatualizada · sensor sem conexão · aguardando nova leitura'),
     ).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));
@@ -136,12 +139,23 @@ describe('descreverUltimaComunicacao', () => {
   const referencia = new Date(2026, 9, 22, 15, 0);
 
   test('no mesmo dia, só a hora', () => {
-    expect(descreverUltimaComunicacao(new Date(2026, 9, 22, 14, 5), referencia)).toBe('Última comunicação às 14:05');
+    expect(descreverUltimaComunicacao(new Date(2026, 9, 22, 14, 5), referencia)).toBe(
+      'Última comunicação há 55 min (às 14:05)',
+    );
   });
 
   test('em outro dia, a data e a hora', () => {
     expect(descreverUltimaComunicacao(new Date(2026, 9, 21, 9, 30), referencia)).toBe(
-      'Última comunicação em 21/10/2026 às 09:30',
+      'Última comunicação há 1 dia (em 21/10/2026 às 09:30)',
+    );
+  });
+
+  test('menos de um minuto e várias horas são descritos em unidades legíveis', () => {
+    expect(descreverUltimaComunicacao(new Date(2026, 9, 22, 14, 59, 30), referencia)).toBe(
+      'Última comunicação há menos de 1 minuto (às 14:59)',
+    );
+    expect(descreverUltimaComunicacao(new Date(2026, 9, 22, 9, 0), referencia)).toBe(
+      'Última comunicação há 6 h (às 09:00)',
     );
   });
 

@@ -10,6 +10,7 @@ import { Planta } from '@/dominio/modelos/Planta';
 import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
+import { Container } from '@/composicao/Container';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import { useAberturaPelaNotificacao } from '@/apresentacao/notificacoes/useAberturaPelaNotificacao';
 import LayoutDasAbas from '../../../app/(abas)/_layout';
@@ -63,6 +64,7 @@ export function renderizarApp(
     falharAoGravarPreferencias?: boolean;
   } = {},
 ): {
+  container: Container;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
   notificador: NotificadorFalso;
@@ -125,5 +127,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { plantas, regas, notificador, avisos, toques, preferencias };
+  return { container, plantas, regas, notificador, avisos, toques, preferencias };
 }

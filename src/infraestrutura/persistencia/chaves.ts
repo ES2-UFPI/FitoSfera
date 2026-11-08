@@ -2,7 +2,7 @@
  * Mapa de chaves do armazenamento local. Toda chave que o app lê ou grava sai daqui;
  * o README desta pasta descreve o formato de cada uma.
  */
-export const VERSAO_ATUAL_DO_ARMAZENAMENTO = 2;
+export const VERSAO_ATUAL_DO_ARMAZENAMENTO = 3;
 
 export const CHAVES = {
   /** Número da versão do schema em que os dados abaixo estão gravados. */
@@ -23,6 +23,8 @@ export const CHAVES = {
   sensoresPareados: 'fitosfera:v2:sensores-pareados',
   /** Preferências de notificação: por enquanto, a janela de horários dos lembretes. */
   preferencias: 'fitosfera:v2:preferencias',
+  /** Última leitura recebida, separada por jardim. */
+  leituraDoJardim: (idJardim: string) => `fitosfera:v3:leitura:${encodeURIComponent(idJardim)}`,
 } as const;
 
 /** Chaves da versão 1 (plantas sem faixas recomendadas). Só a migração lê; nada mais grava nelas. */
