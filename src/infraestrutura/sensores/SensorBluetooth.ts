@@ -343,6 +343,14 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
       umidadePercentual: pacote.umidadePercentual,
       luminosidadeLux: pacote.luminosidadeLux,
       medidaEm,
+      ...(pacote.tipo === 'novo' && {
+        contadorDeLuz: {
+          idReinicio: pacote.idReinicio,
+          luzAcumuladaLuxMinutos: pacote.luzAcumuladaLuxMinutos,
+          segundosSemConfirmacao: pacote.segundosDesdeUltimaConfirmacao,
+          ultimaComunicacaoEm: new Date(medidaEm.getTime() - pacote.segundosDesdeUltimaConfirmacao * 1000),
+        },
+      }),
     };
     this.ultimaLeitura = leitura;
     this.esperas.forEach((resolver) => resolver(leitura));

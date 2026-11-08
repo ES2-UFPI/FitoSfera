@@ -79,6 +79,13 @@ sequência, id do reinício, acumulado de luz desde o boot, tempo sem confirmaç
 não vira uma leitura parcial no painel; luminosidade ausente vira `null`. O decodificador também mantém compatibilidade
 com o pacote legado de 8 bytes. O acumulado do firmware não é o acumulado diário da planta — isso fica para a #89.
 
+**Luz recebida sem conexão:** a `Leitura` do pacote atual traz o `contadorDeLuz`: acumulado, id do reinício, segundos
+sem confirmação e, calculada a partir deles, a data e a hora da última comunicação. A cada leitura, o `SensorComCache`
+passa o contador ao `RegistroDeLuzRecebida`, que compara com o último valor salvo do jardim e guarda a diferença. O
+primeiro contador recebido e um reinício do sensor não contam luz, porque o valor não diz nada sobre o período, e o
+reinício deixa um período marcado como incompleto. Um pacote repetido não soma nada, e um pacote atrasado, com contador
+menor, é ignorado. O sensor simulado e o pacote de 8 bytes não têm contador e não geram luz recebida.
+
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente
 (`esperaParaReconectar`): 5 s, 10 s, 20 s, 40 s e, dali em diante, a cada 60 s. A espera volta ao começo assim que
