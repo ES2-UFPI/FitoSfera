@@ -59,7 +59,7 @@ web o app continua abrindo, com o sensor indisponível.
 | Arquivo | Papel |
 | --- | --- |
 | [`ContratoDoSensor.ts`](ContratoDoSensor.ts) | UUIDs, comando de leitura e tempo limite, copiados do README do firmware. |
-| [`DecodificadorDoPacote.ts`](DecodificadorDoPacote.ts) | Pacote de 8 bytes (base64) → temperatura, umidade e luz. Testado contra os pacotes de exemplo do firmware. |
+| [`DecodificadorDoPacote.ts`](DecodificadorDoPacote.ts) | Pacotes legado (8 bytes) e atual (19 bytes), em base64 → medições e metadados. Testado contra exemplos do firmware. |
 | [`ClienteBle.ts`](ClienteBle.ts) | O pedaço da biblioteca de que o sensor precisa. |
 | [`ClienteBlePlx.ts`](ClienteBlePlx.ts) | A implementação com a `react-native-ble-plx` e o pedido de permissões. É o único arquivo que importa a biblioteca, e só é carregado quando o módulo nativo existe. |
 | [`SensorBluetooth.ts`](SensorBluetooth.ts) | Implementa `SensorDeAmbiente` e `PareamentoDoSensor` (em `aplicacao/portas/`): conexão, reconexão e pareamento. |
@@ -72,6 +72,12 @@ mais forte para o mais fraco. Todos se chamam `FitoSfera`, então a lista mostra
 sensor conecta e espera a primeira leitura (até 20 s); só então é incluído em
 `fitosfera:v2:sensores-pareados`. Parear não associa automaticamente o dispositivo ao jardim: a escolha é feita
 na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua legível após atualizar o app.
+
+**Protocolo e atualização:** o firmware publica automaticamente a cada 5 min. O pacote atual tem 19 bytes, com
+sequência, id do reinício, acumulado de luz desde o boot, tempo sem confirmação e as três medições; o app envia
+`[0x02, sequência]` depois de processar cada pacote válido. Pacote sem temperatura ou umidade é confirmado, mas
+não vira uma leitura parcial no painel; luminosidade ausente vira `null`. O decodificador também mantém compatibilidade
+com o pacote legado de 8 bytes. O acumulado do firmware não é o acumulado diário da planta — isso fica para a #89.
 
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente
