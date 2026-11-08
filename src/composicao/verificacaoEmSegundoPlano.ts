@@ -31,7 +31,8 @@ export async function ligarVerificacaoEmSegundoPlano(
   container: ContainerDeVerificacao,
   intervaloEmMinutos = INTERVALO_EM_MINUTOS,
 ): Promise<void> {
+  // Agenda antes da execução imediata: uma falha de rede na abertura não pode impedir as próximas tentativas.
+  await registrarVerificacaoPeriodica(intervaloEmMinutos);
   await container.atualizarLeituras.executar();
   await container.avaliarLeitura.executar();
-  await registrarVerificacaoPeriodica(intervaloEmMinutos);
 }

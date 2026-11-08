@@ -32,15 +32,17 @@ test('atualiza cada jardim sem deixar a falha de uma fonte interromper as demais
   expect(aguardarQuintal).toHaveBeenCalledTimes(1);
 });
 
-test('uma execução posterior pode atualizar jardins depois de uma execução com falha', async () => {
+test('uma execução posterior continua atualizando jardins depois de uma falha de rede', async () => {
   const sensor = new SensorFixo(leitura);
   const fontes: FontesDeJardim = { obter: jest.fn(async () => sensor) };
   const jardins = new RepositorioDeJardinsEmMemoria();
   const atualizar = new AtualizarLeituras(jardins, fontes);
   const aguardar = jest.spyOn(sensor, 'aguardarLeitura');
+  aguardar.mockRejectedValueOnce(new Error('rede indisponível'));
 
-  await atualizar.executar();
+  await expect(atualizar.executar()).resolves.toBeUndefined();
   await atualizar.executar();
 
   expect(aguardar).toHaveBeenCalledTimes(2);
+  expect(await sensor.lerLeituraAtual()).toEqual(leitura);
 });
