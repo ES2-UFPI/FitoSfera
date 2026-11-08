@@ -24,6 +24,7 @@ import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/
 import { RepositorioDePreferenciasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePreferenciasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
 import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
+import { RegistroDeLuzRecebidaAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeLuzRecebidaAsyncStorage';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
 import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
@@ -43,6 +44,7 @@ export function criarContainer(): Container {
   const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const leituras = new CacheDeLeiturasAsyncStorage(armazenamento);
+  const luz = new RegistroDeLuzRecebidaAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
   const preferencias = new RepositorioDePreferenciasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
@@ -53,7 +55,7 @@ export function criarContainer(): Container {
     criarSensorBluetooth(armazenamento, relogio),
   );
   const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
-  const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras);
+  const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras, luz);
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
 

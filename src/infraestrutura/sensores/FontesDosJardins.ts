@@ -5,13 +5,15 @@ import { CentralDeSensoresBluetooth } from './CentralDeSensoresBluetooth';
 import { SensoresSimuladosDosJardins } from './SensoresSimuladosDosJardins';
 import { SensorIndisponivel } from './SensorIndisponivel';
 import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
+import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
 import { SensorComCache } from './SensorComCache';
 
 export class FontesDosJardins implements FontesDeJardim {
   private readonly indisponivel = new SensorIndisponivel();
   constructor(private readonly jardins: RepositorioDeJardins, private readonly bluetooth: CentralDeSensoresBluetooth | null,
     private readonly simulados: SensoresSimuladosDosJardins | null = null,
-    private readonly leituras?: CacheDeLeituras) {}
+    private readonly leituras?: CacheDeLeituras,
+    private readonly luz?: RegistroDeLuzRecebida) {}
 
   async obter(idJardim: string): Promise<SensorDeAmbiente> {
     const jardim = (await this.jardins.listar()).find((item) => item.id === idJardim);
@@ -25,7 +27,7 @@ export class FontesDosJardins implements FontesDeJardim {
       sensor = pareado ? this.bluetooth.obterSensor(idSensor) : this.indisponivel;
     }
     if (this.leituras) {
-      return new SensorComCache(sensor, this.leituras, idJardim);
+      return new SensorComCache(sensor, this.leituras, idJardim, this.luz);
     }
     return sensor;
   }

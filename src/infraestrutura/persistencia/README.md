@@ -20,6 +20,7 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:sensor-pareado` | Formato antigo de sensor único, lido apenas enquanto a lista nova não foi gravada. | Compatibilidade com instalações anteriores |
 | `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
 | `fitosfera:v2:preferencias` | Preferências de notificação: `{ "janelaDeLembretes": { "inicio": { "hora", "minuto" }, "fim": { … } } }`. Ausente ou ilegível vale como a janela padrão. | `RepositorioDePreferenciasAsyncStorage` |
+| `fitosfera:v3:luz:<idJardim>` | Objeto JSON `{ marca, periodos }`: o último contador de luz contabilizado (`idReinicio`, `luzAcumuladaLuxMinutos`, `medidaEm`) e os períodos de luz recebida (`luxMinutos`, `inicio`, `fim`, `incompleta`), com no máximo 500. Conteúdo ilegível recomeça a contagem, sem cópia `:ilegivel`. | `RegistroDeLuzRecebidaAsyncStorage` |
 
 ### Janela de lembretes (`fitosfera:v2:preferencias`)
 

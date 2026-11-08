@@ -193,6 +193,32 @@ describe('reconexão ao sensor conhecido', () => {
     });
   });
 
+  test('a leitura do pacote novo leva o contador de luz e converte os segundos sem confirmação em data e hora', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoReceber = jest.fn();
+    sensor.observarLeituras(aoReceber);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.ultima.notificar('KjQSBhIPAEEBAADSCagW6AMAAA==');
+
+    expect(aoReceber).toHaveBeenLastCalledWith(expect.objectContaining({
+      medidaEm: instante,
+      contadorDeLuz: {
+        idReinicio: 0x1234,
+        luzAcumuladaLuxMinutos: 987654,
+        segundosSemConfirmacao: 321,
+        ultimaComunicacaoEm: new Date(instante.getTime() - 321_000),
+      },
+    }));
+  });
+
+  test('a leitura do pacote de 8 bytes não traz contador de luz', async () => {
+    const { sensor } = montar(SENSOR);
+    await sensor.lerLeituraAtual();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(await sensor.lerLeituraAtual()).not.toHaveProperty('contadorDeLuz');
+  });
+
   test('confirma pacote válido sem temperatura e umidade sem publicar leitura incompleta', async () => {
     const { cliente, sensor } = montar(SENSOR);
     cliente.proximaConexao = () => {
