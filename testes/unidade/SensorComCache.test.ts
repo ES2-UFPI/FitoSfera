@@ -29,6 +29,15 @@ test('devolve o cache quando o sensor está offline, preservando a data para sin
   expect(await sensor.lerLeituraAtual()).toEqual(leitura);
 });
 
+test('atualização manual não disfarça falha do sensor com a leitura guardada', async () => {
+  const dependencias = montar(new SensorFixo('falha'));
+  await dependencias.leituras.salvar('sala', leitura);
+  const sensor = new SensorComCache(dependencias.sensor, dependencias.leituras, 'sala');
+
+  await expect(sensor.atualizarLeitura()).rejects.toThrow('sensor fora do ar');
+  expect(dependencias.obterCache()).toEqual(leitura);
+});
+
 test('persiste novas leituras observadas', () => {
   const dependencias = montar(new SensorFixo());
   const sensor = new SensorComCache(dependencias.sensor, dependencias.leituras, 'sala');

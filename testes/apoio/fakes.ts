@@ -147,6 +147,10 @@ export class SensorFixo implements SensorDeAmbiente {
     return this.leitura;
   }
 
+  async atualizarLeitura(): Promise<Leitura | null> {
+    return this.aguardarLeitura();
+  }
+
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     this.observadores.add(aoReceber);
     return () => this.observadores.delete(aoReceber);
