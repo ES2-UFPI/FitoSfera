@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
@@ -34,6 +34,9 @@ export function TelaJardim() {
   const [jardimAberto, definirJardimAberto] = useState(false);
   const [sensorAberto, definirSensorAberto] = useState(false);
   const [listaDeSensoresAberta, definirListaDeSensoresAberta] = useState(false);
+  const [atualizandoLeituras, definirAtualizandoLeituras] = useState(false);
+  const [erroDaAtualizacao, definirErroDaAtualizacao] = useState(false);
+  const temporizadorDoErro = useRef<ReturnType<typeof setTimeout> | null>(null);
   const margens = useSafeAreaInsets();
   const navegador = useRouter();
 
@@ -62,6 +65,19 @@ export function TelaJardim() {
   const statusDoSensor = sensorSimulado
     ? 'Sensor simulado associado'
     : sensorFisico?.nome ?? (jardimAtual?.idSensor ? 'Sensor físico associado' : 'Nenhum sensor associado');
+
+  useEffect(() => () => {
+    if (temporizadorDoErro.current !== null) clearTimeout(temporizadorDoErro.current);
+  }, []);
+
+  function mostrarErroDaAtualizacao() {
+    if (temporizadorDoErro.current !== null) clearTimeout(temporizadorDoErro.current);
+    definirErroDaAtualizacao(true);
+    temporizadorDoErro.current = setTimeout(() => {
+      temporizadorDoErro.current = null;
+      definirErroDaAtualizacao(false);
+    }, 4_000);
+  }
 
   async function trocarJardim(id: string) {
     try {
@@ -98,6 +114,21 @@ export function TelaJardim() {
       await atualizarJardimDepoisDaAssociacao();
     } catch (falha) {
       definirErroDoSensor(falha instanceof Error ? falha.message : 'Não foi possível alterar o sensor.');
+    }
+  }
+
+  async function atualizarLeituras() {
+    if (atualizandoLeituras) return;
+    definirAtualizandoLeituras(true);
+    definirErroDaAtualizacao(false);
+    try {
+      const resultado = await container.atualizarLeituras.executar(idJardimSelecionado);
+      await recarregarJardim();
+      if (resultado.houveFalha) mostrarErroDaAtualizacao();
+    } catch {
+      mostrarErroDaAtualizacao();
+    } finally {
+      definirAtualizandoLeituras(false);
     }
   }
 
@@ -195,7 +226,13 @@ export function TelaJardim() {
 
         {lista.length > 0 ? (
           <>
-            <Estante plantas={lista} aoAbrirPlanta={abrirPlanta} aoCadastrar={abrirCadastro} />
+            <Estante
+              plantas={lista}
+              aoAbrirPlanta={abrirPlanta}
+              aoCadastrar={abrirCadastro}
+              atualizando={atualizandoLeituras}
+              aoAtualizar={() => void atualizarLeituras()}
+            />
             <BotaoFlutuante aoTocar={abrirCadastro} />
           </>
         ) : null}
@@ -231,6 +268,13 @@ export function TelaJardim() {
           </Pressable>
         </Pressable>
       </Modal>
+      {erroDaAtualizacao ? (
+        <View testID="aviso-de-atualizacao" style={estilos.avisoDaAtualizacao} accessibilityRole="alert" accessible>
+          <Text style={estilos.textoDoAvisoDaAtualizacao}>
+            Não foi possível atualizar as leituras. Os últimos dados continuam disponíveis.
+          </Text>
+        </View>
+      ) : null}
     </FundoAconchegante>
   );
 }
@@ -288,6 +332,20 @@ const estilos = StyleSheet.create({
   },
   acoesDoSensor: { gap: ESPACO.pequeno },
   erroDoSensor: { ...TEXTO.apoio, color: CORES.erro },
+  avisoDaAtualizacao: {
+    position: 'absolute',
+    right: ESPACO.grande,
+    bottom: ESPACO.grande + ALVO_DE_TOQUE + ESPACO.medio,
+    left: ESPACO.grande,
+    zIndex: 10,
+    elevation: 10,
+    padding: ESPACO.medio,
+    borderWidth: 1,
+    borderColor: CORES.erro,
+    borderRadius: RAIO.medio,
+    backgroundColor: CORES.superficie,
+  },
+  textoDoAvisoDaAtualizacao: { ...TEXTO.apoio, color: CORES.erro },
   fundoDoModal: { flex: 1, justifyContent: 'center', padding: ESPACO.grande, backgroundColor: 'rgba(61, 51, 38, 0.48)' },
   modal: { width: '100%', maxWidth: 460, maxHeight: '85%', alignSelf: 'center', padding: ESPACO.folgado,
     gap: ESPACO.medio, borderRadius: RAIO.grande, backgroundColor: CORES.superficie },

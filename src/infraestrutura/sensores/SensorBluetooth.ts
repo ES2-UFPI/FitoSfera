@@ -116,6 +116,19 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     return proxima.promessa;
   }
 
+  /** Pede uma nova medição mesmo que haja uma leitura automática recente guardada. */
+  async atualizarLeitura(): Promise<Leitura | null> {
+    await this.garantirInicio();
+    if (this.pareado === null) return null;
+    const proxima = this.esperarLeitura();
+    if (this.conexao !== null) void this.conexao.pedirLeitura().catch(() => undefined);
+    else {
+      this.cancelarReconexao();
+      void this.conectarAoPareado();
+    }
+    return proxima.promessa;
+  }
+
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     this.garantirInicio();
     const observador = (leitura: Leitura) => aoReceber(leitura);

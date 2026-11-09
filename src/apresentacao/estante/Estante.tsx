@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { ALTURA_DA_PRATELEIRA, ESPACO, FOLGA_DO_BOTAO_FLUTUANTE } from '../tema/medidas';
 import { contarPrateleirasQueCabem, distribuirNaEstante, Lugar, MINIMO_DE_PRATELEIRAS } from './distribuirNaEstante';
@@ -11,13 +11,15 @@ interface Props {
   plantas: readonly PlantaNoJardim[];
   aoAbrirPlanta: (id: string) => void;
   aoCadastrar: () => void;
+  atualizando?: boolean;
+  aoAtualizar?: () => void;
 }
 
 /**
  * Mede o espaço livre, calcula quantas prateleiras cabem e só libera a rolagem quando as
  * prateleiras da tela principal estão todas cheias.
  */
-export function Estante({ plantas, aoAbrirPlanta, aoCadastrar }: Props) {
+export function Estante({ plantas, aoAbrirPlanta, aoCadastrar, atualizando = false, aoAtualizar }: Props) {
   const [alturaDisponivel, definirAlturaDisponivel] = useState<number | null>(null);
   const prateleirasQueCabem =
     alturaDisponivel === null
@@ -46,18 +48,22 @@ export function Estante({ plantas, aoAbrirPlanta, aoCadastrar }: Props) {
       testID="area-da-estante"
       onLayout={(evento) => definirAlturaDisponivel(evento.nativeEvent.layout.height)}
     >
-      <ScrollView
+      <FlatList
         testID="estante"
+        data={prateleiras}
+        keyExtractor={(_lugares, indice) => String(indice)}
+        renderItem={({ item: lugares, index: indiceDaPrateleira }) => (
+          <Prateleira>
+            {lugares.map((lugar, coluna) => desenharLugar(lugar, indiceDaPrateleira * lugares.length + coluna))}
+          </Prateleira>
+        )}
         scrollEnabled={rolagemLiberada}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={estilos.conteudo}
-      >
-        {prateleiras.map((lugares, indiceDaPrateleira) => (
-          <Prateleira key={indiceDaPrateleira}>
-            {lugares.map((lugar, coluna) => desenharLugar(lugar, indiceDaPrateleira * lugares.length + coluna))}
-          </Prateleira>
-        ))}
-      </ScrollView>
+        refreshControl={
+          aoAtualizar ? <RefreshControl refreshing={atualizando} onRefresh={aoAtualizar} /> : undefined
+        }
+      />
     </View>
   );
 }

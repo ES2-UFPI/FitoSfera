@@ -7,7 +7,7 @@ import {
 import { criarContainer } from './criarContainer';
 
 interface ContainerDeVerificacao {
-  readonly atualizarLeituras: { executar(): Promise<void> };
+  readonly atualizarLeituras: { executar(): Promise<unknown> };
   readonly avaliarLeitura: { executar(): Promise<unknown> };
 }
 

@@ -1,6 +1,6 @@
 /** Só o que o acompanhamento usa do container. */
 interface ComAvaliacaoDeLeitura {
-  readonly atualizarLeituras: { executar(): Promise<void> };
+  readonly atualizarLeituras: { executar(): Promise<unknown> };
   readonly avaliarLeitura: { executar(): Promise<unknown> };
 }
 
