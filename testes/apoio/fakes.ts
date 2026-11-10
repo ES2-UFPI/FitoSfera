@@ -35,6 +35,7 @@ import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
+import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -51,6 +52,10 @@ export class RepositorioDePlantasEmMemoria implements RepositorioDePlantas {
 
   async obterPorId(id: string) {
     return this.salvas.find((planta) => planta.id === id) ?? null;
+  }
+
+  async existe(id: string) {
+    return this.salvas.some((planta) => planta.id === id);
   }
 
   async adicionar(planta: Planta) {
@@ -111,6 +116,14 @@ export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
   }
 }
 
+export class ExclusoesPendentesEmMemoria implements RegistroDeExclusoesPendentes {
+  readonly ids = new Set<string>();
+
+  async marcar(id: string) { this.ids.add(id); }
+  async listar() { return [...this.ids]; }
+  async remover(id: string) { this.ids.delete(id); }
+}
+
 /** Simula o armazenamento do aparelho recusando a leitura. */
 export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
   async listar(): Promise<Planta[]> {
@@ -118,6 +131,10 @@ export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
   }
 
   async obterPorId(): Promise<Planta | null> {
+    throw new Error('armazenamento indisponível');
+  }
+
+  async existe(): Promise<boolean> {
     throw new Error('armazenamento indisponível');
   }
 }
@@ -371,7 +388,7 @@ export function criarContainerDeTeste(
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas),
+    excluirPlanta: new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria()),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
