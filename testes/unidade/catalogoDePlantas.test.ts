@@ -50,6 +50,24 @@ describe('validarCatalogo', () => {
     expect(validarCatalogo([comFaixa('umidadeDoAr', { minimo: 40, maximo: 140, fonte: 'X' })])).toHaveLength(1);
   });
 
+  test('exige a meta diária de luz e as faixas da noite, com fonte', () => {
+    expect(validarCatalogo([comFaixa('luzDiaria', undefined)])).toEqual([
+      'espécie 1 (tomate): faixasIdeais.luzDiaria é obrigatória',
+    ]);
+    expect(validarCatalogo([comFaixa('temperaturaNoturna', undefined)])).toEqual([
+      'espécie 1 (tomate): faixasIdeais.temperaturaNoturna é obrigatória',
+    ]);
+    expect(validarCatalogo([comFaixa('umidadeDoArNoturna', { minimo: 40, maximo: 80, fonte: '' })])).toEqual([
+      'espécie 1 (tomate): faixasIdeais.umidadeDoArNoturna precisa citar a fonte',
+    ]);
+  });
+
+  test('reprova meta diária de luz fora do que o sol entrega', () => {
+    expect(validarCatalogo([comFaixa('luzDiaria', { minimo: 12, maximo: 800, fonte: 'X' })])).toEqual([
+      'espécie 1 (tomate): faixasIdeais.luzDiaria precisa ficar entre 0 e 70',
+    ]);
+  });
+
   test('reprova nomes obrigatórios vazios', () => {
     expect(validarCatalogo([{ ...valida, nomeComum: '', nomeCientifico: undefined }])).toEqual([
       'espécie 1 (tomate): nomeComum é obrigatório',
