@@ -27,6 +27,8 @@ export const CHAVES = {
   leituraDoJardim: (idJardim: string) => `fitosfera:v3:leitura:${encodeURIComponent(idJardim)}`,
   /** Último contador de luz contabilizado e períodos de luz recebida, separados por jardim. */
   luzDoJardim: (idJardim: string) => `fitosfera:v3:luz:${encodeURIComponent(idJardim)}`,
+  /** IDs em exclusão, para retomar a remoção de regas após interrupção do app. */
+  exclusoesPendentes: 'fitosfera:v3:exclusoes-pendentes',
 } as const;
 
 /** Chaves da versão 1 (plantas sem faixas recomendadas). Só a migração lê; nada mais grava nelas. */

@@ -24,6 +24,7 @@ import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/
 import { RepositorioDePreferenciasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePreferenciasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
 import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
+import { RegistroDeExclusoesPendentesAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeExclusoesPendentesAsyncStorage';
 import { RegistroDeLuzRecebidaAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeLuzRecebidaAsyncStorage';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
@@ -41,6 +42,7 @@ import { escolherToquesNaNotificacao } from './escolherToquesNaNotificacao';
 export function criarContainer(): Container {
   const armazenamento = new ArmazenamentoComMigracao(AsyncStorage, new MigradorDoArmazenamento(AsyncStorage));
   const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
+  const exclusoesPendentes = new RegistroDeExclusoesPendentesAsyncStorage(armazenamento);
   const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const leituras = new CacheDeLeiturasAsyncStorage(armazenamento);
@@ -69,7 +71,7 @@ export function criarContainer(): Container {
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas),
+    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
