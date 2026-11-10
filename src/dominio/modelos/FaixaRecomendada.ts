@@ -6,11 +6,21 @@ export interface FaixaRecomendada {
   readonly maximo: number;
 }
 
-/** As faixas que a planta guarda: umidade do ar em %, temperatura em °C e luminosidade em lux. */
+/**
+ * As faixas que a planta guarda: umidade do ar em % e temperatura em °C durante o dia, e luminosidade em lux.
+ * As três últimas existem desde a versão 4 do armazenamento; uma faixa que não dá para ler fica ausente, e quem
+ * precisa dela recorre à espécie no catálogo.
+ */
 export interface FaixasRecomendadas {
   readonly umidadeDoAr: FaixaRecomendada;
   readonly temperatura: FaixaRecomendada;
   readonly luminosidade: FaixaRecomendada;
+  /** Luz somada ao longo do dia (DLI), em mol/m²/dia. */
+  readonly luzDiaria?: FaixaRecomendada;
+  /** Umidade relativa do ar durante a noite, em %. */
+  readonly umidadeDoArNoturna?: FaixaRecomendada;
+  /** Temperatura do ar durante a noite, em °C. */
+  readonly temperaturaNoturna?: FaixaRecomendada;
 }
 
 /**
@@ -24,5 +34,8 @@ export function copiarFaixas(faixas: FaixasIdeais | null): FaixasRecomendadas | 
     umidadeDoAr: copiar(faixas.umidadeDoAr),
     temperatura: copiar(faixas.temperatura),
     luminosidade: copiar(faixas.luminosidade),
+    luzDiaria: copiar(faixas.luzDiaria),
+    umidadeDoArNoturna: copiar(faixas.umidadeDoArNoturna),
+    temperaturaNoturna: copiar(faixas.temperaturaNoturna),
   };
 }

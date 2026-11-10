@@ -9,9 +9,9 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 
 | Chave | Conteúdo | Quem usa |
 | --- | --- | --- |
-| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"2"`). | `MigradorDoArmazenamento` |
-| `fitosfera:v2:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
-| `fitosfera:v2:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v2:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"4"`). | `MigradorDoArmazenamento` |
+| `fitosfera:v4:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v4:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v4:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
@@ -44,6 +44,7 @@ de segurança:
 | --- | --- |
 | 0 | `@fitosfera/plantas`, `@fitosfera/plantas:ilegivel` |
 | 1 | `fitosfera:v1:plantas`, `fitosfera:v1:plantas:ilegivel` |
+| 2 e 3 | `fitosfera:v2:plantas`, `fitosfera:v2:plantas:ilegivel` |
 
 ### Formato de uma planta (`RegistroDePlanta`)
 
@@ -58,7 +59,10 @@ de segurança:
   "faixasRecomendadas": {
     "umidadeDoAr": { "minimo": 50, "maximo": 70 },
     "temperatura": { "minimo": 20, "maximo": 28 },
-    "luminosidade": { "minimo": 25000, "maximo": 80000 }
+    "luminosidade": { "minimo": 25000, "maximo": 80000 },
+    "luzDiaria": { "minimo": 18, "maximo": 30 },
+    "umidadeDoArNoturna": { "minimo": 50, "maximo": 80 },
+    "temperaturaNoturna": { "minimo": 15, "maximo": 23 }
   },
   "intervaloDeRegaEmDias": 3
 }
@@ -77,6 +81,10 @@ exigiu uma nova versão do schema.
 depois não muda plantas já cadastradas. Fica `null` quando a espécie não tinha faixa: o cadastro acontece
 normalmente e a planta aparece como "sem dados". Faixas malformadas também são lidas como `null`, sem perder a
 planta.
+
+Desde a versão 4, a cópia também leva a meta de luz diária (`luzDiaria`, em DLI, mol/m²/dia) e as faixas da noite
+(`umidadeDoArNoturna` e `temperaturaNoturna`). Essas três são opcionais na leitura: uma que estiver malformada só
+fica de fora, sem tirar as faixas do dia, e quem precisar dela recorre à espécie no catálogo.
 
 `intervaloDeRegaEmDias` é uma cópia do intervalo de rega da espécie, feita no cadastro (#31), e é dele que sai
 a data da próxima rega. Como `idJardim`, o campo novo **não exigiu uma nova versão do schema**: registro gravado
@@ -125,6 +133,8 @@ As chaves de regas são novas na versão 2 e não precisaram de migração: não
 | --- | --- |
 | 0 → 1 | Move as plantas de `@fitosfera/plantas` para `fitosfera:v1:plantas`, com os registros intactos. |
 | 1 → 2 | Move as plantas para `fitosfera:v2:plantas` e dá a cada uma, se ainda não tiver, uma cópia das faixas que a espécie tem no catálogo naquele momento (`null` se a espécie saiu do catálogo). |
+| 2 → 3 | Nenhuma conversão: a versão só acrescentou chaves novas, como a última leitura e a luz recebida de cada jardim. |
+| 3 → 4 | Move as plantas para `fitosfera:v4:plantas` e acrescenta às faixas de cada uma as que faltam (`luzDiaria`, `umidadeDoArNoturna` e `temperaturaNoturna`), copiadas da espécie no catálogo. As faixas que a planta já tinha não mudam; planta sem faixas ou de espécie fora do catálogo passa intacta. |
 
 ### Como mudar o formato
 

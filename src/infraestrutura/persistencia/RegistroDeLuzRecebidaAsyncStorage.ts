@@ -38,6 +38,10 @@ export class RegistroDeLuzRecebidaAsyncStorage implements RegistroDeLuzRecebida 
     return (await this.ler(idJardim)).periodos;
   }
 
+  async obterUltimoContato(idJardim: string): Promise<Date | null> {
+    return (await this.ler(idJardim)).marca?.medidaEm ?? null;
+  }
+
   private async contabilizar(idJardim: string, leitura: Leitura): Promise<void> {
     const contador = leitura.contadorDeLuz;
     if (contador === undefined) return;

@@ -6,6 +6,9 @@ export const FAIXAS_DE_TESTE: FaixasRecomendadas = {
   umidadeDoAr: { minimo: 40, maximo: 70 },
   temperatura: { minimo: 18, maximo: 28 },
   luminosidade: { minimo: 5000, maximo: 20000 },
+  luzDiaria: { minimo: 12, maximo: 16 },
+  umidadeDoArNoturna: { minimo: 40, maximo: 80 },
+  temperaturaNoturna: { minimo: 13, maximo: 23 },
 };
 
 /** Espécie válida com valores neutros; cada teste informa só os nomes que importam para ele. */
@@ -20,9 +23,9 @@ export function especieDeTeste(
       umidadeDoAr: { ...FAIXAS_DE_TESTE.umidadeDoAr, fonte },
       temperatura: { ...FAIXAS_DE_TESTE.temperatura, fonte },
       luminosidade: { ...FAIXAS_DE_TESTE.luminosidade, fonte },
-      luzDiaria: { minimo: 12, maximo: 16, fonte },
-      umidadeDoArNoturna: { minimo: 40, maximo: 80, fonte },
-      temperaturaNoturna: { minimo: 13, maximo: 23, fonte },
+      luzDiaria: { ...FAIXAS_DE_TESTE.luzDiaria!, fonte },
+      umidadeDoArNoturna: { ...FAIXAS_DE_TESTE.umidadeDoArNoturna!, fonte },
+      temperaturaNoturna: { ...FAIXAS_DE_TESTE.temperaturaNoturna!, fonte },
     },
     intervaloDeRegaEmDias: 3,
     nivelDeDificuldade: 'facil',
