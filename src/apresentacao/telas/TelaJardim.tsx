@@ -31,9 +31,7 @@ export function TelaJardim() {
   const [erroDoJardim, definirErroDoJardim] = useState(false);
   const [sensores, definirSensores] = useState<readonly SensorPareado[]>([]);
   const [erroDoSensor, definirErroDoSensor] = useState('');
-  const [jardimAberto, definirJardimAberto] = useState(false);
   const [sensorAberto, definirSensorAberto] = useState(false);
-  const [listaDeSensoresAberta, definirListaDeSensoresAberta] = useState(false);
   const margens = useSafeAreaInsets();
   const navegador = useRouter();
 
@@ -88,7 +86,6 @@ export function TelaJardim() {
     await recarregarJardins();
     await recarregarJardim();
     definirErroDoSensor('');
-    definirListaDeSensoresAberta(false);
   }
 
   async function alterarSensorFisico(idSensor: string | null) {
@@ -104,12 +101,12 @@ export function TelaJardim() {
   return (
     <FundoAconchegante style={{ paddingTop: margens.top }}>
         <View style={estilos.cartaoDoJardim}>
+          {/* Abre a lista de jardins direto: trocar de jardim fica a dois toques. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={jardimAberto ? 'Ocultar opções do jardim' : 'Mostrar opções do jardim'}
+            accessibilityLabel="Trocar ou criar jardim"
             accessibilityHint={`Jardim atual: ${nomeDoJardim}`}
-            accessibilityState={{ expanded: jardimAberto }}
-            onPress={() => definirJardimAberto((aberto) => !aberto)}
+            onPress={() => definirSeletorAberto(true)}
             style={({ pressed }) => [estilos.cabecalhoDoCartao, pressed && estilos.cabecalhoPressionado]}
           >
             <View style={estilos.detalheDoCartaoCompacto}>
@@ -117,19 +114,8 @@ export function TelaJardim() {
               <Text style={estilos.nomeDoJardim} numberOfLines={1}>{nomeDoJardim}</Text>
               <Text style={TEXTO.apoio}>{lista.length} {lista.length === 1 ? 'planta' : 'plantas'} neste espaço</Text>
             </View>
-            <SetaDoDropdown aberto={jardimAberto} />
+            <SetaDoDropdown aberto={seletorAberto} />
           </Pressable>
-
-          {jardimAberto ? (
-            <View style={estilos.conteudoDoCartao}>
-              <BotaoPrincipal
-                titulo="Trocar ou criar jardim"
-                variante="secundaria"
-                largo
-                aoTocar={() => definirSeletorAberto(true)}
-              />
-            </View>
-          ) : null}
         </View>
 
         <View style={estilos.cabecalhoJardim}>
@@ -159,27 +145,17 @@ export function TelaJardim() {
 
                 {container.pareamentoDoSensor ? (
                   <View style={estilos.acoesDoSensor}>
-                    <BotaoPrincipal
-                      titulo={listaDeSensoresAberta ? 'Fechar lista de sensores' : sensorFisico ? 'Trocar sensor físico' : 'Associar sensor físico'}
-                      variante="secundaria"
-                      largo
-                      aoTocar={() => definirListaDeSensoresAberta((aberta) => !aberta)}
-                    />
-                    {listaDeSensoresAberta ? (
-                      <>
-                        {sensores.map((sensor) => (
-                          <BotaoPrincipal
-                            key={sensor.id}
-                            titulo={`${sensor.id === jardimAtual?.idSensor ? 'Associado: ' : 'Associar '}${sensor.nome} · ${sensor.id.slice(-5)}`}
-                            variante="secundaria"
-                            largo
-                            aoTocar={() => void alterarSensorFisico(sensor.id)}
-                          />
-                        ))}
-                        <BotaoPrincipal titulo="Parear novo sensor" variante="secundaria" largo
-                          aoTocar={() => navegador.push('/sensor')} />
-                      </>
-                    ) : null}
+                    {sensores.map((sensor) => (
+                      <BotaoPrincipal
+                        key={sensor.id}
+                        titulo={`${sensor.id === jardimAtual?.idSensor ? 'Associado: ' : 'Associar '}${sensor.nome} · ${sensor.id.slice(-5)}`}
+                        variante="secundaria"
+                        largo
+                        aoTocar={() => void alterarSensorFisico(sensor.id)}
+                      />
+                    ))}
+                    <BotaoPrincipal titulo="Parear novo sensor" variante="secundaria" largo
+                      aoTocar={() => navegador.push('/sensor')} />
                     {jardimAtualTemSensorFisico(jardimAtual?.idSensor) ? (
                       <BotaoPrincipal titulo="Desassociar sensor físico" variante="secundaria" largo
                         aoTocar={() => void alterarSensorFisico(null)} />
