@@ -45,25 +45,25 @@ test('the simulator association control is in Settings, not on the garden screen
   const controle = new SensoresSimuladosDosJardins(new RelogioParado(new Date('2026-10-18T13:00:00Z')));
   renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
 
-  expect(await screen.findByRole('button', { name: 'Associar simulador a este jardim' })).toBeTruthy();
-  fireEvent.press(screen.getByRole('button', { name: 'Associar simulador a este jardim' }));
-  expect(await screen.findByText('Simulador associado a Jardim principal')).toBeTruthy();
+  expect(await screen.findByRole('button', { name: 'Usar o simulador neste jardim' })).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', { name: 'Usar o simulador neste jardim' }));
+  expect(await screen.findByText('Simulador em uso em Jardim principal')).toBeTruthy();
 });
 
 test('mostra os cenários apenas quando há um sensor de desenvolvimento', async () => {
   renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: new ControleFixo() });
 
   expect(await screen.findByRole('header', { name: 'Ajustes' })).toBeTruthy();
-  expect(screen.getByText('DADOS SIMULADOS')).toBeTruthy();
+  expect(screen.getByText('VALORES SIMULADOS')).toBeTruthy();
   expect(screen.getByText('O que significa automático?')).toBeTruthy();
   expect(
     screen.getByText(
-      'A condição varia sozinha ao longo do dia seguindo um ciclo ambiental simulado. Você pode deixar uma grandeza automática e forçar apenas as outras.',
+      'A condição muda sozinha ao longo do dia, como num dia de verdade. Você pode deixar uma medida automática e escolher só as outras.',
     ),
   ).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Tudo automático' }).props.accessibilityState.selected).toBe(true);
   expect(screen.getByRole('button', { name: 'Quente, seco e ensolarado' })).toBeTruthy();
-  expect(screen.getByRole('button', { name: 'Customizado' }).props.accessibilityState).toEqual({
+  expect(screen.getByRole('button', { name: 'Personalizado' }).props.accessibilityState).toEqual({
     selected: false,
     disabled: true,
   });
@@ -135,7 +135,7 @@ test('forçar um cenário de desvio envia a notificação correspondente', async
     }),
   );
   expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima do ideal');
-  expect(notificador.entregues[0].corpo).toContain('A luminosidade está em 100000 lux, acima do ideal');
+  expect(notificador.entregues[0].corpo).toContain('A luz está em 100000 lux, acima do ideal');
 });
 
 test('permite montar uma combinação personalizada', async () => {
@@ -155,7 +155,7 @@ test('permite montar uma combinação personalizada', async () => {
     luminosidade: 'alto',
     desconectado: false,
   });
-  expect(screen.getByRole('button', { name: 'Customizado' }).props.accessibilityState).toEqual({
+  expect(screen.getByRole('button', { name: 'Personalizado' }).props.accessibilityState).toEqual({
     selected: true,
     disabled: false,
   });
@@ -195,7 +195,7 @@ test('o painel exibe a leitura forçada pelo simulador sem hardware', async () =
   });
 
   expect(await screen.findByLabelText('Umidade: 10 por cento. Faixa ideal: 40 a 70 por cento. Abaixo do ideal.')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });
 
 test('o cenário desconectado não é escondido por valores demonstrativos', async () => {
@@ -214,5 +214,5 @@ test('o cenário desconectado não é escondido por valores demonstrativos', asy
   });
 
   expect(await screen.findByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });

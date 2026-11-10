@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PareamentoDoSensor, SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { CORES } from '../tema/cores';
@@ -47,36 +48,36 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
   return (
     <View style={estilos.cartao}>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Sensor do ambiente
+        {TEXTOS.sensor.titulo}
       </Text>
-      {pareado === undefined ? <Text style={TEXTO.corpo}>Buscando o sensor pareado…</Text> : null}
+      {pareado === undefined ? <Text style={TEXTO.corpo}>{TEXTOS.sensor.buscandoPareado}</Text> : null}
       {pareado === null ? (
-        <Text style={TEXTO.corpo}>Nenhum sensor pareado. Pareie o FitoSfera para as leituras virem do ambiente real.</Text>
+        <Text style={TEXTO.corpo}>{TEXTOS.sensor.nenhumPareado}</Text>
       ) : null}
       {pareado && !pareamento.listarPareados ? (
-        <View style={estilos.pareado} accessible accessibilityLabel={`Pareado com ${pareado.nome}, final ${finalDoEndereco(pareado.id)}.`}>
+        <View style={estilos.pareado} accessible accessibilityLabel={TEXTOS.sensor.pareadoCom(pareado.nome, finalDoEndereco(pareado.id))}>
           <View style={estilos.ponto} />
           <Text style={estilos.nome}>
-            {pareado.nome} · final {finalDoEndereco(pareado.id)}
+            {TEXTOS.sensor.nomeComFinal(pareado.nome, finalDoEndereco(pareado.id))}
           </Text>
         </View>
       ) : null}
       {pareamento.listarPareados ? todos.map((sensor) => (
         <View key={sensor.id} style={estilos.pareado}>
-          <Text style={estilos.nome}>{sensor.nome} · final {finalDoEndereco(sensor.id)}</Text>
-          <BotaoPrincipal titulo={`Esquecer ${sensor.nome} · ${finalDoEndereco(sensor.id)}`} variante="secundaria"
+          <Text style={estilos.nome}>{TEXTOS.sensor.nomeComFinal(sensor.nome, finalDoEndereco(sensor.id))}</Text>
+          <BotaoPrincipal titulo={TEXTOS.sensor.esquecer(sensor.nome, finalDoEndereco(sensor.id))} variante="secundaria"
             aoTocar={() => void esquecer(sensor)} />
         </View>
       )) : null}
       {pareado !== undefined ? (
         <View style={estilos.botoes}>
           <BotaoPrincipal
-            titulo={pareado ? 'Trocar sensor' : 'Parear sensor'}
+            titulo={pareado ? TEXTOS.sensor.trocar : TEXTOS.sensor.parear}
             aoTocar={() => navegador.push('/sensor')}
             largo
           />
           {pareado && !pareamento.listarPareados ? (
-            <BotaoPrincipal titulo="Esquecer sensor" variante="secundaria" aoTocar={() => void esquecer(pareado)} largo />
+            <BotaoPrincipal titulo={TEXTOS.sensor.esquecerSensor} variante="secundaria" aoTocar={() => void esquecer(pareado)} largo />
           ) : null}
         </View>
       ) : null}

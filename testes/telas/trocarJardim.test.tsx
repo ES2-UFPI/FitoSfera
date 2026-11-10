@@ -50,12 +50,12 @@ test('sensor associado a um jardim não pode ser associado ao outro', async () =
     jardins: [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }],
     pareamentoDoSensor: pareamento,
   });
-  expect(screen.queryByRole('button', { name: 'Associar FitoSfera · le-01' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Usar FitoSfera · le-01' })).toBeNull();
   fireEvent.press(await screen.findByRole('button', { name: 'Mostrar opções do sensor' }));
-  fireEvent.press(await screen.findByRole('button', { name: 'Associar FitoSfera · le-01' }));
+  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' }));
   fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Sala' }));
   await waitFor(() => expect(screen.queryByRole('header', { name: 'Seus jardins' })).toBeNull());
-  fireEvent.press(await screen.findByRole('button', { name: 'Associar FitoSfera · le-01' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Este sensor já está associado a outro jardim.');
+  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Este sensor já está em uso em outro jardim.');
 });

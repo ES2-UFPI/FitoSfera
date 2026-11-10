@@ -31,7 +31,7 @@ test('"sao jorge" encontra a Espada-de-são-jorge', async () => {
 test('sem resultado mostra a mensagem do catálogo', async () => {
   renderizarApp({ url: '/cadastro' });
   fireEvent.changeText(await screen.findByPlaceholderText('Nome da planta'), 'xyzw');
-  expect(await screen.findByText('Não encontramos essa planta no catálogo.')).toBeTruthy();
+  expect(await screen.findByText('Não encontramos essa planta na nossa lista de espécies.')).toBeTruthy();
 });
 
 test('digitação rápida espera o debounce e pesquisa somente o último termo', async () => {
