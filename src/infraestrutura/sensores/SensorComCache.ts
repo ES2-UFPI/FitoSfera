@@ -39,6 +39,13 @@ export class SensorComCache implements SensorDeAmbiente {
     return this.leituras.obter(this.idJardim);
   }
 
+  /** Uma atualização pedida pela pessoa não mascara falha com o cache; a tela decide como exibir os dados antigos. */
+  async atualizarLeitura(): Promise<Leitura | null> {
+    const leitura = await this.sensor.atualizarLeitura();
+    if (leitura !== null) await this.guardar(leitura);
+    return leitura;
+  }
+
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     return this.sensor.observarLeituras((leitura) => {
       void this.guardar(leitura);

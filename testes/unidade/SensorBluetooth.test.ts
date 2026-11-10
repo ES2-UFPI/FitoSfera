@@ -643,6 +643,18 @@ describe('aguardarLeitura, usada pela verificação de avisos', () => {
     expect(cliente.ultima.pedidos).toBe(pedidos);
   });
 
+  test('a atualização manual pede uma medição nova mesmo com leitura recente guardada', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    await sensor.aguardarLeitura();
+    const pedidos = cliente.ultima.pedidos;
+    cliente.ultima.responderAoPedido = SEM_LUZ;
+
+    const nova = await sensor.atualizarLeitura();
+
+    expect(cliente.ultima.pedidos).toBe(pedidos + 1);
+    expect(nova).toEqual(expect.objectContaining({ luminosidadeLux: null }));
+  });
+
   test('com a leitura guardada já antiga, pede uma nova ao sensor conectado', async () => {
     let agora = instante;
     const cliente = new ClienteFalso();

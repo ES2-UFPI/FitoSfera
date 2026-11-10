@@ -87,6 +87,7 @@ export const TEXTOS = {
     exemploDeNome: 'Ex.: Varanda',
     criarJardim: 'Criar jardim',
     falhaAoTrocarJardim: 'Não deu para criar ou abrir o jardim. Confira o nome e tente novamente.',
+    falhaAoAtualizarLeituras: 'Não foi possível atualizar as leituras. Os últimos dados continuam disponíveis.',
     novaPlanta: 'Nova planta',
     cadastrarNovaPlanta: 'Cadastrar uma nova planta',
     cadastrarPrimeiraPlanta: 'Cadastrar a primeira planta',
