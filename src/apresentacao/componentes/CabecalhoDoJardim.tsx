@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { TEXTOS } from '@/textos';
 import { ESPACO } from '../tema/medidas';
 import { TEXTO } from '../tema/tipografia';
 import { dataPorExtenso, descreverQuantidade, saudacaoPara } from './textosDoCabecalho';
@@ -11,7 +12,7 @@ export function CabecalhoDoJardim({ quantidade }: { quantidade: number }) {
       <Text style={TEXTO.rotulo}>{dataPorExtenso(agora)}</Text>
       <View style={estilos.titulo} accessibilityRole="header">
         <Text style={TEXTO.titulo}>{saudacaoPara(agora)}!</Text>
-        <Text style={TEXTO.titulo}>Seu cantinho verde</Text>
+        <Text style={TEXTO.titulo}>{TEXTOS.cabecalho.titulo}</Text>
       </View>
       <Text style={TEXTO.apoio}>{descreverQuantidade(quantidade)}</Text>
     </View>

@@ -21,7 +21,7 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   );
 
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
-  expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
+  expect(screen.getByText('VALORES DE EXEMPLO')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
   expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
@@ -44,7 +44,7 @@ test('leitura desatualizada mantém os últimos valores e os identifica como arm
   render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, faixasRecomendadas, desatualizada: true }} />);
 
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByText('58')).toBeTruthy();
   expect(screen.getByText('24,5')).toBeTruthy();
@@ -64,7 +64,7 @@ test('sem conexão, identifica o cache e não classifica os valores como atuais'
 
   expect(screen.getByRole('alert')).toBeTruthy();
   expect(
-    screen.getByText('Últimos dados armazenados · leitura desatualizada · sensor sem conexão · aguardando nova leitura'),
+    screen.getByText('Estes são os últimos valores que chegaram. O sensor está sem conexão, então eles podem não ser os de agora.'),
   ).toBeTruthy();
   expect(screen.getByText('58')).toBeTruthy();
   expect(screen.queryByText(/do ideal$/)).toBeNull();
@@ -82,7 +82,7 @@ test('explica quando o sensor está indisponível', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'indisponivel' }} />);
 
   expect(screen.getByText('O sensor ainda não está disponível nesta versão.')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });
 
 test('sem leitura, mostra as faixas ideais da espécie sem inventar valores', () => {

@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
+import { TEXTOS } from '@/textos';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
@@ -7,11 +8,11 @@ import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
 import { formatarDataEHora } from './CartaoDoHistorico';
 
 const APRESENTACAO: Record<EstadoDaConexao, { texto: string; cor: string }> = {
-  conectado: { texto: 'Sensor conectado', cor: CORES.statusOk },
-  conectando: { texto: 'Conectando ao sensor…', cor: CORES.statusAtencao },
-  desconectado: { texto: 'Sensor desconectado', cor: CORES.erro },
-  'sem-permissao': { texto: 'Sem permissão de Bluetooth', cor: CORES.erro },
-  indisponivel: { texto: 'Nenhum sensor conectado', cor: CORES.statusSemDados },
+  conectado: { texto: TEXTOS.conexao.conectado, cor: CORES.statusOk },
+  conectando: { texto: TEXTOS.conexao.conectando, cor: CORES.statusAtencao },
+  desconectado: { texto: TEXTOS.conexao.desconectado, cor: CORES.erro },
+  'sem-permissao': { texto: TEXTOS.conexao.semPermissao, cor: CORES.erro },
+  indisponivel: { texto: TEXTOS.conexao.indisponivel, cor: CORES.statusSemDados },
 };
 
 function frase(texto: string): string {
@@ -23,22 +24,20 @@ function mesmoDia(a: Date, b: Date): boolean {
 }
 
 export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora: Date): string {
-  if (ultimaComunicacao === null) return 'Sem comunicação desde que o app abriu';
+  if (ultimaComunicacao === null) return TEXTOS.conexao.semComunicacao;
   const horario = formatarDataEHora(ultimaComunicacao);
   const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / 60_000));
   const decorrido = minutos < 1
-    ? 'há menos de 1 minuto'
+    ? TEXTOS.conexao.haMenosDeUmMinuto
     : minutos < 60
-      ? `há ${minutos} min`
+      ? TEXTOS.conexao.haMinutos(minutos)
       : minutos < 1_440
-        ? `há ${Math.floor(minutos / 60)} h`
-        : Math.floor(minutos / 1_440) === 1
-          ? 'há 1 dia'
-          : `há ${Math.floor(minutos / 1_440)} dias`;
+        ? TEXTOS.conexao.haHoras(Math.floor(minutos / 60))
+        : TEXTOS.conexao.haDias(Math.floor(minutos / 1_440));
   const quando = mesmoDia(ultimaComunicacao, agora)
     ? horario.slice(horario.indexOf('às'))
     : `em ${horario}`;
-  return `Última comunicação ${decorrido} (${quando})`;
+  return TEXTOS.conexao.ultimaComunicacao(decorrido, quando);
 }
 
 function horarioComSegundos(instante: Date): string {
@@ -51,12 +50,12 @@ function horarioComSegundos(instante: Date): string {
 export function descreverReconexao(conexao: ConexaoDoSensor): string | null {
   if (conexao.estado !== 'desconectado' || conexao.problema === 'bluetooth-desligado') return null;
   return conexao.proximaTentativa
-    ? `Nova tentativa automática às ${horarioComSegundos(conexao.proximaTentativa)}`
-    : 'O app tenta reconectar sozinho';
+    ? TEXTOS.conexao.novaTentativa(horarioComSegundos(conexao.proximaTentativa))
+    : TEXTOS.conexao.tentaSozinho;
 }
 
 function detalhes(conexao: ConexaoDoSensor, agora: Date): string[] {
-  if (conexao.estado === 'sem-permissao') return ['Permita o Bluetooth para o app voltar a receber leituras.'];
+  if (conexao.estado === 'sem-permissao') return [TEXTOS.conexao.permitaOBluetooth];
   if (conexao.estado !== 'desconectado') return [];
   return [
     conexao.problema ? MENSAGEM_DO_PROBLEMA[conexao.problema] : null,

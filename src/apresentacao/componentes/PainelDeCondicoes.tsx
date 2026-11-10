@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
+import { TEXTOS } from '@/textos';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
@@ -52,9 +53,9 @@ function formatarNumero(valor: number): string {
 }
 
 const APRESENTACAO_DA_SITUACAO: Record<SituacaoDaMedicao, { simbolo: string; texto: string; cor: string }> = {
-  abaixo: { simbolo: '▼', texto: 'Abaixo do ideal', cor: CORES.statusAtencao },
-  ideal: { simbolo: '✓', texto: 'Dentro do ideal', cor: CORES.statusOk },
-  acima: { simbolo: '▲', texto: 'Acima do ideal', cor: CORES.statusAtencao },
+  abaixo: { simbolo: '▼', texto: TEXTOS.condicoes.abaixoDoIdeal, cor: CORES.statusAtencao },
+  ideal: { simbolo: '✓', texto: TEXTOS.condicoes.dentroDoIdeal, cor: CORES.statusOk },
+  acima: { simbolo: '▲', texto: TEXTOS.condicoes.acimaDoIdeal, cor: CORES.statusAtencao },
 };
 
 export function formatarHorarioDaLeitura(instante: Date): string {
@@ -86,13 +87,17 @@ function Indicador({
   const apresentacao = situacao === null ? null : APRESENTACAO_DA_SITUACAO[situacao];
   const foraDoIdeal = situacao !== null && situacao !== 'ideal';
   const valorFormatado = valor === null ? null : formatarNumero(valor);
-  const valorFalado = valorFormatado === null ? 'sem dados recentes' : `${valorFormatado} ${descricaoDaUnidade}`;
+  const valorFalado = valorFormatado === null ? TEXTOS.condicoes.semDadosRecentes : `${valorFormatado} ${descricaoDaUnidade}`;
   const faixaVisivel = faixaRecomendada
     ? `${formatarNumero(faixaRecomendada.minimo)}–${formatarNumero(faixaRecomendada.maximo)}${unidade === '%' ? '' : ' '}${unidade}`
     : null;
   const descricaoDaFaixa = faixaRecomendada
-    ? `Faixa ideal: ${formatarNumero(faixaRecomendada.minimo)} a ${formatarNumero(faixaRecomendada.maximo)} ${descricaoDaUnidade}.`
-    : 'Faixa ideal não informada.';
+    ? TEXTOS.condicoes.faixaIdeal(
+        formatarNumero(faixaRecomendada.minimo),
+        formatarNumero(faixaRecomendada.maximo),
+        descricaoDaUnidade,
+      )
+    : `${TEXTOS.condicoes.faixaNaoInformada}.`;
 
   return (
     <View
@@ -106,7 +111,7 @@ function Indicador({
       <Text style={TEXTO.rotulo}>{rotulo.toUpperCase()}</Text>
       <View style={estilos.linhaDoValor}>
         {valorFormatado === null ? (
-          <Text style={estilos.semDados}>sem dados</Text>
+          <Text style={estilos.semDados}>{TEXTOS.condicoes.semDados}</Text>
         ) : (
           <>
             <Text style={[estilos.valor, foraDoIdeal && estilos.valorForaDoIdeal]}>{valorFormatado}</Text>
@@ -114,7 +119,7 @@ function Indicador({
           </>
         )}
       </View>
-      <Text style={estilos.faixa}>{faixaVisivel ? `Ideal: ${faixaVisivel}` : 'Faixa ideal não informada'}</Text>
+      <Text style={estilos.faixa}>{faixaVisivel ? TEXTOS.condicoes.ideal(faixaVisivel) : TEXTOS.condicoes.faixaNaoInformada}</Text>
       {apresentacao ? (
         <View style={[estilos.situacao, foraDoIdeal && { backgroundColor: apresentacao.cor }]}>
           <Text
@@ -147,28 +152,28 @@ function Indicadores({
       style={[estilos.indicadores, fontScale >= FONTE_QUE_EMPILHA && estilos.indicadoresEmpilhados]}
     >
       <Indicador
-        rotulo="Umidade"
+        rotulo={TEXTOS.condicoes.umidade}
         valor={leitura?.umidadePercentual ?? null}
         unidade="%"
-        descricaoDaUnidade="por cento"
+        descricaoDaUnidade={TEXTOS.condicoes.porCento}
         icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
         faixaRecomendada={faixas?.umidadePercentual}
         avaliarSituacao={avaliarSituacoes}
       />
       <Indicador
-        rotulo="Temperatura"
+        rotulo={TEXTOS.condicoes.temperatura}
         valor={leitura?.temperaturaCelsius ?? null}
         unidade="°C"
-        descricaoDaUnidade="graus Celsius"
+        descricaoDaUnidade={TEXTOS.condicoes.grausCelsius}
         icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
         faixaRecomendada={faixas?.temperaturaCelsius}
         avaliarSituacao={avaliarSituacoes}
       />
       <Indicador
-        rotulo="Luz"
+        rotulo={TEXTOS.condicoes.luz}
         valor={leitura?.luminosidadeLux ?? null}
         unidade="lux"
-        descricaoDaUnidade="lux"
+        descricaoDaUnidade={TEXTOS.condicoes.lux}
         icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
         faixaRecomendada={faixas?.luminosidadeLux}
         avaliarSituacao={avaliarSituacoes}
@@ -183,11 +188,11 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
     <View style={estilos.painel}>
       <View style={estilos.cabecalho}>
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
-          Condições agora
+          {TEXTOS.condicoes.titulo}
         </Text>
         {estado.tipo === 'leitura' && estado.demonstracao ? (
           <View style={estilos.seloDeDemonstracao}>
-            <Text style={estilos.textoDoSelo}>DADOS DE DEMONSTRAÇÃO</Text>
+            <Text style={estilos.textoDoSelo}>{TEXTOS.condicoes.seloDeExemplo}</Text>
           </View>
         ) : null}
       </View>
@@ -195,43 +200,46 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
 
       {estado.tipo === 'carregando' ? (
         <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">
-          Buscando as condições da planta…
+          {TEXTOS.condicoes.buscando}
         </Text>
       ) : null}
 
       {estado.tipo === 'indisponivel' ? (
         <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">
-          O sensor ainda não está disponível nesta versão.
+          {TEXTOS.condicoes.sensorIndisponivel}
         </Text>
       ) : null}
 
       {estado.tipo === 'sem-leitura' ? (
         <>
           <Text style={[TEXTO.corpo, estilos.mensagem]} accessibilityLiveRegion="polite">
-            Nenhuma leitura disponível ainda.
+            {TEXTOS.condicoes.semLeitura}
           </Text>
-          {estado.faixasRecomendadas ? <Indicadores leitura={null} faixas={estado.faixasRecomendadas} /> : null}
+          {estado.faixasRecomendadas ? (
+            <>
+              <Indicadores leitura={null} faixas={estado.faixasRecomendadas} />
+              <Text style={TEXTO.apoio}>{TEXTOS.condicoes.explicacaoDoLux}</Text>
+            </>
+          ) : null}
         </>
       ) : null}
 
       {estado.tipo === 'leitura' ? (
         <>
           <Text style={estilos.horarioDaLeitura}>
-            Última leitura às {formatarHorarioDaLeitura(estado.leitura.medidaEm)}
+            {TEXTOS.condicoes.ultimaLeitura(formatarHorarioDaLeitura(estado.leitura.medidaEm))}
           </Text>
           {estado.atualizando ? (
             <View style={estilos.atualizando} accessible accessibilityLiveRegion="polite">
               <ActivityIndicator size="small" color={CORES.acao} />
-              <Text style={TEXTO.apoio}>Atualizando condições…</Text>
+              <Text style={TEXTO.apoio}>{TEXTOS.condicoes.atualizando}</Text>
             </View>
           ) : null}
           {estado.offline || estado.desatualizada ? (
             <View style={estilos.aviso} accessible accessibilityRole="alert">
               <Text style={estilos.simboloDoAviso}>!</Text>
               <Text style={estilos.textoDoAviso}>
-                {estado.offline
-                  ? `Últimos dados armazenados · leitura desatualizada · sensor sem conexão${estado.desatualizada ? '' : ' · aguardando nova leitura'}`
-                  : 'Últimos dados armazenados · leitura desatualizada'}
+                {estado.offline ? TEXTOS.condicoes.valoresAntigosSemConexao : TEXTOS.condicoes.valoresAntigos}
               </Text>
             </View>
           ) : null}
@@ -240,6 +248,7 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
             faixas={estado.faixasRecomendadas}
             avaliarSituacoes={!estado.desatualizada && !estado.offline}
           />
+          <Text style={TEXTO.apoio}>{TEXTOS.condicoes.explicacaoDoLux}</Text>
         </>
       ) : null}
     </View>

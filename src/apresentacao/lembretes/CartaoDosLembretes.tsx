@@ -2,6 +2,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { CORES } from '../tema/cores';
@@ -35,15 +36,15 @@ export function CartaoDosLembretes() {
   return (
     <View style={estilos.cartao}>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Lembretes
+        {TEXTOS.lembretes.titulo}
       </Text>
       <Text style={TEXTO.corpo}>
         {janela === undefined
-          ? 'Lendo o horário salvo…'
-          : `Os avisos chegam ${descreverJanela(janela)}. Fora dessa faixa, eles esperam.`}
+          ? TEXTOS.lembretes.lendo
+          : TEXTOS.lembretes.resumo(descreverJanela(janela))}
       </Text>
       {janela === undefined ? null : (
-        <BotaoPrincipal titulo="Mudar o horário dos lembretes" aoTocar={() => navegador.push('/lembretes')} largo />
+        <BotaoPrincipal titulo={TEXTOS.lembretes.mudarHorario} aoTocar={() => navegador.push('/lembretes')} largo />
       )}
     </View>
   );

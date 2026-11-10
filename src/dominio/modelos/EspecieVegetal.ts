@@ -9,12 +9,18 @@ export interface FaixaIdeal extends FaixaRecomendada {
 }
 
 export interface FaixasIdeais {
-  /** Umidade relativa do ar, em %. */
+  /** Umidade relativa do ar durante o dia, em %. */
   readonly umidadeDoAr: FaixaIdeal;
-  /** Temperatura do ar, em °C. */
+  /** Temperatura do ar durante o dia, em °C. */
   readonly temperatura: FaixaIdeal;
-  /** Luminosidade, em lux. */
+  /** Luminosidade num instante, em lux. */
   readonly luminosidade: FaixaIdeal;
+  /** Luz somada ao longo do dia (DLI), em mol/m²/dia. */
+  readonly luzDiaria: FaixaIdeal;
+  /** Umidade relativa do ar durante a noite, em %. */
+  readonly umidadeDoArNoturna: FaixaIdeal;
+  /** Temperatura do ar durante a noite, em °C. */
+  readonly temperaturaNoturna: FaixaIdeal;
 }
 
 /** Dias entre o plantio e a primeira colheita. */

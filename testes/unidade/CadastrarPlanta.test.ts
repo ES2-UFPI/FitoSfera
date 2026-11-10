@@ -6,7 +6,7 @@ import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/Armazena
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
-import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { EspecieVegetal, FaixasIdeais } from '@/dominio/modelos/EspecieVegetal';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
 import { SensorFixo, GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
@@ -114,6 +114,7 @@ describe('faixas recomendadas', () => {
     const tomateRevisado: EspecieVegetal = {
       ...tomateDoCatalogo,
       faixasIdeais: {
+        ...(tomateDoCatalogo.faixasIdeais as FaixasIdeais),
         umidadeDoAr: { minimo: 60, maximo: 80, fonte },
         temperatura: { minimo: 22, maximo: 30, fonte },
         luminosidade: { minimo: 30000, maximo: 90000, fonte },

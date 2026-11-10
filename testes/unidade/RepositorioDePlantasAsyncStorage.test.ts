@@ -79,9 +79,9 @@ test('remover tira só a planta do id, preservando registros que o app não ente
   expect(gravado().map((r: { id: string }) => r.id)).toEqual(['x', 'p1']);
 });
 
-test('remover num conteúdo ilegível não apaga nada', async () => {
+test('remover num conteúdo ilegível falha sem sobrescrever os dados', async () => {
   await armazenamento.setItem('fitosfera:v2:plantas', '{quebrado');
-  await repo.remover('p1');
+  await expect(repo.remover('p1')).rejects.toThrow('Não foi possível remover a planta do armazenamento.');
   expect(armazenamento.valores.get('fitosfera:v2:plantas')).toBe('{quebrado');
 });
 

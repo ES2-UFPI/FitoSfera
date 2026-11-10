@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { TEXTOS } from '@/textos';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
@@ -39,7 +40,7 @@ export function LayoutDaEdicao({ id }: { id: string }) {
         <BotaoVoltar />
         <View style={estilos.centro}>
           <Text style={TEXTO.subtitulo}>
-            {item === null ? 'Planta não encontrada' : 'Não deu para abrir esta planta agora.'}
+            {item === null ? TEXTOS.comum.plantaNaoEncontrada : TEXTOS.comum.naoDeuParaAbrirAPlanta}
           </Text>
         </View>
       </FundoAconchegante>

@@ -13,7 +13,7 @@ test('tocar no vaso abre o detalhe e informa quando ainda não há leitura', asy
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
   expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });
 
 test('espécie fora do catálogo mostra "Espécie desconhecida"', async () => {
@@ -40,7 +40,7 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
   });
 
   expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
   expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento. Dentro do ideal.')).toBeTruthy();
 });
 
@@ -59,7 +59,7 @@ test('leitura mais antiga que 30 minutos mantém os valores armazenados com avis
 
   expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
   expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
   expect(screen.getByText('58')).toBeTruthy();
 });
@@ -103,7 +103,7 @@ test('puxar para atualizar mantém os últimos valores e os marca como desatuali
   const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   fireEvent(screen.UNSAFE_getByType(RefreshControl), 'refresh');
 
-  expect(await screen.findByText('Últimos dados armazenados · leitura desatualizada')).toBeTruthy();
+  expect(await screen.findByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
   expect(screen.getByText('61')).toBeTruthy();
   expect(screen.getByText('25')).toBeTruthy();
   expect(screen.getByText('9000')).toBeTruthy();
@@ -219,7 +219,7 @@ describe('histórico da planta', () => {
         agora,
       });
 
-      expect(await screen.findByLabelText('Próxima rega: sem intervalo conhecido.')).toBeTruthy();
+      expect(await screen.findByLabelText('Próxima rega: sem previsão para esta espécie.')).toBeTruthy();
     });
   });
 

@@ -53,6 +53,42 @@ e um emulador ou celular com depuração USB.
 O Bluetooth do sensor físico usa código nativo e **não funciona no Expo Go**: no Expo Go, o app abre normalmente,
 mas sem sensor. Para parear o sensor, instale o development build com `npm run android`.
 
+## Mapa de navegação
+
+A navegação usa o `expo-router`: uma pilha na raiz, com as abas como tela inicial. O app abre na aba **Jardim**,
+que é de onde se contam os toques.
+
+```
+app/
+├── (abas)/                 abas da tela inicial
+│   ├── index               Jardim: estante, jardim atual e sensor do ambiente   ← o app abre aqui
+│   ├── ajustes             Ajustes: lembretes, sensor pareado e sensor simulado
+│   └── ambiente            escondida da barra enquanto for só "Em breve"
+├── cadastro/               modal: buscar espécie → aparência → apelido
+├── planta/[id]             detalhe: condições, rega, histórico, editar e excluir
+├── historico/[id]          todas as regas da planta
+├── editar/[id]/            modal: aparência → apelido, reaproveitando o cadastro
+├── sensor                  pareamento do sensor BLE
+└── lembretes               horário dos lembretes
+```
+
+| Função | Caminho a partir do Jardim | Toques |
+| --- | --- | --- |
+| Ver o jardim | tela inicial | 0 |
+| Cadastrar planta | **Nova planta** (ou **Começar**, ou o vaso tracejado) → passos do cadastro | 1 |
+| Ver o detalhe da planta | tocar no vaso | 1 |
+| Registrar rega | vaso → **Registrar rega** | 2 |
+| Ver todas as regas | vaso → **Ver todas as regas** | 2 |
+| Editar a planta | vaso → **Editar** → passos da edição | 2 |
+| Excluir a planta | vaso → **Excluir** → confirmar | 2 + confirmação |
+| Trocar de jardim | cartão do jardim → escolher o jardim | 2 |
+| Associar ou parear sensor | cartão do sensor → **Associar …** ou **Parear novo sensor** | 2 |
+| Horário dos lembretes | aba **Ajustes** → **Mudar o horário dos lembretes** | 2 |
+
+Tocar numa notificação de desvio abre direto o detalhe da planta citada. Os caminhos da tabela são verificados em
+[`testes/telas/mapaDeNavegacao.test.tsx`](testes/telas/mapaDeNavegacao.test.tsx), que falha se alguma função
+principal passar de dois toques. Ao criar uma tela nova, acrescente-a à árvore, à tabela e ao teste.
+
 ## Como o time trabalha
 
 - [CONTRIBUTING.md](CONTRIBUTING.md): branches, commits, pull requests e regras de proteção.
@@ -60,6 +96,22 @@ mas sem sensor. Para parear o sensor, instale o development build com `npm run a
   estar pronta.
 - Todo pull request para `dev` ou `main` passa pelo [CI](.github/workflows/ci.yml), que verifica os tipos,
   valida o catálogo de espécies e roda os testes.
+
+## Textos do app
+
+Todo texto que a pessoa lê (telas, botões, leitor de tela e notificações) fica em
+[`src/textos/index.ts`](src/textos/index.ts), agrupado por tela. Para revisar a linguagem, basta abrir esse
+arquivo. O módulo não importa nada, então qualquer camada pode usá-lo, inclusive o domínio, que monta o texto das
+notificações.
+
+Ao escrever um texto:
+
+- Escreva para quem está começando a cuidar de plantas: frases curtas e palavras do dia a dia.
+- Termo técnico só com explicação na própria tela, como o lux no painel de condições.
+- Nada de texto escrito direto na tela: acrescente-o ao módulo e use `TEXTOS.<grupo>.<nome>`.
+
+[`testes/unidade/textos.test.ts`](testes/unidade/textos.test.ts) falha se uma tela voltar a escrever texto direto
+ou se um texto usar termos do projeto que a pessoa não conhece (como "desvio", "grandeza" ou "associar").
 
 ## Onde ficam os dados
 

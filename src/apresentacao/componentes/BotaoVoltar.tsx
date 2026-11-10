@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { CORES } from '../tema/cores';
 
 /** Círculo de papel kraft com a seta de voltar. */
@@ -11,7 +12,7 @@ export function BotaoVoltar() {
       // Aberto direto por um link não há tela anterior: aí "voltar" é ir para o jardim.
       onPress={() => (navegador.canGoBack() ? navegador.back() : navegador.replace('/'))}
       accessibilityRole="button"
-      accessibilityLabel="Voltar"
+      accessibilityLabel={TEXTOS.comum.voltar}
       hitSlop={8}
       style={({ pressed }) => [estilos.voltar, pressed && estilos.pressionado]}
     >

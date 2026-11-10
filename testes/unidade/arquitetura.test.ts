@@ -16,13 +16,17 @@ function importacoes(arquivo: string): string[] {
   return [...codigo.matchAll(/(?:from|import)\s+['"]([^'"]+)['"]/g)].map((achado) => achado[1]);
 }
 
-test('o domínio só importa do próprio domínio: nada de Expo, React Native, BLE ou AsyncStorage', () => {
+test('o domínio só importa do próprio domínio e dos textos: nada de Expo, React Native, BLE ou AsyncStorage', () => {
   const proibidas = arquivosDe('dominio').flatMap((arquivo) =>
     importacoes(arquivo)
-      .filter((origem) => !origem.startsWith('.') && !origem.startsWith('@/dominio/'))
+      .filter((origem) => !origem.startsWith('.') && !origem.startsWith('@/dominio/') && origem !== '@/textos')
       .map((origem) => `${arquivo} importa ${origem}`),
   );
   expect(proibidas).toEqual([]);
+});
+
+test('o módulo de textos não importa nada, para qualquer camada poder usá-lo', () => {
+  expect(arquivosDe('textos').flatMap(importacoes)).toEqual([]);
 });
 
 test('a porta do sensor está no domínio', () => {

@@ -1,4 +1,5 @@
 import { HorarioDoDia, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
+import { TEXTOS } from '@/textos';
 
 /** `08:00`: sempre dois dígitos, para a hora não dançar na tela quando o número muda de tamanho. */
 export function formatarHorario({ hora, minuto }: HorarioDoDia): string {
@@ -12,9 +13,11 @@ export function formatarHorario({ hora, minuto }: HorarioDoDia): string {
 export function descreverJanela(janela: JanelaDeLembretes): string {
   const inicio = formatarHorario(janela.inicio);
   const fim = formatarHorario(janela.fim);
-  if (inicio === fim) return 'a qualquer hora do dia';
+  if (inicio === fim) return TEXTOS.lembretes.qualquerHora;
   const atravessaAMeiaNoite = emMinutos(janela.fim) < emMinutos(janela.inicio);
-  return atravessaAMeiaNoite ? `das ${inicio} às ${fim}, atravessando a meia-noite` : `das ${inicio} às ${fim}`;
+  return atravessaAMeiaNoite
+    ? TEXTOS.lembretes.entreAtravessandoAMeiaNoite(inicio, fim)
+    : TEXTOS.lembretes.entre(inicio, fim);
 }
 
 function emMinutos({ hora, minuto }: HorarioDoDia): number {

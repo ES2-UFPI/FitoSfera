@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { Prateleira } from '../estante/Prateleira';
 import { VasoFantasma } from '../estante/VasoFantasma';
@@ -17,7 +18,6 @@ import { ALTURA_DA_AREA_DOS_VASOS, ESPACO, LARGURA_DO_VASO } from '../tema/medid
 import { FONTES, TEXTO } from '../tema/tipografia';
 
 const GrupoAnimado = Animated.createAnimatedComponent(G);
-const PASSOS = ['busque', 'monte', 'batize'];
 
 /** O jardim antes da primeira planta: vasos fantasma mostrando o que pode nascer ali. */
 export function EstadoVazio({ aoComecar }: { aoComecar: () => void }) {
@@ -26,21 +26,21 @@ export function EstadoVazio({ aoComecar }: { aoComecar: () => void }) {
       <View style={estilos.estante}>
         <Prateleira>
           <ContornoDePlanta tipo="erva" />
-          <VasoFantasma aoTocar={aoComecar} rotulo="Cadastrar a primeira planta" />
+          <VasoFantasma aoTocar={aoComecar} rotulo={TEXTOS.jardim.cadastrarPrimeiraPlanta} />
           <ContornoDePlanta tipo="flor" />
         </Prateleira>
       </View>
 
       <View style={estilos.convite}>
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
-          Monte sua primeira planta
+          {TEXTOS.jardim.vazioTitulo}
         </Text>
         <Text style={[TEXTO.corpo, estilos.texto]}>
-          Busque pelo nome, escolha a forma e as cores, e dê um apelido carinhoso.
+          {TEXTOS.jardim.vazioTexto}
         </Text>
-        <BotaoPrincipal titulo="＋ Começar" aoTocar={aoComecar} />
+        <BotaoPrincipal titulo={TEXTOS.jardim.comecar} aoTocar={aoComecar} />
         <View style={estilos.passos}>
-          {PASSOS.map((passo, indice) => (
+          {TEXTOS.jardim.passosDoVazio.map((passo, indice) => (
             <View key={passo} style={estilos.passo}>
               <View style={estilos.numero}>
                 <Text style={estilos.textoDoNumero}>{indice + 1}</Text>
