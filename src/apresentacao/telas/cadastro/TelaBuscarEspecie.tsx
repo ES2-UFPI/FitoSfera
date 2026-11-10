@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
+import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../cadastro/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
@@ -83,32 +84,49 @@ export function TelaBuscarEspecie() {
             <Text style={[TEXTO.corpo, estilos.semResultado]}>Não encontramos essa planta no catálogo.</Text>
           ) : null
         }
-        renderItem={({ item }) => (
-          <Pressable
-            testID="resultado-especie"
-            onPress={() => escolher(item)}
-            accessibilityRole="button"
-            accessibilityLabel={item.nomeComum}
-            style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
-          >
-            <View style={estilos.nomes}>
-              <Text testID="nome-comum" style={estilos.nomeComum}>
-                {item.nomeComum}
-              </Text>
-              <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
-            </View>
-            <Svg width={14} height={14} viewBox="0 0 14 14">
-              <Path
-                d="M5 2 L10 7 L5 12"
-                stroke={CORES.rotulo}
-                strokeWidth={2}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const dificuldade = APRESENTACAO_DA_DIFICULDADE[item.nivelDeDificuldade];
+          // Ficha de manejo ainda não pesquisada, então a observação cita só o que o catálogo mede: rega e luz.
+          const observacao = observacaoDaDificuldade(item.nivelDeDificuldade, { ...item, exigencias: null });
+          // "Nome. Estado.", como a etiqueta da estante: o nível é informação, não enfeite, e precisa ser falado.
+          const falado = observacao ?? `${dificuldade.falado}.`;
+          return (
+            <Pressable
+              testID="resultado-especie"
+              onPress={() => escolher(item)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.nomeComum}. ${falado}`}
+              style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
+            >
+              <View style={estilos.nomes}>
+                <View style={estilos.linhaDoNome}>
+                  <Text testID="nome-comum" style={estilos.nomeComum}>
+                    {item.nomeComum}
+                  </Text>
+                  <Text testID="selo-dificuldade" style={[estilos.selo, { color: dificuldade.cor }]}>
+                    {dificuldade.curto}
+                  </Text>
+                </View>
+                <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
+                {observacao !== null && (
+                  <Text testID="observacao-dificuldade" style={estilos.observacao}>
+                    {observacao}
+                  </Text>
+                )}
+              </View>
+              <Svg width={14} height={14} viewBox="0 0 14 14">
+                <Path
+                  d="M5 2 L10 7 L5 12"
+                  stroke={CORES.rotulo}
+                  strokeWidth={2}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </Pressable>
+          );
+        }}
       />
     </FundoAconchegante>
   );
@@ -135,7 +153,11 @@ const estilos = StyleSheet.create({
   resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.pequeno },
   pressionado: { opacity: 0.6 },
   nomes: { flex: 1, gap: 1 },
-  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto },
+  linhaDoNome: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto, flexShrink: 1 },
+  /** Selo do nível ao lado do nome: maiúsculas pequenas, na cor do nível. */
+  selo: { fontFamily: FONTES.forte, fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase' },
+  observacao: { fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio, marginTop: 2 },
   nomeCientifico: { fontFamily: FONTES.italico, fontSize: 12.5, color: CORES.textoApoio },
   semResultado: { textAlign: 'center', marginTop: ESPACO.folgado },
 });

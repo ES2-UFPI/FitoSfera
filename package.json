@@ -10,7 +10,7 @@
     "test": "jest",
     "typecheck": "tsc --noEmit && tsc --noEmit -p testes",
     "verificar-tipos": "npm run typecheck",
-    "validar-catalogo": "jest --selectProjects unidade --testPathPattern=catalogoDePlantas"
+    "validar-catalogo": "jest --selectProjects unidade --testPathPattern=\"catalogoDePlantas|exigenciasDeManejo\""
   },
   "dependencies": {
     "@expo-google-fonts/fraunces": "^0.4.1",
