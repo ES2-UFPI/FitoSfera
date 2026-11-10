@@ -1,8 +1,8 @@
-import { copiarFaixas } from '@/dominio/modelos/FaixaRecomendada';
+import { copiarFaixas, FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 import { RepositorioDeEspeciesLocal } from '../catalogo/RepositorioDeEspeciesLocal';
 import { ArmazenamentoChaveValor } from './ArmazenamentoChaveValor';
-import { CHAVES, CHAVES_DA_VERSAO_0, CHAVES_DA_VERSAO_1 } from './chaves';
+import { CHAVES, CHAVES_DA_VERSAO_0, CHAVES_DA_VERSAO_1, CHAVES_DA_VERSAO_3 } from './chaves';
 
 /**
  * Leva os dados da versão `paraVersao - 1` para `paraVersao`. Precisa poder rodar de novo sem estrago:
@@ -30,8 +30,22 @@ export function criarMigracaoParaVersao2(especies: RepositorioDeEspecies): Migra
   return {
     paraVersao: 2,
     aplicar: (armazenamento) =>
-      moverPlantas(armazenamento, CHAVES_DA_VERSAO_1, CHAVES, (registros) =>
+      moverPlantas(armazenamento, CHAVES_DA_VERSAO_1, CHAVES_DA_VERSAO_3, (registros) =>
         Promise.all(registros.map((registro) => acrescentarFaixas(registro, especies))),
+      ),
+  };
+}
+
+/**
+ * 3 → 4: as plantas passam a guardar a meta de luz diária e as faixas da noite (#90). Quem foi cadastrado antes
+ * ganha uma cópia das que faltam, tiradas da espécie no catálogo; as faixas que a planta já tinha ficam como estão.
+ */
+export function criarMigracaoParaVersao4(especies: RepositorioDeEspecies): Migracao {
+  return {
+    paraVersao: 4,
+    aplicar: (armazenamento) =>
+      moverPlantas(armazenamento, CHAVES_DA_VERSAO_3, CHAVES, (registros) =>
+        Promise.all(registros.map((registro) => completarFaixas(registro, especies))),
       ),
   };
 }
@@ -39,7 +53,9 @@ export function criarMigracaoParaVersao2(especies: RepositorioDeEspecies): Migra
 export const MIGRACOES: readonly Migracao[] = [
   MIGRACAO_PARA_VERSAO_1,
   criarMigracaoParaVersao2(new RepositorioDeEspeciesLocal()),
+  // A versão 3 só acrescentou chaves novas, sem dados para converter.
   { paraVersao: 3, aplicar: async () => undefined },
+  criarMigracaoParaVersao4(new RepositorioDeEspeciesLocal()),
 ];
 
 interface ChavesDasPlantas {
@@ -79,6 +95,20 @@ async function acrescentarFaixas(registro: unknown, especies: RepositorioDeEspec
   const especie = await especies.obterPorId(campos.idEspecie);
   return { ...campos, faixasRecomendadas: copiarFaixas(especie?.faixasIdeais ?? null) };
 }
+
+/** Só acrescenta as faixas que faltam; planta sem faixas ou de espécie fora do catálogo passa intacta. */
+async function completarFaixas(registro: unknown, especies: RepositorioDeEspecies): Promise<unknown> {
+  if (typeof registro !== 'object' || registro === null || Array.isArray(registro)) return registro;
+  const campos = registro as Record<string, unknown>;
+  const faixas = campos.faixasRecomendadas;
+  if (typeof faixas !== 'object' || faixas === null || typeof campos.idEspecie !== 'string') return registro;
+  const doCatalogo = copiarFaixas((await especies.obterPorId(campos.idEspecie))?.faixasIdeais ?? null);
+  if (doCatalogo === null) return registro;
+  const faltantes = FAIXAS_NOVAS.filter((nome) => !(nome in faixas)).map((nome) => [nome, doCatalogo[nome]]);
+  return faltantes.length === 0 ? registro : { ...campos, faixasRecomendadas: { ...faixas, ...Object.fromEntries(faltantes) } };
+}
+
+const FAIXAS_NOVAS: readonly (keyof FaixasRecomendadas)[] = ['luzDiaria', 'umidadeDoArNoturna', 'temperaturaNoturna'];
 
 /**
  * Uma tentativa anterior pode ter parado depois de o app já gravar na chave nova. Junta as duas listas,

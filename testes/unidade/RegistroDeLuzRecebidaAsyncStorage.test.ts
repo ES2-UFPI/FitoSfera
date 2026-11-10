@@ -120,3 +120,18 @@ test('uma falha ao gravar não trava as próximas contagens', async () => {
 
   expect((await registro.listar('sala')).map((periodo) => periodo.luxMinutos)).toEqual([300]);
 });
+
+test('depois de fechar e reabrir o app, os períodos e o último contato com o sensor continuam lá', async () => {
+  const { armazenamento, registro } = montar();
+  await registro.registrar('sala', leitura(1_000, 0));
+  await registro.registrar('sala', leitura(1_600, 1));
+
+  const reaberto = new RegistroDeLuzRecebidaAsyncStorage(armazenamento);
+  expect(await reaberto.listar('sala')).toEqual(await registro.listar('sala'));
+  expect(await reaberto.obterUltimoContato('sala')).toEqual(leitura(0, 1).medidaEm);
+});
+
+test('sem nenhum contador recebido, não há último contato', async () => {
+  const { registro } = montar();
+  expect(await registro.obterUltimoContato('sala')).toBeNull();
+});

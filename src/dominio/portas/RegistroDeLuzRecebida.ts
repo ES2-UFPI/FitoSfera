@@ -7,4 +7,6 @@ export interface RegistroDeLuzRecebida {
   registrar(idJardim: string, leitura: Leitura): Promise<void>;
   /** Os períodos com luz ou com reinício do sensor, do mais antigo para o mais recente. */
   listar(idJardim: string): Promise<readonly PeriodoDeLuz[]>;
+  /** Quando chegou o último contador contabilizado: até ali, a luz do jardim é conhecida. Null se nunca chegou. */
+  obterUltimoContato(idJardim: string): Promise<Date | null>;
 }

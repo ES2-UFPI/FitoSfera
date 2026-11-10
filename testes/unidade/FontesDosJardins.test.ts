@@ -78,6 +78,7 @@ test('as leituras do jardim passam pelo registro de luz recebida', async () => {
   const fontes = new FontesDosJardins(jardins, null, simulados, new CacheDeLeiturasAsyncStorage(armazenamento), {
     registrar,
     listar: async () => [],
+    obterUltimoContato: async () => null,
   });
 
   await (await fontes.obter('sala')).lerLeituraAtual();

@@ -68,15 +68,26 @@ function lerIntervalo(bruto: unknown): number | null {
   return bruto;
 }
 
-/** Faixas ausentes ou malformadas deixam a planta sem faixas (status "sem dados"), sem perder o registro. */
+/**
+ * Faixas do dia ausentes ou malformadas deixam a planta sem faixas (status "sem dados"), sem perder o registro.
+ * As faixas da versão 4 são opcionais: uma que não dá para ler só fica de fora.
+ */
 function lerFaixas(bruto: unknown): FaixasRecomendadas | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { umidadeDoAr, temperatura, luminosidade } = bruto as Record<string, unknown>;
-  const faixas = [umidadeDoAr, temperatura, luminosidade].map(lerFaixa);
+  const campos = bruto as Record<string, unknown>;
+  const faixas = [campos.umidadeDoAr, campos.temperatura, campos.luminosidade].map(lerFaixa);
   if (faixas.some((faixa) => faixa === null)) return null;
   const [umidade, temperaturaLida, luz] = faixas as FaixaRecomendada[];
-  return { umidadeDoAr: umidade, temperatura: temperaturaLida, luminosidade: luz };
+  const opcionais = Object.fromEntries(
+    FAIXAS_DA_VERSAO_4.flatMap((nome) => {
+      const faixa = lerFaixa(campos[nome]);
+      return faixa === null ? [] : [[nome, faixa]];
+    }),
+  );
+  return { umidadeDoAr: umidade, temperatura: temperaturaLida, luminosidade: luz, ...opcionais };
 }
+
+const FAIXAS_DA_VERSAO_4 = ['luzDiaria', 'umidadeDoArNoturna', 'temperaturaNoturna'] as const;
 
 function lerFaixa(bruto: unknown): FaixaRecomendada | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
