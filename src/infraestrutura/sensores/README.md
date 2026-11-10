@@ -77,7 +77,7 @@ na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua leg�
 sequência, id do reinício, acumulado de luz desde o boot, tempo sem confirmação e as três medições; o app envia
 `[0x02, sequência]` depois de processar cada pacote válido. Pacote sem temperatura ou umidade é confirmado, mas
 não vira uma leitura parcial no painel; luminosidade ausente vira `null`. O decodificador também mantém compatibilidade
-com o pacote legado de 8 bytes. O acumulado do firmware não é o acumulado diário da planta — isso fica para a #89.
+com o pacote legado de 8 bytes. O acumulado do firmware não é o acumulado diário da planta: o total do dia é calculado a partir dos períodos de luz recebida (veja abaixo).
 
 **Luz recebida sem conexão:** a `Leitura` do pacote atual traz o `contadorDeLuz`: acumulado, id do reinício, segundos
 sem confirmação e, calculada a partir deles, a data e a hora da última comunicação. A cada leitura, o `SensorComCache`
@@ -85,6 +85,17 @@ passa o contador ao `RegistroDeLuzRecebida`, que compara com o último valor sal
 primeiro contador recebido e um reinício do sensor não contam luz, porque o valor não diz nada sobre o período, e o
 reinício deixa um período marcado como incompleto. Um pacote repetido não soma nada, e um pacote atrasado, com contador
 menor, é ignorado. O sensor simulado e o pacote de 8 bytes não têm contador e não geram luz recebida.
+
+**Luz do dia:** a regra [`LuzDoDia`](../../dominio/regras/LuzDoDia.ts) soma os períodos que caem no dia, da meia-noite
+local até agora, e converte lux × minutos em DLI (mol/m²), a unidade da meta `luzDiaria` do catálogo. A conversão usa
+o fator da luz do sol (1 lux ≈ 0,0185 µmol/m²/s), então é uma aproximação que erra mais com LED ou lâmpada.
+
+- Um período que atravessa a meia-noite é dividido entre os dois dias na proporção do tempo. Se ele cobrir mais de
+  3 horas entre as 6h e as 18h, não dá para saber em que dia a luz caiu, e o dia fica incompleto.
+- O dia também fica incompleto com um reinício do sensor ou sem contato com ele há mais de 20 min. Dia incompleto
+  não deve ser lido como falta de luz.
+- O progresso é a luz do dia dividida pelo mínimo da meta. A projeção estima o dia inteiro supondo que a luz segue a
+  curva de um dia de sol, das 6h às 18h. Antes de cerca de 8h30 ela não é feita, porque seria quase um chute.
 
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente
