@@ -37,7 +37,7 @@ test('tocar no sensor já mostra os sensores pareados e o pareamento, com a seta
 
   fireEvent.press(await screen.findByRole('button', { name: 'Mostrar opções do sensor' }));
 
-  expect(await screen.findByRole('button', { name: 'Associar FitoSfera · le-01' })).toBeTruthy();
+  expect(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Parear novo sensor' })).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Ocultar opções do sensor' })).toHaveProp('accessibilityState', {
     expanded: true,

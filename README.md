@@ -97,6 +97,22 @@ principal passar de dois toques. Ao criar uma tela nova, acrescente-a à árvore
 - Todo pull request para `dev` ou `main` passa pelo [CI](.github/workflows/ci.yml), que verifica os tipos,
   valida o catálogo de espécies e roda os testes.
 
+## Textos do app
+
+Todo texto que a pessoa lê (telas, botões, leitor de tela e notificações) fica em
+[`src/textos/index.ts`](src/textos/index.ts), agrupado por tela. Para revisar a linguagem, basta abrir esse
+arquivo. O módulo não importa nada, então qualquer camada pode usá-lo, inclusive o domínio, que monta o texto das
+notificações.
+
+Ao escrever um texto:
+
+- Escreva para quem está começando a cuidar de plantas: frases curtas e palavras do dia a dia.
+- Termo técnico só com explicação na própria tela, como o lux no painel de condições.
+- Nada de texto escrito direto na tela: acrescente-o ao módulo e use `TEXTOS.<grupo>.<nome>`.
+
+[`testes/unidade/textos.test.ts`](testes/unidade/textos.test.ts) falha se uma tela voltar a escrever texto direto
+ou se um texto usar termos do projeto que a pessoa não conhece (como "desvio", "grandeza" ou "associar").
+
 ## Onde ficam os dados
 
 - [Catálogo de espécies](src/infraestrutura/catalogo/README.md): schema e como acrescentar uma espécie.

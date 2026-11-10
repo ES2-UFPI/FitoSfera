@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_HISTORICO_DE_REGAS, RegaDoHistorico } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
+import { TEXTOS } from '@/textos';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { descreverQuandoRegou, formatarDataEHora } from '../componentes/CartaoDoHistorico';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -20,8 +21,8 @@ type Estado =
 
 /** Quantas regas a lista está mostrando, avisando quando o limite cortou as mais antigas. */
 export function resumirQuantidade(quantidade: number): string {
-  if (quantidade >= LIMITE_DO_HISTORICO_DE_REGAS) return `As ${LIMITE_DO_HISTORICO_DE_REGAS} regas mais recentes`;
-  return quantidade === 1 ? '1 rega registrada' : `${quantidade} regas registradas`;
+  if (quantidade >= LIMITE_DO_HISTORICO_DE_REGAS) return TEXTOS.historico.regasMaisRecentes(LIMITE_DO_HISTORICO_DE_REGAS);
+  return TEXTOS.historico.regasRegistradas(quantidade);
 }
 
 /** As regas anteriores de uma planta, da mais recente para a mais antiga. Aberta pelo detalhe. */
@@ -65,18 +66,18 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
       >
         <View style={estilos.cabecalho}>
           <Text style={TEXTO.titulo} accessibilityRole="header">
-            Histórico de regas
+            {TEXTOS.historico.tituloDaTela}
           </Text>
           {estado.tipo === 'pronto' ? <Text style={estilos.apelido}>{estado.apelido}</Text> : null}
         </View>
 
-        {estado.tipo === 'carregando' ? <Text style={TEXTO.corpo}>Buscando as regas da planta…</Text> : null}
+        {estado.tipo === 'carregando' ? <Text style={TEXTO.corpo}>{TEXTOS.historico.buscandoRegas}</Text> : null}
 
-        {estado.tipo === 'sem-planta' ? <Text style={TEXTO.subtitulo}>Planta não encontrada</Text> : null}
+        {estado.tipo === 'sem-planta' ? <Text style={TEXTO.subtitulo}>{TEXTOS.comum.plantaNaoEncontrada}</Text> : null}
 
         {estado.tipo === 'falhou' ? (
           <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-            Não deu para ler o histórico agora.
+            {TEXTOS.historico.falha}
           </Text>
         ) : null}
 
@@ -112,10 +113,10 @@ function SemRegas() {
         <IconeRegador cor={CORES.acaoRega} tamanho={44} />
       </View>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Nenhuma rega registrada
+        {TEXTOS.historico.semRegasTitulo}
       </Text>
       <Text style={[TEXTO.corpo, estilos.texto]}>
-        Toque em “Registrar rega” no detalhe da planta e cada rega passa a aparecer aqui.
+        {TEXTOS.historico.semRegasTexto}
       </Text>
     </View>
   );

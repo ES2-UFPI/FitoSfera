@@ -1,3 +1,4 @@
+import { TEXTOS } from '@/textos';
 import { Desvio, Grandeza, SentidoDoDesvio } from '../regras/DesvioDaLeitura';
 
 /** O texto de uma notificação de desvio. */
@@ -11,11 +12,7 @@ export const ACOES = ['aguar', 'afastar do sol', 'reposicionar'] as const;
 export type Acao = (typeof ACOES)[number];
 
 /** Como cada ação entra no título, sempre depois do apelido da planta. */
-const PEDIDO_DA_ACAO: Record<Acao, string> = {
-  aguar: 'precisa de água',
-  'afastar do sol': 'precisa sair do sol',
-  reposicionar: 'precisa mudar de lugar',
-};
+const PEDIDO_DA_ACAO: Record<Acao, string> = TEXTOS.notificacoes.acoes;
 
 /**
  * A ação que resolve cada tipo de desvio. Só a falta de umidade se resolve com água; o calor demais pede
@@ -29,9 +26,9 @@ const ACAO_DO_DESVIO: Record<Grandeza, Record<SentidoDoDesvio, Acao>> = {
 
 /** O nome de cada grandeza na frase e a unidade colada ao número (a unidade já traz o espaço, quando tem). */
 const TEXTO_DA_GRANDEZA: Record<Grandeza, { readonly nome: string; readonly unidade: string }> = {
-  umidadeDoAr: { nome: 'A umidade do ar', unidade: '%' },
-  temperatura: { nome: 'A temperatura', unidade: ' °C' },
-  luminosidade: { nome: 'A luminosidade', unidade: ' lux' },
+  umidadeDoAr: { nome: TEXTOS.notificacoes.medidas.umidadeDoAr, unidade: '%' },
+  temperatura: { nome: TEXTOS.notificacoes.medidas.temperatura, unidade: ' °C' },
+  luminosidade: { nome: TEXTOS.notificacoes.medidas.luminosidade, unidade: ' lux' },
 };
 
 export function acaoDoDesvio(desvio: Desvio): Acao {
@@ -55,7 +52,7 @@ export function acaoPrincipal(desvios: readonly Desvio[]): Acao | null {
 export function montarMensagemDoAviso(apelido: string, desvios: readonly Desvio[]): MensagemDoAviso {
   const acao = acaoPrincipal(desvios);
   return {
-    titulo: `${apelido} ${acao === null ? 'precisa de atenção' : PEDIDO_DA_ACAO[acao]}`,
+    titulo: TEXTOS.notificacoes.titulo(apelido, acao === null ? TEXTOS.notificacoes.precisaDeAtencao : PEDIDO_DA_ACAO[acao]),
     corpo: desvios.map(descreverDesvio).join(' '),
   };
 }
@@ -63,7 +60,7 @@ export function montarMensagemDoAviso(apelido: string, desvios: readonly Desvio[
 function descreverDesvio(desvio: Desvio): string {
   const { nome, unidade } = TEXTO_DA_GRANDEZA[desvio.grandeza];
   const medido = comUnidade(desvio.valor, unidade);
-  return `${nome} está em ${medido}, ${desvio.sentido} do ideal.`;
+  return TEXTOS.notificacoes.desvio(nome, medido, desvio.sentido);
 }
 
 /** Uma casa decimal basta para a pessoa, e com vírgula, como se escreve em português. */

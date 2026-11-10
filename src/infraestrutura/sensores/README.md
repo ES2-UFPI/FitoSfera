@@ -98,7 +98,8 @@ Os erros da `react-native-ble-plx` são traduzidos em [`ClassificadorDeErroBle.t
 um `FalhaBle`, sem o vocabulário da biblioteca. O `SensorBluetooth` transforma esse tipo no motivo que a interface
 mostra: na tela de pareamento, um `MotivoDaFalhaDoPareamento`; durante o uso, o `problema` da `ConexaoDoSensor`,
 que o indicador de conexão exibe junto do horário da próxima tentativa. Os textos ficam em
-[`textosDoSensor.ts`](../../apresentacao/sensor/textosDoSensor.ts), cada um com o que aconteceu e o que fazer.
+[`src/textos/index.ts`](../../textos/index.ts) (grupos `pareamento.falhas` e `conexao.problemas`), cada um com o
+que aconteceu e o que fazer.
 
 | Situação | Código da biblioteca | Ao parear | Durante o uso |
 | --- | --- | --- | --- |

@@ -203,9 +203,9 @@ describe('tela de pareamento', () => {
     }
   });
 
-  test('sem Bluetooth no app (Expo Go), explica que precisa do development build', async () => {
+  test('sem Bluetooth nesta versão do app, explica o que instalar', async () => {
     renderizarApp({ url: '/sensor' });
-    expect(await screen.findByText(/development build/)).toBeTruthy();
+    expect(await screen.findByText(/Instale o FitoSfera completo/)).toBeTruthy();
   });
 });
 

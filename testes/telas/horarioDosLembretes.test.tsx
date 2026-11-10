@@ -84,7 +84,7 @@ describe('lembretes nos ajustes', () => {
 
     expect(
       await screen.findByText(
-        'Os avisos chegam das 22:30 às 07:15, atravessando a meia-noite. Fora dessa faixa, eles esperam.',
+        'Os avisos chegam das 22:30 às 07:15, atravessando a meia-noite. Fora desse horário, eles esperam.',
       ),
     ).toBeTruthy();
 
@@ -102,6 +102,6 @@ describe('lembretes nos ajustes', () => {
 
     fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
-    expect(await screen.findByText('Os avisos chegam das 08:00 às 21:30. Fora dessa faixa, eles esperam.')).toBeTruthy();
+    expect(await screen.findByText('Os avisos chegam das 08:00 às 21:30. Fora desse horário, eles esperam.')).toBeTruthy();
   });
 });
