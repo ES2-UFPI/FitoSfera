@@ -31,6 +31,7 @@ export function ProvedorDoAplicativo({
   const [jardins, definirJardins] = useState<readonly Jardim[]>([JARDIM_PRINCIPAL]);
   const [idJardimSelecionado, definirSelecionado] = useState(JARDIM_PRINCIPAL.id);
   const selecaoAtual = useRef(JARDIM_PRINCIPAL.id);
+  const recuperacaoDeExclusoes = useRef<Promise<void>>(Promise.resolve());
 
   const recarregarJardins = useCallback(async () => {
     const [lista, selecionado] = await Promise.all([
@@ -63,6 +64,7 @@ export function ProvedorDoAplicativo({
   // primeira leitura). Sem isso, a abertura esperaria pelo jardim para sempre.
   const recarregarJardim = useCallback(async () => {
     try {
+      await recuperacaoDeExclusoes.current;
       const carregadas = await container.listarJardim.executar(idJardimSelecionado);
       if (selecaoAtual.current === idJardimSelecionado) definirPlantas(carregadas);
     } catch (falha) {
@@ -70,6 +72,12 @@ export function ProvedorDoAplicativo({
       if (selecaoAtual.current === idJardimSelecionado) definirPlantas((anteriores) => anteriores ?? []);
     }
   }, [container, idJardimSelecionado]);
+
+  useEffect(() => {
+    recuperacaoDeExclusoes.current = container.excluirPlanta.recuperarPendentes().catch((falha) => {
+      console.warn('Não foi possível concluir a limpeza de uma exclusão pendente.', falha);
+    });
+  }, [container]);
 
   useEffect(() => {
     void recarregarJardins().catch((falha) => console.warn('Não deu para ler os jardins.', falha));
