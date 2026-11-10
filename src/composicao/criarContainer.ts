@@ -71,7 +71,7 @@ export function criarContainer(): Container {
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes),
+    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

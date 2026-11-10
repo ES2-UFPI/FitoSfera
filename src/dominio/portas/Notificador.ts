@@ -16,4 +16,6 @@ export interface Notificador {
    */
   garantirPermissao(): Promise<boolean>;
   notificar(aviso: Aviso): Promise<void>;
+  /** Cancela notificações pendentes da planta removida, sem afetar as demais. */
+  cancelarDaPlanta(idPlanta: string): Promise<void>;
 }

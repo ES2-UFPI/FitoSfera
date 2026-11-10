@@ -1,6 +1,7 @@
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
+import { Notificador } from '@/dominio/portas/Notificador';
 
 /** Remove a planta e, só depois, apaga suas regas para uma falha de remoção não destruir o histórico. */
 export class ExcluirPlanta {
@@ -8,9 +9,11 @@ export class ExcluirPlanta {
     private readonly plantas: RepositorioDePlantas,
     private readonly regas: RepositorioDeRegas,
     private readonly pendentes: RegistroDeExclusoesPendentes,
+    private readonly notificador: Pick<Notificador, 'cancelarDaPlanta'>,
   ) {}
 
   async executar(idPlanta: string): Promise<void> {
+    await this.notificador.cancelarDaPlanta(idPlanta);
     await this.pendentes.marcar(idPlanta);
     try {
       await this.plantas.remover(idPlanta);

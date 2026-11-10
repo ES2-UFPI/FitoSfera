@@ -12,4 +12,8 @@ export class NotificadorInativo implements Notificador {
   async notificar(): Promise<void> {
     // Sem notificação nesta plataforma: nada a fazer.
   }
+
+  async cancelarDaPlanta(): Promise<void> {
+    // Sem notificações nesta plataforma: nada a cancelar.
+  }
 }
