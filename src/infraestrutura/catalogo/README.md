@@ -17,7 +17,10 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
   "faixasIdeais": {
     "umidadeDoAr": { "minimo": 50, "maximo": 80, "fonte": "..." },
     "temperatura": { "minimo": 20, "maximo": 35, "fonte": "..." },
-    "luminosidade": { "minimo": 20000, "maximo": 80000, "fonte": "..." }
+    "luminosidade": { "minimo": 20000, "maximo": 80000, "fonte": "..." },
+    "luzDiaria": { "minimo": 18, "maximo": 30, "fonte": "..." },
+    "umidadeDoArNoturna": { "minimo": 50, "maximo": 90, "fonte": "..." },
+    "temperaturaNoturna": { "minimo": 15, "maximo": 30, "fonte": "..." }
   },
   "intervaloDeRegaEmDias": 3,
   "nivelDeDificuldade": "facil",
@@ -32,8 +35,8 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
 | `nomeCientifico` | sim | Nome científico. Para grupos, use o gênero ou a família (`Phalaenopsis`, `Cactaceae`). |
 | `nomesAlternativos` | sim | Outros nomes populares, usados na busca. Pode ser `[]`. |
 | `foto` | sim | Caminho de uma imagem em `assets/`, ou `null` enquanto a espécie não tiver foto. |
-| `faixasIdeais` | sim | As três faixas: `umidadeDoAr` em %, `temperatura` em °C e `luminosidade` em lux. |
-| `faixasIdeais.*.minimo` / `maximo` | sim | Números, com `minimo` **menor** que `maximo`. Umidade entre 0 e 100, temperatura entre -10 e 50, luz entre 0 e 120000. |
+| `faixasIdeais` | sim | As seis faixas: `umidadeDoAr` (%) e `temperatura` (°C) durante o dia, `luminosidade` num instante (lux), `luzDiaria` somada no dia (DLI, mol/m²/dia), e `umidadeDoArNoturna` (%) e `temperaturaNoturna` (°C) durante a noite. |
+| `faixasIdeais.*.minimo` / `maximo` | sim | Números, com `minimo` **menor** que `maximo`. Umidade entre 0 e 100, temperatura entre -10 e 50, luminosidade entre 0 e 120000, luz diária entre 0 e 70. |
 | `faixasIdeais.*.fonte` | sim | De onde veio a faixa (instituição e publicação). |
 | `intervaloDeRegaEmDias` | sim | Inteiro positivo: de quantos em quantos dias regar em condições normais. |
 | `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. |
@@ -58,13 +61,34 @@ O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/E
 
 Se a espécie tiver foto, coloque a imagem em `assets/especies/<id>.jpg` e preencha `foto` com esse caminho.
 
+## Luz diária e faixas da noite
+
+A `luzDiaria` é a meta de luz somada ao longo do dia, em DLI (mol/m²/dia), a unidade usada na horticultura. Os
+valores seguem a tabela "DLI Needs of Indoor Plants" da Iowa State University Extension, por categoria; a
+`fonte` de cada espécie diz a categoria. O `maximo` é o topo da faixa recomendada, não um limite de dano.
+
+| Categoria | DLI | Espécies |
+| --- | --- | --- |
+| Luz baixa | 3 a 6 | zamioculca, espada-de-são-jorge, jiboia, samambaia |
+| Luz média | 6 a 10 | costela-de-adão, antúrio, orquídea, begônia |
+| Luz alta | 12 a 16 | folhosas e ervas de folha (alface, rúcula, couve, coentro, salsinha, cebolinha, hortelã, manjericão), suculentas (cacto, suculenta, babosa) e gerânio |
+| Luz muito alta | 18 a 30 | hortaliças de fruto e raiz (tomate, pimentão, pimenta, abobrinha, morango, cenoura), limoeiro e ervas de sol pleno (alecrim, lavanda, orégano, camomila, capim-limão, boldo) |
+
+As faixas da noite ainda são **estimativas**, marcadas assim na `fonte`, até alguém revisar espécie por espécie:
+
+- `temperaturaNoturna`: a faixa do dia 5 °C abaixo. As extensões universitárias recomendam noites de 3 a 8 °C
+  mais frias, e os valores publicados para tomate, pimentão e alface caem dentro da faixa calculada.
+- `umidadeDoArNoturna`: o mínimo do dia e o máximo 10 pontos acima, até 95%, porque a umidade relativa sobe
+  quando o ar esfria.
+
 ## Faixas e plantas já cadastradas
 
 No cadastro, a planta guarda uma **cópia** das faixas da espécie, e o status dela é calculado com essa cópia.
 Por isso, mudar uma faixa aqui só vale para plantas cadastradas depois; as que já existem continuam com as
 faixas da época do cadastro.
 
-O catálogo embutido sempre tem as três faixas, porque a validação exige. Ainda assim, o domínio aceita uma
+O catálogo embutido sempre tem as seis faixas, porque a validação exige. Por enquanto a planta copia só a umidade,
+a temperatura e a luminosidade do dia; a luz diária e as faixas da noite chegam às plantas com a #90. Ainda assim, o domínio aceita uma
 espécie sem faixas (`faixasIdeais: null`): o cadastro acontece normalmente e a planta fica sem faixas, aparecendo
 como "sem dados".
 

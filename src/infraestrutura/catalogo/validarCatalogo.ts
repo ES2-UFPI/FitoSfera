@@ -7,6 +7,10 @@ const LIMITES_DAS_FAIXAS = {
   umidadeDoAr: { minimo: 0, maximo: 100 },
   temperatura: { minimo: -10, maximo: 50 },
   luminosidade: { minimo: 0, maximo: 120000 },
+  // Sol pleno no verão dá cerca de 65 mol/m²/dia.
+  luzDiaria: { minimo: 0, maximo: 70 },
+  umidadeDoArNoturna: { minimo: 0, maximo: 100 },
+  temperaturaNoturna: { minimo: -10, maximo: 50 },
 } as const;
 
 type Registro = Record<string, unknown>;
