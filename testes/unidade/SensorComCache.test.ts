@@ -82,8 +82,25 @@ describe('luz recebida', () => {
     const aoReceber = jest.fn();
     sensor.observarLeituras(aoReceber);
     falso.publicar(comContador);
-    await Promise.resolve();
+    await new Promise((resolver) => setImmediate(resolver));
     expect(registrar).toHaveBeenCalledWith('sala', comContador);
+    expect(aoReceber).toHaveBeenCalledWith(comContador);
+  });
+
+  test('a leitura observada só chega a quem observa depois de a luz dela ser contabilizada', async () => {
+    const falso = new SensorFixo();
+    const { registrar, sensor } = montarComLuz(falso);
+    let concluirRegistro: () => void = () => undefined;
+    registrar.mockImplementation(() => new Promise<undefined>((resolver) => (concluirRegistro = () => resolver(undefined))));
+    const aoReceber = jest.fn();
+    sensor.observarLeituras(aoReceber);
+
+    falso.publicar(comContador);
+    await new Promise((resolver) => setImmediate(resolver));
+    expect(aoReceber).not.toHaveBeenCalled();
+
+    concluirRegistro();
+    await new Promise((resolver) => setImmediate(resolver));
     expect(aoReceber).toHaveBeenCalledWith(comContador);
   });
 

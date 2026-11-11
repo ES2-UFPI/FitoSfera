@@ -215,6 +215,24 @@ export const TEXTOS = {
     acimaDoIdeal: 'Acima do ideal',
   },
 
+  luzDeHoje: {
+    titulo: 'Luz de hoje',
+    porcentagem: (porcento: number) => `${porcento}%`,
+    daLuzDeHoje: 'da luz de hoje',
+    ritmo: {
+      abaixo: 'No ritmo de hoje, deve faltar luz para esta planta.',
+      ideal: 'No ritmo de hoje, a planta deve receber a luz de que precisa.',
+      acima: 'No ritmo de hoje, a planta deve receber mais luz do que o recomendado.',
+    },
+    cedoParaSaber: 'Ainda é cedo para saber como o dia vai terminar.',
+    incompletos: 'Dados de hoje incompletos',
+    parteNaoContada: 'O sensor ficou um tempo sem falar com o app, então parte da luz de hoje não foi contada.',
+    metaJaAlcancada: 'Mesmo com dados faltando, a planta já recebeu a luz mínima de hoje.',
+    semMedida: 'Ainda não chegou nenhuma medida de luz do sensor.',
+    falado: (porcento: number, frase: string) =>
+      `Luz de hoje: ${porcento} por cento da luz de que a planta precisa. ${frase}`,
+  },
+
   historico: {
     titulo: 'Rega e histórico',
     buscando: 'Buscando o histórico da planta…',

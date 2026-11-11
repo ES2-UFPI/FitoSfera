@@ -3,9 +3,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { TEXTOS } from '@/textos';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
+import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/CartaoDaLuzDeHoje';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -59,6 +61,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
+  const [luzDeHoje, definirLuzDeHoje] = useState<LuzDoDia | undefined>(undefined);
+  const [tiqueDaLuz, definirTiqueDaLuz] = useState(0);
   const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
   const registroEmAndamento = useRef(false);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
@@ -115,6 +119,28 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       atual = false;
     };
   }, [container, plantaCarregada?.id]);
+
+  // Sem leitura nova, o tempo passando também muda a luz de hoje: o sensor calado deixa o dia incompleto.
+  useEffect(() => {
+    const relogio = setInterval(() => definirTiqueDaLuz((tique) => tique + 1), INTERVALO_DA_LUZ_DE_HOJE_MS);
+    return () => clearInterval(relogio);
+  }, []);
+
+  // Cada versão nova do item (ao abrir, ao voltar para a tela, a cada leitura) pode trazer luz nova do sensor.
+  const itemCarregado = item && item !== 'falhou' ? item : null;
+  useEffect(() => {
+    if (itemCarregado === null) return;
+    let atual = true;
+    container.obterLuzDoDia.executar(itemCarregado.planta).then(
+      (lida) => {
+        if (atual) definirLuzDeHoje(lida);
+      },
+      (falha) => console.warn('Não deu para ler a luz de hoje.', falha),
+    );
+    return () => {
+      atual = false;
+    };
+  }, [container, itemCarregado, tiqueDaLuz]);
 
   async function excluirPlanta() {
     if (exclusao === 'excluindo') return;
@@ -267,6 +293,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               />
             )}
           />
+          <CartaoDaLuzDeHoje luz={luzDeHoje} />
           <CartaoDoHistorico
             estado={historico}
             rodape={
