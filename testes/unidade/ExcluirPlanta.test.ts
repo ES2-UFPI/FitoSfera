@@ -6,6 +6,7 @@ import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/Re
 import { RegistroDeExclusoesPendentesAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeExclusoesPendentesAsyncStorage';
 import { CHAVES } from '@/infraestrutura/persistencia/chaves';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
+import { NotificadorFalso } from '../apoio/fakes';
 
 const planta = (id: string) => Planta.criar({ id, idEspecie: 'tomate', apelido: `Planta ${id}`, aparencia: APARENCIA_INICIAL });
 const rega = (idPlanta: string, n: number) => ({
@@ -19,7 +20,7 @@ function montar() {
   const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
   const pendentes = new RegistroDeExclusoesPendentesAsyncStorage(armazenamento);
-  return { armazenamento, plantas, regas, pendentes, excluir: new ExcluirPlanta(plantas, regas, pendentes) };
+  return { armazenamento, plantas, regas, pendentes, excluir: new ExcluirPlanta(plantas, regas, pendentes, new NotificadorFalso()) };
 }
 
 test('excluir uma planta não deixa regas órfãs no armazenamento', async () => {
@@ -36,6 +37,49 @@ test('excluir uma planta não deixa regas órfãs no armazenamento', async () =>
   expect([...armazenamento.valores.keys()].filter((chave) => chave.includes('regas'))).toEqual([
     'fitosfera:v2:regas:p2',
   ]);
+});
+
+test('cancela os avisos da planta antes de removê-la, sem tocar nos avisos das outras', async () => {
+  const armazenamento = new ArmazenamentoEmMemoria();
+  const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
+  const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
+  const pendentes = new RegistroDeExclusoesPendentesAsyncStorage(armazenamento);
+  const notificador = new NotificadorFalso();
+  await plantas.adicionar(planta('p1'));
+  await plantas.adicionar(planta('p2'));
+  const ordem: string[] = [];
+  const excluir = new ExcluirPlanta(
+    {
+      listar: () => plantas.listar(),
+      obterPorId: (id) => plantas.obterPorId(id),
+      existe: (id) => plantas.existe(id),
+      adicionar: (item) => plantas.adicionar(item),
+      atualizar: (item) => plantas.atualizar(item),
+      remover: async (id) => { ordem.push('remover'); await plantas.remover(id); },
+    },
+    regas,
+    pendentes,
+    { ...notificador, cancelarDaPlanta: async (id) => { ordem.push('cancelar'); await notificador.cancelarDaPlanta(id); } },
+  );
+
+  await excluir.executar('p1');
+
+  expect(ordem).toEqual(['cancelar', 'remover']);
+  expect(notificador.canceladas).toEqual(['p1']);
+  expect((await plantas.listar()).map((item) => item.id)).toEqual(['p2']);
+});
+
+test('não remove a planta se não conseguir cancelar seus avisos pendentes', async () => {
+  const { plantas, regas, pendentes } = montar();
+  await plantas.adicionar(planta('p1'));
+  const notificador = new NotificadorFalso();
+  notificador.falharAoCancelar = true;
+  const excluir = new ExcluirPlanta(plantas, regas, pendentes, notificador);
+
+  await expect(excluir.executar('p1')).rejects.toThrow('não foi possível cancelar');
+
+  expect(await plantas.obterPorId('p1')).not.toBeNull();
+  expect(await pendentes.listar()).toEqual([]);
 });
 
 test('se a remoção da planta falhar, mantém as regas para não perder o histórico', async () => {
@@ -65,6 +109,7 @@ test('se a remoção da planta falhar, mantém as regas para não perder o hist�
       },
     },
     pendentes,
+    new NotificadorFalso(),
   );
 
   await expect(excluir.executar('p1')).rejects.toThrow('disco cheio');
@@ -113,7 +158,7 @@ test('falha ao apagar regas fica marcada e é concluída na recuperação seguin
       await regas.apagarDaPlanta(id);
     },
   };
-  const excluir = new ExcluirPlanta(plantas, regasInstaveis, pendentes);
+  const excluir = new ExcluirPlanta(plantas, regasInstaveis, pendentes, new NotificadorFalso());
 
   await expect(excluir.executar('p1')).rejects.toThrow('armazenamento indisponível');
   expect(await plantas.existe('p1')).toBe(false);

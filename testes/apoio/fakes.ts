@@ -210,7 +210,9 @@ export class SensorFixo implements SensorDeAmbiente {
 /** Notificador de mentira: conta os pedidos de permissão e guarda os avisos entregues. */
 export class NotificadorFalso implements Notificador {
   readonly entregues: Aviso[] = [];
+  readonly canceladas: string[] = [];
   pedidosDePermissao = 0;
+  falharAoCancelar = false;
 
   constructor(
     private readonly permitido = true,
@@ -225,6 +227,11 @@ export class NotificadorFalso implements Notificador {
   async notificar(aviso: Aviso): Promise<void> {
     if (this.falharAoNotificar) throw new Error('o sistema recusou a notificação');
     this.entregues.push(aviso);
+  }
+
+  async cancelarDaPlanta(idPlanta: string): Promise<void> {
+    if (this.falharAoCancelar) throw new Error('não foi possível cancelar os avisos');
+    this.canceladas.push(idPlanta);
   }
 }
 
@@ -392,7 +399,7 @@ export function criarContainerDeTeste(
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria()),
+    excluirPlanta: new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria(), notificador),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

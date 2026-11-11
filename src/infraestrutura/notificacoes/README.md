@@ -8,6 +8,7 @@ operações:
 | --- | --- |
 | `garantirPermissao()` | Garante a permissão de notificar, pedindo na primeira vez. Devolve `false` quando a pessoa recusou, quando não dá para perguntar de novo ou quando o aparelho não tem notificação. |
 | `notificar(aviso)` | Entrega um `Aviso` (id da planta, título e corpo já montados). |
+| `cancelarDaPlanta(idPlanta)` | Cancela os avisos pendentes da planta indicada, sem tocar nos das demais. |
 
 ## Implementações
 
@@ -21,6 +22,12 @@ Quem escolhe é [`escolherNotificador.ts`](../../composicao/escolherNotificador.
 Os módulos do Expo entram por importação sob demanda (`import('expo-notifications')`), e não por importação
 estática: fora de um build nativo eles não existem, e uma importação estática derrubaria a prévia web e os
 testes. Toda falha de carregamento vira "não notifiquei", nunca um erro que sobe para o caso de uso.
+
+Ao excluir uma planta, [`ExcluirPlanta`](../../aplicacao/casos-de-uso/ExcluirPlanta.ts) chama
+`cancelarDaPlanta()` antes de removê-la do armazenamento. No Android, o `NotificadorExpo` consulta os avisos
+pendentes, identifica os que têm `content.data.idPlanta` igual ao ID excluído e cancela somente esses avisos.
+Se esse cancelamento falhar, a planta não é removida: é preferível manter a planta a deixá-la com um aviso
+pendente que poderia abrir um detalhe inexistente.
 
 ## Quem dispara a verificação
 
