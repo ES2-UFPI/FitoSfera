@@ -10,6 +10,7 @@ import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlant
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
+import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
@@ -22,7 +23,7 @@ import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { FaixasRecomendadas } from '@/dominio/modelos/FaixaRecomendada';
 import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
-import { Planta } from '@/dominio/modelos/Planta';
+import { ID_JARDIM_PRINCIPAL, Planta } from '@/dominio/modelos/Planta';
 import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
@@ -36,6 +37,8 @@ import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
+import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
+import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -125,6 +128,25 @@ export class ExclusoesPendentesEmMemoria implements RegistroDeExclusoesPendentes
 }
 
 /** Simula o armazenamento do aparelho recusando a leitura. */
+/** A luz de cada jardim, já contabilizada: o teste diz o que o sensor somou, sem passar por contadores. */
+export class RegistroDeLuzEmMemoria implements RegistroDeLuzRecebida {
+  private readonly jardins = new Map<string, { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null }>();
+
+  definir(periodos: readonly PeriodoDeLuz[], ultimoContato: Date | null, idJardim = ID_JARDIM_PRINCIPAL): void {
+    this.jardins.set(idJardim, { periodos, ultimoContato });
+  }
+
+  async registrar(): Promise<void> {}
+
+  async listar(idJardim: string): Promise<readonly PeriodoDeLuz[]> {
+    return this.jardins.get(idJardim)?.periodos ?? [];
+  }
+
+  async obterUltimoContato(idJardim: string): Promise<Date | null> {
+    return this.jardins.get(idJardim)?.ultimoContato ?? null;
+  }
+}
+
 export class RepositorioQueFalhaAoLer extends RepositorioDePlantasEmMemoria {
   async listar(): Promise<Planta[]> {
     throw new Error('armazenamento indisponível');
@@ -305,10 +327,15 @@ export class RepositorioDePreferenciasEmMemoria implements RepositorioDePreferen
 }
 
 export class RelogioParado implements Relogio {
-  constructor(private readonly instante: Date = new Date(2026, 9, 17, 14, 0)) {}
+  constructor(private instante: Date = new Date(2026, 9, 17, 14, 0)) {}
 
   agora(): Date {
     return this.instante;
+  }
+
+  /** Passa o tempo do teste, sem esperar de verdade. */
+  avancar(milissegundos: number): void {
+    this.instante = new Date(this.instante.getTime() + milissegundos);
   }
 }
 
@@ -361,9 +388,12 @@ export function criarContainerDeTeste(
     janelaDeLembretes?: JanelaDeLembretes;
     falharAoLerPreferencias?: boolean;
     falharAoGravarPreferencias?: boolean;
+    luz?: { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null };
   } = {},
 ): {
   container: Container;
+  luz: RegistroDeLuzEmMemoria;
+  relogio: RelogioParado;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
   notificador: NotificadorFalso;
@@ -390,6 +420,8 @@ export function criarContainerDeTeste(
     opcoes.falharAoGravarPreferencias,
   );
   const jardins = new RepositorioDeJardinsEmMemoria(opcoes.jardins);
+  const luz = new RegistroDeLuzEmMemoria();
+  if (opcoes.luz) luz.definir(opcoes.luz.periodos, opcoes.luz.ultimoContato);
   const container: Container = {
     gerenciarJardins: new GerenciarJardins(jardins, gerador),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
@@ -403,6 +435,7 @@ export function criarContainerDeTeste(
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
+    obterLuzDoDia: new ObterLuzDoDia(luz, relogio, especies),
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
@@ -410,5 +443,5 @@ export function criarContainerDeTeste(
     ajustarPreferencias: new AjustarPreferencias(preferencias),
     atualizarLeituras: new AtualizarLeituras(jardins, { obter: async () => leituras }),
   };
-  return { container, plantas, regas, notificador, avisos, toques, preferencias };
+  return { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias };
 }

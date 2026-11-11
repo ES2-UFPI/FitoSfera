@@ -96,6 +96,11 @@ o fator da luz do sol (1 lux ≈ 0,0185 µmol/m²/s), então é uma aproximaçã
   não deve ser lido como falta de luz.
 - O progresso é a luz do dia dividida pelo mínimo da meta. A projeção estima o dia inteiro supondo que a luz segue a
   curva de um dia de sol, das 6h às 18h. Antes de cerca de 8h30 ela não é feita, porque seria quase um chute.
+- O caso de uso `ObterLuzDoDia` junta a luz do jardim da planta com a meta dela (ou a da espécie no catálogo) e
+  alimenta o cartão "Luz de hoje" do detalhe da planta. O cartão é buscado de novo a cada minuto, para o sensor
+  calado virar "dados incompletos" sem sair da tela, e a cada leitura; por isso o
+  `SensorComCache` só entrega uma leitura observada depois de contabilizar a luz dela. Com o dia incompleto, o cartão
+  mostra um aviso no lugar da porcentagem, a menos que a meta já tenha sido alcançada.
 
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente

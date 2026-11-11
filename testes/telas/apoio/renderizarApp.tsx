@@ -9,6 +9,7 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
+import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Container } from '@/composicao/Container';
 import { ProvedorDoAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
@@ -31,6 +32,8 @@ import RotaSensor from '../../../app/sensor';
 import {
   criarContainerDeTeste,
   NotificadorFalso,
+  RegistroDeLuzEmMemoria,
+  RelogioParado,
   RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
   RepositorioDePreferenciasEmMemoria,
@@ -62,9 +65,12 @@ export function renderizarApp(
     janelaDeLembretes?: JanelaDeLembretes;
     falharAoLerPreferencias?: boolean;
     falharAoGravarPreferencias?: boolean;
+    luz?: { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null };
   } = {},
 ): {
   container: Container;
+  luz: RegistroDeLuzEmMemoria;
+  relogio: RelogioParado;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
   notificador: NotificadorFalso;
@@ -72,7 +78,7 @@ export function renderizarApp(
   toques: ToquesNaNotificacaoFalso;
   preferencias: RepositorioDePreferenciasEmMemoria;
 } {
-  const { container, plantas, regas, notificador, avisos, toques, preferencias } = criarContainerDeTeste({
+  const { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias } = criarContainerDeTeste({
     plantas: opcoes.plantas,
     jardins: opcoes.jardins,
     especies: opcoes.especies,
@@ -90,6 +96,7 @@ export function renderizarApp(
     janelaDeLembretes: opcoes.janelaDeLembretes,
     falharAoLerPreferencias: opcoes.falharAoLerPreferencias,
     falharAoGravarPreferencias: opcoes.falharAoGravarPreferencias,
+    luz: opcoes.luz,
   });
 
   function LayoutDeTeste() {
@@ -127,5 +134,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { container, plantas, regas, notificador, avisos, toques, preferencias };
+  return { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias };
 }

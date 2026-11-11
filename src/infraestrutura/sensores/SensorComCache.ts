@@ -47,9 +47,9 @@ export class SensorComCache implements SensorDeAmbiente {
   }
 
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
+    // Entrega depois de guardar: quem recebe pode querer ler a luz que esta leitura acabou de contabilizar.
     return this.sensor.observarLeituras((leitura) => {
-      void this.guardar(leitura);
-      aoReceber(leitura);
+      void this.guardar(leitura).then(() => aoReceber(leitura));
     });
   }
 
