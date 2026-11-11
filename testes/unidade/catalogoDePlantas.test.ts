@@ -11,6 +11,17 @@ describe('catalogo-plantas.json', () => {
   test('tem cerca de 30 espécies', () => {
     expect(catalogo.length).toBeGreaterThanOrEqual(28);
   });
+
+  test('marca como frutíferas só as espécies que dão frutos (US15)', () => {
+    expect(catalogo.filter((especie) => especie.frutifera).map((especie) => especie.id)).toEqual([
+      'abobrinha',
+      'limoeiro',
+      'morango',
+      'pimenta',
+      'pimentao',
+      'tomate',
+    ]);
+  });
 });
 
 describe('validarCatalogo', () => {
@@ -18,6 +29,14 @@ describe('validarCatalogo', () => {
   const comFaixa = (grandeza: string, faixa: unknown) => ({
     ...valida,
     faixasIdeais: { ...valida.faixasIdeais, [grandeza]: faixa },
+  });
+
+  test('exige dizer se a espécie é frutífera', () => {
+    const { frutifera: _semCampo, ...semFrutifera } = valida;
+    expect(validarCatalogo([semFrutifera])).toEqual(['espécie 1 (tomate): frutifera precisa ser true ou false']);
+    expect(validarCatalogo([{ ...valida, frutifera: 'sim' }])).toEqual([
+      'espécie 1 (tomate): frutifera precisa ser true ou false',
+    ]);
   });
 
   test('aceita uma espécie completa, com ou sem ciclo de colheita', () => {

@@ -9,6 +9,7 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
 import { Jardim } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
+import { RegistroDeColheita } from '@/dominio/modelos/RegistroDeColheita';
 import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 import { SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Container } from '@/composicao/Container';
@@ -37,6 +38,7 @@ import {
   RepositorioDeAvisosEmMemoria,
   RepositorioDePlantasEmMemoria,
   RepositorioDePreferenciasEmMemoria,
+  RepositorioDeColheitasEmMemoria,
   RepositorioDeRegasEmMemoria,
   ToquesNaNotificacaoFalso,
 } from '../../apoio/fakes';
@@ -58,6 +60,8 @@ export function renderizarApp(
     agora?: Date;
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
+    colheitas?: readonly RegistroDeColheita[];
+    falharAoRegistrarColheita?: boolean;
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     toqueDeAbertura?: ToqueNaNotificacao | null;
     pareamentoDoSensor?: PareamentoDoSensor | null;
@@ -73,12 +77,14 @@ export function renderizarApp(
   relogio: RelogioParado;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
+  colheitas: RepositorioDeColheitasEmMemoria;
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
   toques: ToquesNaNotificacaoFalso;
   preferencias: RepositorioDePreferenciasEmMemoria;
 } {
-  const { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias } = criarContainerDeTeste({
+  const { container, luz, relogio, plantas, regas, colheitas, notificador, avisos, toques, preferencias } =
+    criarContainerDeTeste({
     plantas: opcoes.plantas,
     jardins: opcoes.jardins,
     especies: opcoes.especies,
@@ -89,6 +95,8 @@ export function renderizarApp(
     agora: opcoes.agora,
     falharAoRegistrarRega: opcoes.falharAoRegistrarRega,
     regas: opcoes.regas,
+    colheitas: opcoes.colheitas,
+    falharAoRegistrarColheita: opcoes.falharAoRegistrarColheita,
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento,
     toqueDeAbertura: opcoes.toqueDeAbertura,
     pareamentoDoSensor: opcoes.pareamentoDoSensor,
@@ -134,5 +142,5 @@ export function renderizarApp(
     },
     { initialUrl: opcoes.url ?? '/' },
   );
-  return { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias };
+  return { container, luz, relogio, plantas, regas, colheitas, notificador, avisos, toques, preferencias };
 }

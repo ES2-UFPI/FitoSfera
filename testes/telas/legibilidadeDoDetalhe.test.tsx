@@ -21,7 +21,7 @@ const leituraIdeal = {
   medidaEm: new Date(2026, 9, 17, 13, 55),
 };
 
-test('o leitor de tela percorre planta, condições, luz de hoje, rega e histórico e, por fim, as ações', async () => {
+test('o leitor de tela percorre planta, condições, luz de hoje, rega e histórico, colheita e, por fim, as ações', async () => {
   renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora, leitura: leituraIdeal });
   await screen.findByRole('header', { name: 'Rega e histórico' });
   await screen.findByRole('header', { name: 'Luz de hoje' });
@@ -31,11 +31,14 @@ test('o leitor de tela percorre planta, condições, luz de hoje, rega e histór
     'Condições agora',
     'Luz de hoje',
     'Rega e histórico',
+    // O tomate dá frutos: o registro de colheita (#130) vem depois da rega e antes das ações.
+    'Registrar colheita',
   ]);
   expect(screen.getAllByRole('button').map((botao) => botao.props.accessibilityLabel)).toEqual([
     'Voltar',
     'Registrar rega',
     'Ver todas as regas',
+    'Registrar colheita',
     'Editar',
     'Excluir',
   ]);

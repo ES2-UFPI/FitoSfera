@@ -43,4 +43,9 @@ export interface EspecieVegetal {
   readonly nivelDeDificuldade: NivelDeDificuldade;
   /** null para espécies que não se colhem, como as ornamentais. */
   readonly cicloAteColheitaEmDias: CicloAteColheita | null;
+  /**
+   * Se a espécie dá frutos, como o tomate e o morango. Só as frutíferas registram colheitas e mostram rendimento
+   * (US15). Não é o mesmo que ter ciclo até a colheita: a alface se colhe sem dar fruto.
+   */
+  readonly frutifera: boolean;
 }

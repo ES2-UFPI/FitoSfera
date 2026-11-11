@@ -56,6 +56,7 @@ export function validarCatalogo(dados: unknown): string[] {
     if (!NIVEIS_DE_DIFICULDADE.includes(especie.nivelDeDificuldade as never))
       erro(`nivelDeDificuldade precisa ser um de: ${NIVEIS_DE_DIFICULDADE.join(', ')}`);
     validarCiclo(especie.cicloAteColheitaEmDias, erro);
+    if (typeof especie.frutifera !== 'boolean') erro('frutifera precisa ser true ou false');
   });
 
   return erros;
