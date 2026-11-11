@@ -44,6 +44,18 @@ describe('excluir', () => {
     expect(await screen.findByLabelText('Fica. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
     expect(screen.queryByLabelText(/^Tomatinho\./)).toBeNull();
   });
+
+  test('excluir a última planta mostra o estado vazio do jardim', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Excluir' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Excluir planta' }));
+
+    await waitFor(() => expect(screen).toHavePathname('/'));
+    expect(await screen.findByText('Monte sua primeira planta')).toBeTruthy();
+    expect(screen.getByText('Ainda sem plantas por aqui')).toBeTruthy();
+    expect(screen.queryByTestId('estante')).toBeNull();
+  });
 });
 
 describe('editar', () => {
