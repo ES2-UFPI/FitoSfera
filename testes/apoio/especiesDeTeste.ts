@@ -14,6 +14,7 @@ export const FAIXAS_DE_TESTE: FaixasRecomendadas = {
 /** Espécie válida com valores neutros; cada teste informa só os nomes que importam para ele. */
 export function especieDeTeste(
   nomes: Pick<EspecieVegetal, 'id' | 'nomeComum' | 'nomeCientifico' | 'nomesAlternativos'>,
+  extra: Partial<EspecieVegetal> = {},
 ): EspecieVegetal {
   const fonte = 'Fonte de teste';
   return {
@@ -30,11 +31,16 @@ export function especieDeTeste(
     intervaloDeRegaEmDias: 3,
     nivelDeDificuldade: 'facil',
     cicloAteColheitaEmDias: null,
+    frutifera: false,
+    ...extra,
   };
 }
 
 export const ESPECIES_DE_TESTE: readonly EspecieVegetal[] = [
-  especieDeTeste({ id: 'tomate', nomeComum: 'Tomate', nomeCientifico: 'Solanum lycopersicum', nomesAlternativos: ['Tomateiro'] }),
+  especieDeTeste(
+    { id: 'tomate', nomeComum: 'Tomate', nomeCientifico: 'Solanum lycopersicum', nomesAlternativos: ['Tomateiro'] },
+    { frutifera: true },
+  ),
   especieDeTeste({ id: 'jiboia', nomeComum: 'Jiboia', nomeCientifico: 'Epipremnum aureum', nomesAlternativos: ['Pothos'] }),
   especieDeTeste({
     id: 'espada-de-sao-jorge',

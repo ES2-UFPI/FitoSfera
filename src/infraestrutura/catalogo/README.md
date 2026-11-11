@@ -24,7 +24,8 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
   },
   "intervaloDeRegaEmDias": 3,
   "nivelDeDificuldade": "facil",
-  "cicloAteColheitaEmDias": { "minimo": 120, "maximo": 150 }
+  "cicloAteColheitaEmDias": { "minimo": 120, "maximo": 150 },
+  "frutifera": false
 }
 ```
 
@@ -41,6 +42,7 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
 | `intervaloDeRegaEmDias` | sim | Inteiro positivo: de quantos em quantos dias regar em condições normais. |
 | `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. |
 | `cicloAteColheitaEmDias` | sim | Dias do plantio à primeira colheita (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. |
+| `frutifera` | sim | `true` para espécies que dão frutos (tomate, morango, pimenta…). Só elas registram colheitas e mostram rendimento (US15). Ter ciclo até a colheita não basta: a alface se colhe e não é frutífera. |
 
 O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/EspecieVegetal.ts`.
 

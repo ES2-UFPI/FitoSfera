@@ -15,7 +15,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 60}
+    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 60},
+    "frutifera": true
   },
   {
     "id": "alecrim",
@@ -33,7 +34,8 @@
     },
     "intervaloDeRegaEmDias": 5,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": false
   },
   {
     "id": "alface",
@@ -51,7 +53,8 @@
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 70}
+    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 70},
+    "frutifera": false
   },
   {
     "id": "anturio",
@@ -69,7 +72,8 @@
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "babosa",
@@ -87,7 +91,8 @@
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "begonia",
@@ -105,7 +110,8 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "boldo",
@@ -123,7 +129,8 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": false
   },
   {
     "id": "cacto",
@@ -141,7 +148,8 @@
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "camomila",
@@ -159,7 +167,8 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "capim-limao",
@@ -177,7 +186,8 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 120, "maximo": 150}
+    "cicloAteColheitaEmDias": {"minimo": 120, "maximo": 150},
+    "frutifera": false
   },
   {
     "id": "cebolinha",
@@ -195,7 +205,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "cenoura",
@@ -213,7 +224,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 85, "maximo": 110}
+    "cicloAteColheitaEmDias": {"minimo": 85, "maximo": 110},
+    "frutifera": false
   },
   {
     "id": "coentro",
@@ -231,7 +243,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 40, "maximo": 60}
+    "cicloAteColheitaEmDias": {"minimo": 40, "maximo": 60},
+    "frutifera": false
   },
   {
     "id": "costela-de-adao",
@@ -249,7 +262,8 @@
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "couve",
@@ -267,7 +281,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "espada-de-sao-jorge",
@@ -285,7 +300,8 @@
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "geranio",
@@ -303,7 +319,8 @@
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "hortela",
@@ -321,7 +338,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "jiboia",
@@ -339,7 +357,8 @@
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "lavanda",
@@ -357,7 +376,8 @@
     },
     "intervaloDeRegaEmDias": 5,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "limoeiro",
@@ -375,7 +395,8 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": true
   },
   {
     "id": "manjericao",
@@ -393,7 +414,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "morango",
@@ -411,7 +433,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": true
   },
   {
     "id": "oregano",
@@ -429,7 +452,8 @@
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 80, "maximo": 100}
+    "cicloAteColheitaEmDias": {"minimo": 80, "maximo": 100},
+    "frutifera": false
   },
   {
     "id": "orquidea",
@@ -447,7 +471,8 @@
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "pimenta",
@@ -465,7 +490,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "pimentao",
@@ -483,7 +509,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "rucula",
@@ -501,7 +528,8 @@
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 30, "maximo": 45}
+    "cicloAteColheitaEmDias": {"minimo": 30, "maximo": 45},
+    "frutifera": false
   },
   {
     "id": "salsinha",
@@ -519,7 +547,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "samambaia",
@@ -537,7 +566,8 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "suculenta",
@@ -555,7 +585,8 @@
     },
     "intervaloDeRegaEmDias": 10,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "tomate",
@@ -573,7 +604,8 @@
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "zamioculca",
@@ -591,6 +623,7 @@
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   }
 ]

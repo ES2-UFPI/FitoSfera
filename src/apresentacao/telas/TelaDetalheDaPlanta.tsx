@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { TEXTOS } from '@/textos';
+import { FormularioDeColheita } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/CartaoDaLuzDeHoje';
@@ -339,6 +340,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               </Text>
             ) : null}
           </CartaoDoHistorico>
+          {item.especie?.frutifera ? <FormularioDeColheita idPlanta={item.planta.id} /> : null}
           <View style={estilos.acoes}>
             <View style={estilos.acao}>
               <BotaoPrincipal

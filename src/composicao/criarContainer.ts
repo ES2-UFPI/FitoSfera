@@ -14,6 +14,7 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
@@ -76,6 +77,7 @@ export function criarContainer(): Container {
     editarPlanta: new EditarPlanta(plantas),
     excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     obterLuzDoDia: new ObterLuzDoDia(luz, relogio, especies),

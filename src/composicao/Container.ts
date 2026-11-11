@@ -12,6 +12,7 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -30,6 +31,7 @@ export interface Container {
   readonly editarPlanta: EditarPlanta;
   readonly excluirPlanta: ExcluirPlanta;
   readonly registrarRega: RegistrarRega;
+  readonly registrarColheita: RegistrarColheita;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;
   readonly obterLuzDoDia: ObterLuzDoDia;

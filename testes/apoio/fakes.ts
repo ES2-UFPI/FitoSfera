@@ -12,6 +12,7 @@ import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoD
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -124,11 +125,15 @@ export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
 export class RepositorioDeColheitasEmMemoria implements RepositorioDeColheitas {
   readonly salvas: RegistroDeColheita[] = [];
 
-  constructor(iniciais: readonly RegistroDeColheita[] = []) {
+  constructor(
+    iniciais: readonly RegistroDeColheita[] = [],
+    private readonly falharAoGravar = false,
+  ) {
     this.salvas.push(...iniciais);
   }
 
   async gravar(registro: RegistroDeColheita) {
+    if (this.falharAoGravar) throw new Error('armazenamento indisponível');
     this.salvas.push(registro);
   }
 
@@ -405,6 +410,8 @@ export function criarContainerDeTeste(
     agora?: Date;
     falharAoRegistrarRega?: boolean;
     regas?: readonly Rega[];
+    colheitas?: readonly RegistroDeColheita[];
+    falharAoRegistrarColheita?: boolean;
     controleDoSensorDeDesenvolvimento?: ControleDoSensorDeDesenvolvimento | null;
     toqueDeAbertura?: ToqueNaNotificacao | null;
     pareamentoDoSensor?: PareamentoDoSensor | null;
@@ -420,6 +427,7 @@ export function criarContainerDeTeste(
   relogio: RelogioParado;
   plantas: RepositorioDePlantasEmMemoria;
   regas: RepositorioDeRegasEmMemoria;
+  colheitas: RepositorioDeColheitasEmMemoria;
   notificador: NotificadorFalso;
   avisos: RepositorioDeAvisosEmMemoria;
   toques: ToquesNaNotificacaoFalso;
@@ -435,6 +443,7 @@ export function criarContainerDeTeste(
   const relogio = new RelogioParado(opcoes.agora);
   const gerador = new GeradorSequencial();
   const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega, opcoes.regas);
+  const colheitas = new RepositorioDeColheitasEmMemoria(opcoes.colheitas, opcoes.falharAoRegistrarColheita);
   const notificador = new NotificadorFalso(opcoes.permitirNotificacao ?? false);
   const avisos = new RepositorioDeAvisosEmMemoria();
   const toques = new ToquesNaNotificacaoFalso(opcoes.toqueDeAbertura ?? null);
@@ -460,9 +469,10 @@ export function criarContainerDeTeste(
       regas,
       new ExclusoesPendentesEmMemoria(),
       notificador,
-      new RepositorioDeColheitasEmMemoria(),
+      colheitas,
     ),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     obterLuzDoDia: new ObterLuzDoDia(luz, relogio, especies),
@@ -473,5 +483,5 @@ export function criarContainerDeTeste(
     ajustarPreferencias: new AjustarPreferencias(preferencias),
     atualizarLeituras: new AtualizarLeituras(jardins, { obter: async () => leituras }),
   };
-  return { container, luz, relogio, plantas, regas, notificador, avisos, toques, preferencias };
+  return { container, luz, relogio, plantas, regas, colheitas, notificador, avisos, toques, preferencias };
 }
