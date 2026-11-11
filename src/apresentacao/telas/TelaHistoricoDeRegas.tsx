@@ -5,7 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_HISTORICO_DE_REGAS, RegaDoHistorico } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { TEXTOS } from '@/textos';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
-import { descreverQuandoRegou, formatarDataEHora } from '../componentes/CartaoDoHistorico';
+import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
+import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
@@ -91,10 +92,10 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
                 key={rega.id}
                 style={estilos.item}
                 accessible
-                accessibilityLabel={`${formatarDataEHora(rega.regadaEm)}, ${descreverQuandoRegou(diasAtras)}.`}
+                accessibilityLabel={`${formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}, ${descreverQuandoRegou(diasAtras)}.`}
               >
                 <View style={estilos.marcador} />
-                <Text style={estilos.quando}>{formatarDataEHora(rega.regadaEm)}</Text>
+                <Text style={estilos.quando}>{formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}</Text>
                 <Text style={TEXTO.apoio}>{descreverQuandoRegou(diasAtras)}</Text>
               </View>
             ))}

@@ -5,7 +5,7 @@ import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
-import { formatarDataEHora } from './CartaoDoHistorico';
+import { formatarData } from '../formatarData';
 
 const APRESENTACAO: Record<EstadoDaConexao, { texto: string; cor: string }> = {
   conectado: { texto: TEXTOS.conexao.conectado, cor: CORES.statusOk },
@@ -25,7 +25,7 @@ function mesmoDia(a: Date, b: Date): boolean {
 
 export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora: Date): string {
   if (ultimaComunicacao === null) return TEXTOS.conexao.semComunicacao;
-  const horario = formatarDataEHora(ultimaComunicacao);
+  const horario = formatarData(ultimaComunicacao, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
   const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / 60_000));
   const decorrido = minutos < 1
     ? TEXTOS.conexao.haMenosDeUmMinuto

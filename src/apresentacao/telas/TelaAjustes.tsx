@@ -7,6 +7,7 @@ import {
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { TEXTOS } from '@/textos';
+import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from '../componentes/IconesDasCondicoes';
@@ -107,11 +108,6 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
     !configuracoesIguais(configuracao, AUTOMATICO) &&
     !configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)
   );
-}
-
-function formatarHorarioSimulado(horario: Date): string {
-  const doisDigitos = (valor: number) => String(valor).padStart(2, '0');
-  return `${doisDigitos(horario.getDate())}/${doisDigitos(horario.getMonth() + 1)}/${horario.getFullYear()} ${doisDigitos(horario.getHours())}:${doisDigitos(horario.getMinutes())}`;
 }
 
 export function TelaAjustes() {
@@ -256,7 +252,7 @@ function CartaoDoSensorDeDesenvolvimento({
       <View style={estilos.relogioSimulado}>
         <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.relogio}</Text>
         <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
-          {formatarHorarioSimulado(horarioSimulado)}
+          {formatarData(horarioSimulado, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}
         </Text>
         <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDoRelogio}</Text>
         <View style={estilos.opcoesDeTempo}>
