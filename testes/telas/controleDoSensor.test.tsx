@@ -84,16 +84,16 @@ test('o relógio de simulação avança e volta ao horário real sem afetar o re
   const { container } = renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
   const listarJardim = jest.spyOn(container.listarJardim, 'executar');
 
-  expect(await screen.findByText('18/10/2026 10:00')).toBeTruthy();
+  expect(await screen.findByText('18/10/2026 às 10:00')).toBeTruthy();
   fireEvent.press(screen.getByRole('button', { name: '+1 hora' }));
-  expect(screen.getByText('18/10/2026 11:00')).toBeTruthy();
+  expect(screen.getByText('18/10/2026 às 11:00')).toBeTruthy();
   await waitFor(() => expect(listarJardim).toHaveBeenCalled());
   await expect(controle.obterSensor('jardim-principal').lerLeituraAtual()).resolves.toEqual(expect.objectContaining({
     medidaEm: new Date(2026, 9, 18, 11, 0),
   }));
 
   fireEvent.press(screen.getByRole('button', { name: 'Voltar ao horário atual' }));
-  expect(screen.getByText('18/10/2026 10:00')).toBeTruthy();
+  expect(screen.getByText('18/10/2026 às 10:00')).toBeTruthy();
 });
 
 test('o atalho combina calor, tempo seco e sol alto', async () => {
