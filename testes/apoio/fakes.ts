@@ -26,6 +26,7 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { ID_JARDIM_PRINCIPAL, Planta } from '@/dominio/modelos/Planta';
 import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Rega } from '@/dominio/modelos/Rega';
+import { RegistroDeColheita } from '@/dominio/modelos/RegistroDeColheita';
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
 import { RepositorioDePreferencias } from '@/dominio/portas/RepositorioDePreferencias';
@@ -35,6 +36,7 @@ import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador'
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
+import { RepositorioDeColheitas } from '@/dominio/portas/RepositorioDeColheitas';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
@@ -116,6 +118,28 @@ export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
 
   async apagarDaPlanta(idPlanta: string) {
     this.salvas.splice(0, this.salvas.length, ...this.salvas.filter((rega) => rega.idPlanta !== idPlanta));
+  }
+}
+
+export class RepositorioDeColheitasEmMemoria implements RepositorioDeColheitas {
+  readonly salvas: RegistroDeColheita[] = [];
+
+  constructor(iniciais: readonly RegistroDeColheita[] = []) {
+    this.salvas.push(...iniciais);
+  }
+
+  async gravar(registro: RegistroDeColheita) {
+    this.salvas.push(registro);
+  }
+
+  async listarPorPlanta(idPlanta: string) {
+    return this.salvas
+      .filter((registro) => registro.idPlanta === idPlanta)
+      .sort((a, b) => b.colhidaEm.getTime() - a.colhidaEm.getTime());
+  }
+
+  async apagarDaPlanta(idPlanta: string) {
+    this.salvas.splice(0, this.salvas.length, ...this.salvas.filter((registro) => registro.idPlanta !== idPlanta));
   }
 }
 
@@ -431,7 +455,13 @@ export function criarContainerDeTeste(
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria(), notificador),
+    excluirPlanta: new ExcluirPlanta(
+      plantas,
+      regas,
+      new ExclusoesPendentesEmMemoria(),
+      notificador,
+      new RepositorioDeColheitasEmMemoria(),
+    ),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

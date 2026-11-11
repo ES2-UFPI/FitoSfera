@@ -14,6 +14,10 @@ export const CHAVES = {
   regasDaPlanta: (idPlanta: string) => `fitosfera:v2:regas:${idPlanta}`,
   /** Cópia de um conteúdo de `regasDaPlanta` que não deu para ler, guardada antes de ser sobrescrito. */
   regasIlegiveisDaPlanta: (idPlanta: string) => `fitosfera:v2:regas:${idPlanta}:ilegivel`,
+  /** Uma chave por planta, como as regas: registrar uma colheita não carrega as colheitas do jardim inteiro. */
+  colheitasDaPlanta: (idPlanta: string) => `fitosfera:v4:colheitas:${idPlanta}`,
+  /** Cópia de um conteúdo de `colheitasDaPlanta` que não deu para ler, guardada antes de ser sobrescrito. */
+  colheitasIlegiveisDaPlanta: (idPlanta: string) => `fitosfera:v4:colheitas:${idPlanta}:ilegivel`,
   /** Assinatura do desvio já avisado de cada planta, para a notificação não se repetir. */
   avisos: 'fitosfera:v2:avisos',
   /** O sensor BLE escolhido na tela de pareamento: `{ id, nome }`. */
@@ -27,7 +31,7 @@ export const CHAVES = {
   leituraDoJardim: (idJardim: string) => `fitosfera:v3:leitura:${encodeURIComponent(idJardim)}`,
   /** Último contador de luz contabilizado e períodos de luz recebida, separados por jardim. */
   luzDoJardim: (idJardim: string) => `fitosfera:v3:luz:${encodeURIComponent(idJardim)}`,
-  /** IDs em exclusão, para retomar a remoção de regas após interrupção do app. */
+  /** IDs em exclusão, para retomar a remoção de regas e colheitas após interrupção do app. */
   exclusoesPendentes: 'fitosfera:v3:exclusoes-pendentes',
 } as const;
 

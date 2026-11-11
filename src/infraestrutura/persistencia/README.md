@@ -14,6 +14,8 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v4:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v4:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
+| `fitosfera:v4:colheitas:<idPlanta>` | Array JSON de `{ id, quantidade, unidade, colhidaEm }` de uma planta, da colheita mais recente para a mais antiga, sem limite. | `RepositorioDeColheitasAsyncStorage` |
+| `fitosfera:v4:colheitas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de colheitas da planta que não era um array JSON. | `RepositorioDeColheitasAsyncStorage` |
 | `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
 | `fitosfera:v2:jardins` | Jardins (`id`, `nome`, `idSensor`) e ID do jardim selecionado. Ausente em instalações antigas, que usam o Jardim principal. | `RepositorioDeJardinsAsyncStorage` |
 | `fitosfera:v2:sensores-pareados` | Lista de sensores Bluetooth (`id`, `nome`), independentes da associação aos jardins. | `RepositorioDeSensoresPareadosAsyncStorage` |
@@ -21,7 +23,7 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
 | `fitosfera:v2:preferencias` | Preferências de notificação: `{ "janelaDeLembretes": { "inicio": { "hora", "minuto" }, "fim": { … } } }`. Ausente ou ilegível vale como a janela padrão. | `RepositorioDePreferenciasAsyncStorage` |
 | `fitosfera:v3:luz:<idJardim>` | Objeto JSON `{ marca, periodos }`: o último contador de luz contabilizado (`idReinicio`, `luzAcumuladaLuxMinutos`, `medidaEm`) e os períodos de luz recebida (`luxMinutos`, `inicio`, `fim`, `incompleta`), com no máximo 500. Conteúdo ilegível recomeça a contagem, sem cópia `:ilegivel`. | `RegistroDeLuzRecebidaAsyncStorage` |
-| `fitosfera:v3:exclusoes-pendentes` | Array de IDs de plantas cuja exclusão iniciou, mas ainda pode precisar apagar regas. A recuperação roda na abertura. | `RegistroDeExclusoesPendentesAsyncStorage` |
+| `fitosfera:v3:exclusoes-pendentes` | Array de IDs de plantas cuja exclusão iniciou, mas ainda pode precisar apagar regas e colheitas. A recuperação roda na abertura. | `RegistroDeExclusoesPendentesAsyncStorage` |
 
 ### Janela de lembretes (`fitosfera:v2:preferencias`)
 
@@ -120,6 +122,27 @@ sobrarem regas de uma planta que não existe.
 
 As chaves de regas são novas na versão 2 e não precisaram de migração: não havia regas gravadas antes.
 
+## Colheitas: chave própria por planta, sem poda
+
+**Decisão (#129):** as colheitas (`RegistroDeColheita`, em `dominio/modelos/`) seguem o desenho das regas, pelos
+mesmos motivos: cada planta tem a sua chave, `fitosfera:v4:colheitas:<idPlanta>`, e a abertura do app não lê
+colheitas.
+
+```json
+[{ "id": "c7", "quantidade": 250, "unidade": "gramas", "colhidaEm": "2026-11-11T14:30:00.000Z" }]
+```
+
+- **Unidade:** `unidades` (frutos contados) ou `gramas` (pesados), de `UNIDADES_DE_COLHEITA`. O rendimento (#132)
+  só soma registros da mesma unidade.
+- **Sem retenção:** diferente das regas, nenhuma colheita é descartada. O histórico (#133) lista todas, e o
+  rendimento (#132) e a comparação entre plantas (#131) somam qualquer período.
+- **Mesmo id:** gravar de novo um registro com o mesmo `id` substitui o anterior, em vez de duplicar a colheita.
+- **Exclusão da planta:** o `ExcluirPlanta` apaga as colheitas (a chave e a cópia `:ilegivel`) junto com as regas,
+  depois de remover a planta. Se o app fechar no meio, a planta continua em `fitosfera:v3:exclusoes-pendentes` e
+  a recuperação da abertura seguinte termina a limpeza.
+
+As chaves de colheitas são novas na versão 4 e não precisaram de migração: não havia colheitas gravadas antes.
+
 ## Versão do schema e migração
 
 - A versão atual é `VERSAO_ATUAL_DO_ARMAZENAMENTO`, em `chaves.ts`.
@@ -158,6 +181,9 @@ O app abre mesmo com dados ruins:
   próximas gravações o preservam como estava.
 - **Regas:** uma chave de regas ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação. Uma rega
   sem id ou com data ilegível fica de fora e desaparece na próxima poda.
+- **Colheitas:** como as regas, uma chave ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação.
+  Uma colheita sem id, com quantidade que não é positiva, unidade desconhecida ou data ilegível fica de fora e
+  desaparece na próxima gravação da planta.
 - **Avisos:** um mapa de avisos ilegível é lido como "nenhum desvio avisado" e sobrescrito na próxima
   gravação, sem cópia `:ilegivel`: ali não há dado da pessoa para preservar, e o pior que acontece é um aviso
   se repetir uma vez.
