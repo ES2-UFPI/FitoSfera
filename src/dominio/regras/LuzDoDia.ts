@@ -1,6 +1,7 @@
 import { FaixaRecomendada } from '../modelos/FaixaRecomendada';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from './AvaliacaoDaLeitura';
 import { PeriodoDeLuz } from './LuzRecebida';
+import { NASCER_DO_SOL, POR_DO_SOL } from './PeriodoDoDia';
 
 /**
  * Quanto de luz útil para a planta (µmol/m²/s) cada lux representa, no caso da luz do sol. O catálogo mede a meta
@@ -14,8 +15,6 @@ export const TOLERANCIA_SEM_CONTATO_MS = 20 * 60_000;
 /** Um período sem contato que atravessa a meia-noite e cobre mais horas de sol que isto não dá para dividir. */
 export const HORAS_DE_SOL_PARA_DIVIDIR = 3;
 
-const NASCER_DO_SOL = 6;
-const POR_DO_SOL = 18;
 /** Antes de passar esta fração da luz do dia, a projeção seria quase um chute. */
 const FRACAO_MINIMA_PARA_PROJETAR = 0.1;
 const HORA_MS = 3_600_000;
@@ -116,4 +115,15 @@ function projetar(dli: number, conhecidaAte: Date | null, inicioDoDia: Date): nu
   if (conhecidaAte === null || conhecidaAte.getTime() < inicioDoDia.getTime()) return null;
   const fracao = fracaoDaLuzDoDia(conhecidaAte);
   return fracao < FRACAO_MINIMA_PARA_PROJETAR ? null : dli / fracao;
+}
+
+/** A partir desta hora já não sobra sol para recuperar a luz do dia: é quando avisar a falta dela faz sentido. */
+export const HORA_DO_AVISO_DE_LUZ = 17;
+
+/**
+ * Se a planta vai fechar o dia com menos luz do que a meta pede. Só responde perto do fim do dia, pela projeção do
+ * total, e nunca num dia incompleto: ali a luz que falta pode ter caído enquanto o sensor estava sem contato.
+ */
+export function faltouLuzNoDia(luz: LuzDoDia, agora: Date): boolean {
+  return agora.getHours() >= HORA_DO_AVISO_DE_LUZ && !luz.incompleta && luz.situacaoProjetada === 'abaixo';
 }

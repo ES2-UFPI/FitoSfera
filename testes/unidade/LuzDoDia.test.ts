@@ -1,4 +1,4 @@
-import { calcularLuzDoDia, luxMinutosParaDli } from '@/dominio/regras/LuzDoDia';
+import { calcularLuzDoDia, faltouLuzNoDia, LuzDoDia, luxMinutosParaDli } from '@/dominio/regras/LuzDoDia';
 import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 
 /** Lux × minutos que equivalem a 1 mol/m² de luz do sol. */
@@ -151,5 +151,36 @@ describe('progresso e projeção', () => {
     });
     expect(luz).toMatchObject({ progresso: null, situacaoProjetada: null });
     expect(luz.dli).toBeCloseTo(8);
+  });
+});
+
+describe('falta de luz no fim do dia (#91)', () => {
+  const luz = (parcial: Partial<LuzDoDia>): LuzDoDia => ({
+    dli: 4,
+    conhecidaAte: hora(10, 17),
+    incompleta: false,
+    progresso: 0.33,
+    projecaoDli: 4.3,
+    situacaoProjetada: 'abaixo',
+    ...parcial,
+  });
+
+  test('a partir das 17h, com a projeção abaixo da meta, faltou luz', () => {
+    expect(faltouLuzNoDia(luz({}), hora(10, 17))).toBe(true);
+    expect(faltouLuzNoDia(luz({}), hora(10, 23, 30))).toBe(true);
+  });
+
+  test('antes das 17h ainda é cedo para dizer', () => {
+    expect(faltouLuzNoDia(luz({}), hora(10, 16, 59))).toBe(false);
+  });
+
+  test('dia incompleto nunca é falta de luz', () => {
+    expect(faltouLuzNoDia(luz({ incompleta: true }), hora(10, 18))).toBe(false);
+  });
+
+  test('com a projeção dentro ou acima da meta, ou sem meta, não faltou luz', () => {
+    expect(faltouLuzNoDia(luz({ situacaoProjetada: 'ideal' }), hora(10, 18))).toBe(false);
+    expect(faltouLuzNoDia(luz({ situacaoProjetada: 'acima' }), hora(10, 18))).toBe(false);
+    expect(faltouLuzNoDia(luz({ situacaoProjetada: null }), hora(10, 18))).toBe(false);
   });
 });

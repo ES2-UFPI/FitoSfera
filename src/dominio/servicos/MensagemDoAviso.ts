@@ -67,3 +67,14 @@ function descreverDesvio(desvio: Desvio): string {
 function comUnidade(valor: number, unidade: string): string {
   return `${String(Math.round(valor * 10) / 10).replace('.', ',')}${unidade}`;
 }
+
+/**
+ * O aviso de que a planta está fechando o dia com pouca luz. O corpo diz quanto da meta ela recebeu até agora, em
+ * porcentagem, como a tela de detalhes mostra.
+ */
+export function montarAvisoDeFaltaDeLuz(apelido: string, progresso: number): MensagemDoAviso {
+  return {
+    titulo: TEXTOS.notificacoes.titulo(apelido, TEXTOS.notificacoes.faltaDeLuz),
+    corpo: TEXTOS.notificacoes.luzRecebida(Math.round(progresso * 100)),
+  };
+}

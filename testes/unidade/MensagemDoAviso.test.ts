@@ -1,5 +1,11 @@
 import { Desvio, GRANDEZAS, SentidoDoDesvio } from '@/dominio/regras/DesvioDaLeitura';
-import { Acao, acaoDoDesvio, acaoPrincipal, montarMensagemDoAviso } from '@/dominio/servicos/MensagemDoAviso';
+import {
+  Acao,
+  acaoDoDesvio,
+  acaoPrincipal,
+  montarAvisoDeFaltaDeLuz,
+  montarMensagemDoAviso,
+} from '@/dominio/servicos/MensagemDoAviso';
 
 const desvio = (grandeza: Desvio['grandeza'], sentido: SentidoDoDesvio, valor: number): Desvio => ({
   grandeza,
@@ -96,5 +102,12 @@ describe('o corpo', () => {
 
   test('sem desvio nenhum, fica vazio', () => {
     expect(montarMensagemDoAviso('Jiboia', []).corpo).toBe('');
+  });
+});
+
+test('o aviso de falta de luz diz quanto da luz de hoje a planta recebeu', () => {
+  expect(montarAvisoDeFaltaDeLuz('Tomatinho', 0.456)).toEqual({
+    titulo: 'Tomatinho precisa de mais luz',
+    corpo: 'Até agora, recebeu 46% da luz de que precisa hoje.',
   });
 });

@@ -21,6 +21,7 @@ import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/Repositori
 import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/GeradorDeIdentificadorAleatorio';
 import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
+import { RegistroDeDesviosEmAbertoAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeDesviosEmAbertoAsyncStorage';
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
 import { RepositorioDeColheitasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeColheitasAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
@@ -52,6 +53,7 @@ export function criarContainer(): Container {
   const leituras = new CacheDeLeiturasAsyncStorage(armazenamento);
   const luz = new RegistroDeLuzRecebidaAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
+  const desviosEmAberto = new RegistroDeDesviosEmAbertoAsyncStorage(armazenamento);
   const preferencias = new RepositorioDePreferenciasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
   const relogio = new RelogioDoSistema();
@@ -64,6 +66,7 @@ export function criarContainer(): Container {
   const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras, luz);
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
+  const obterLuzDoDia = new ObterLuzDoDia(luz, relogio, especies);
 
   return {
     gerenciarJardins: new GerenciarJardins(jardins, gerador,
@@ -80,11 +83,14 @@ export function criarContainer(): Container {
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
-    obterLuzDoDia: new ObterLuzDoDia(luz, relogio, especies),
+    obterLuzDoDia,
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
     toquesNaNotificacao,
-    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias),
+    avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias, {
+      desviosEmAberto,
+      luzDoDia: obterLuzDoDia,
+    }),
     ajustarPreferencias: new AjustarPreferencias(preferencias),
     atualizarLeituras: new AtualizarLeituras(jardins, fontes),
   };

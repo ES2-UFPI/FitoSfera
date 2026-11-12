@@ -31,6 +31,7 @@ import { RegistroDeColheita } from '@/dominio/modelos/RegistroDeColheita';
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { Aviso, Notificador } from '@/dominio/portas/Notificador';
 import { RepositorioDePreferencias } from '@/dominio/portas/RepositorioDePreferencias';
+import { RegistroDeDesviosEmAberto } from '@/dominio/portas/RegistroDeDesviosEmAberto';
 import { RepositorioDeAvisos } from '@/dominio/portas/RepositorioDeAvisos';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
@@ -328,6 +329,18 @@ export class RepositorioDeAvisosEmMemoria implements RepositorioDeAvisos {
 
   async gravar(assinaturas: ReadonlyMap<string, string>): Promise<void> {
     this.salvas = new Map(assinaturas);
+  }
+}
+
+export class RegistroDeDesviosEmAbertoEmMemoria implements RegistroDeDesviosEmAberto {
+  salvos: ReadonlyMap<string, ReadonlyMap<string, Date>> = new Map();
+
+  async listar(): Promise<ReadonlyMap<string, ReadonlyMap<string, Date>>> {
+    return new Map(this.salvos);
+  }
+
+  async gravar(desvios: ReadonlyMap<string, ReadonlyMap<string, Date>>): Promise<void> {
+    this.salvos = new Map(desvios);
   }
 }
 
