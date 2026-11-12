@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { RefreshControl } from 'react-native';
 import { CORES } from '@/apresentacao/tema/cores';
+import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { especieDeTeste } from '../apoio/especiesDeTeste';
 import { plantaDeTeste, SensorFixo } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -267,5 +269,56 @@ describe('histórico da planta', () => {
     });
 
     expect(await screen.findByLabelText('Última rega: 20/10/2026 às 07:00, hoje.')).toBeTruthy();
+  });
+});
+
+
+describe('os cuidados da espécie no detalhe', () => {
+  const fonte = 'Fonte de teste';
+  /** O tomate do catálogo de verdade: rega diária e DLI de 18 a 30, que é "luz muito alta". */
+  const tomateDificil: EspecieVegetal = (() => {
+    const base = especieDeTeste({
+      id: 'tomate',
+      nomeComum: 'Tomate',
+      nomeCientifico: 'Solanum lycopersicum',
+      nomesAlternativos: [],
+    });
+    return {
+      ...base,
+      nivelDeDificuldade: 'dificil',
+      intervaloDeRegaEmDias: 1,
+      faixasIdeais: { ...base.faixasIdeais!, luzDiaria: { minimo: 18, maximo: 30, fonte } },
+    };
+  })();
+
+  const motivosNaTela = () =>
+    screen.queryAllByTestId('motivo-da-dificuldade').map((linha) => linha.props.children);
+
+  test('lista o que pesou numa espécie difícil', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
+    expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
+    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('difícil');
+    expect(motivosNaTela()).toEqual(['Necessita de rega frequente', 'Necessita de sol pleno']);
+  });
+
+  test('numa espécie fácil diz que ela é tranquila, sem lista de motivos', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+    expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
+    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('fácil');
+    expect(screen.getByText('Fácil de cuidar')).toBeTruthy();
+    expect(motivosNaTela()).toEqual([]);
+  });
+
+  test('o leitor de tela ouve os motivos em uma frase só', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
+    expect(
+      await screen.findByLabelText('Difícil: Necessita de rega frequente. Necessita de sol pleno.'),
+    ).toBeTruthy();
+  });
+
+  test('espécie fora do catálogo não mostra o cartão', async () => {
+    renderizarApp({ plantas: [plantaDeTeste({ idEspecie: 'sumiu' })], url: '/planta/p1' });
+    expect(await screen.findByText('Espécie desconhecida')).toBeTruthy();
+    expect(screen.queryByTestId('cartao-dificuldade')).toBeNull();
   });
 });

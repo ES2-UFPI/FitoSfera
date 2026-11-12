@@ -7,9 +7,13 @@ export type CriteriosDeDificuldade = Pick<EspecieVegetal, 'intervaloDeRegaEmDias
 };
 
 /**
- * Limites calibrados contra os 33 níveis curados do catálogo embutido. A busca varreu a grade de
- * limites e cortes e ficou com a combinação de maior acerto: 24 das 30 espécies com ficha de manejo
- * apurada (80%), contra 53% de quem classificasse tudo como fácil.
+ * Os limites da rega foram calibrados contra os 33 níveis curados do catálogo: a busca varreu a grade de
+ * limites e cortes e ficou com a combinação de maior acerto, 24 das 30 espécies com ficha de manejo apurada
+ * (80%), contra 53% de quem classificasse tudo como fácil.
+ *
+ * Os da luz **não** vêm dessa calibração: eles são as bandas da tabela de DLI da Iowa State Extension, que é
+ * a fonte das faixas de `luzDiaria` no catálogo. Por isso aquele 80% ficou desatualizado — ele foi medido
+ * quando a luz era um limite em lux instantâneo. Recalibrar depende das fichas de manejo, que ainda faltam.
  *
  * Mudar um número aqui muda a classificação de todo o catálogo. Recalibre com dados, não por intuição.
  */
@@ -18,10 +22,14 @@ export const LIMITES = {
   regaExigenteEmDias: 4,
   /** Acima do limite anterior e até este, vale 1 ponto. Mais que isso perdoa esquecimento e vale 0. */
   regaModeradaEmDias: 5,
-  /** Sol pleno, inalcançável dentro de casa: 2 pontos. */
-  luzExigenteEmLux: 25_000,
-  /** Meia-sombra para cima: 1 ponto. Abaixo disso a espécie aceita canto escuro e vale 0. */
-  luzModeradaEmLux: 2_000,
+  /**
+   * Luz diária (DLI) em mol/m²/dia, o total que a espécie precisa somar ao longo do dia. É melhor medida de
+   * exigência que o lux de um instante: lux alto por pouco tempo não sustenta a planta, e sombra por muitas
+   * horas sustenta. "Luz muito alta" na tabela da fonte, que dentro de casa só a janela certa alcança: 2 pontos.
+   */
+  luzDiariaMuitoAlta: 18,
+  /** "Luz alta" na mesma tabela, que uma janela boa resolve: 1 ponto. Abaixo disso, 0 — sombra é fácil de dar. */
+  luzDiariaAlta: 12,
 } as const;
 
 /** Somando rega (0–2), luz (0–2) e os três fatos de manejo (0–3), o total vai de 0 a 7. */
@@ -71,7 +79,7 @@ export type MotivoDaDificuldade = (typeof MOTIVOS_DA_DIFICULDADE)[number];
 export function motivosDaDificuldade(especie: CriteriosParaMotivos): readonly MotivoDaDificuldade[] {
   const motivos: MotivoDaDificuldade[] = [];
   if (especie.intervaloDeRegaEmDias <= LIMITES.regaExigenteEmDias) motivos.push('rega-frequente');
-  if (especie.faixasIdeais !== null && especie.faixasIdeais.luminosidade.minimo >= LIMITES.luzExigenteEmLux)
+  if (especie.faixasIdeais !== null && pontosDaLuzDiaria(especie.faixasIdeais.luzDiaria.minimo) === 2)
     motivos.push('sol-pleno');
   if (especie.exigencias === null) return motivos;
 
@@ -91,9 +99,13 @@ function pontosDaRega({ intervaloDeRegaEmDias }: CriteriosDeDificuldade): number
 function pontosDaLuz({ faixasIdeais }: CriteriosDeDificuldade): number {
   // Espécie sem faixa não pesa: a falta de dado não torna a planta difícil.
   if (faixasIdeais === null) return 0;
-  const { minimo } = faixasIdeais.luminosidade;
-  if (minimo >= LIMITES.luzExigenteEmLux) return 2;
-  if (minimo >= LIMITES.luzModeradaEmLux) return 1;
+  return pontosDaLuzDiaria(faixasIdeais.luzDiaria.minimo);
+}
+
+/** Separado porque os motivos precisam da mesma conta, sem repetir os limites. */
+function pontosDaLuzDiaria(dliMinimo: number): number {
+  if (dliMinimo >= LIMITES.luzDiariaMuitoAlta) return 2;
+  if (dliMinimo >= LIMITES.luzDiariaAlta) return 1;
   return 0;
 }
 

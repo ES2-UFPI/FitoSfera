@@ -71,25 +71,27 @@ test('o cabeçalho do cadastro marca o passo 1 de 3', async () => {
 
 describe('o nível de dificuldade ao lado da espécie', () => {
   const fonte = 'Fonte de teste';
+  /** `luzDiaria` é o mínimo da faixa de DLI, em mol/m²/dia, como no catálogo. */
   const comDificuldade = (
     nomeComum: string,
     nivel: EspecieVegetal['nivelDeDificuldade'],
     rega: number,
-    luzMinima: number,
+    luzDiaria: number,
   ): EspecieVegetal => {
     const base = especieDeTeste({ id: nomeComum.toLowerCase(), nomeComum, nomeCientifico: 'X x', nomesAlternativos: [] });
     return {
       ...base,
       nivelDeDificuldade: nivel,
       intervaloDeRegaEmDias: rega,
-      faixasIdeais: { ...base.faixasIdeais!, luminosidade: { minimo: luzMinima, maximo: 80000, fonte } },
+      faixasIdeais: { ...base.faixasIdeais!, luzDiaria: { minimo: luzDiaria, maximo: 30, fonte } },
     };
   };
 
+  // Os três com os valores que eles têm no catálogo de verdade.
   const especies = [
-    comDificuldade('Jiboia', 'facil', 7, 1000),
-    comDificuldade('Samambaia', 'medio', 2, 2000),
-    comDificuldade('Tomate', 'dificil', 1, 25000),
+    comDificuldade('Jiboia', 'facil', 7, 3),
+    comDificuldade('Samambaia', 'medio', 2, 3),
+    comDificuldade('Tomate', 'dificil', 1, 18),
   ];
 
   test('mostra o selo do nível em toda espécie da lista', async () => {
@@ -99,22 +101,32 @@ describe('o nível de dificuldade ao lado da espécie', () => {
     expect(selos).toEqual(['fácil', 'médio', 'difícil']);
   });
 
-  test('explica o que pesou em médio e em difícil, e não escreve nada em fácil', async () => {
+  test('lista o que pesou em médio e em difícil, e não escreve nada em fácil', async () => {
     renderizarApp({ url: '/cadastro', especies });
     const resultados = await screen.findAllByTestId('resultado-especie');
-    const observacoes = resultados.map(
-      (item) => within(item).queryByTestId('observacao-dificuldade')?.props.children ?? null,
+    const motivos = resultados.map((item) =>
+      within(item)
+        .queryAllByTestId('motivo-da-dificuldade')
+        .map((linha) => linha.props.children),
     );
-    expect(observacoes).toEqual([
-      null,
-      'Médio: rega frequente.',
-      'Difícil: rega frequente e precisa de sol pleno.',
+    expect(motivos).toEqual([
+      [],
+      ['Necessita de rega frequente'],
+      ['Necessita de rega frequente', 'Necessita de sol pleno'],
     ]);
+  });
+
+  test('a espécie fácil não ganha lista nenhuma', async () => {
+    renderizarApp({ url: '/cadastro', especies });
+    const resultados = await screen.findAllByTestId('resultado-especie');
+    expect(within(resultados[0]).queryByTestId('observacao-dificuldade')).toBeNull();
   });
 
   test('o leitor de tela ouve o nome e, depois, o nível', async () => {
     renderizarApp({ url: '/cadastro', especies });
     expect(await screen.findByLabelText('Jiboia. Fácil de cuidar.')).toBeTruthy();
-    expect(screen.getByLabelText('Tomate. Difícil: rega frequente e precisa de sol pleno.')).toBeTruthy();
+    expect(
+      screen.getByLabelText('Tomate. Difícil: Necessita de rega frequente. Necessita de sol pleno.'),
+    ).toBeTruthy();
   });
 });

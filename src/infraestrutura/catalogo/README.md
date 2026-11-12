@@ -104,7 +104,8 @@ citadas em cada faixa. Ao revisar uma espécie, confira o valor na fonte e, se e
 
 O arquivo [`exigencias-de-manejo.json`](exigencias-de-manejo.json) guarda, por id de espécie, os três fatos de
 manejo que o [`ClassificadorDeDificuldade`](../../dominio/regras/ClassificadorDeDificuldade.ts) soma à rega e à
-luz para decidir o nível de dificuldade (US12). Ele é separado do catálogo porque nem toda espécie tem ficha
+`luzDiaria` para decidir o nível de dificuldade (US12). A luz entra pelas categorias da tabela acima: "luz
+muito alta" vale 2 pontos, "luz alta" vale 1 e sombra não pesa, porque pouca luz é o que uma casa dá de graça. Ele é separado do catálogo porque nem toda espécie tem ficha
 pesquisada, e porque o nível passa a ser **calculado**: o campo `nivelDeDificuldade` do catálogo continua sendo
 o valor curado, usado como gabarito da calibração, não como resposta.
 

@@ -8,6 +8,7 @@ import { TEXTOS } from '@/textos';
 import { FormularioDeColheita } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
+import { CartaoDaDificuldade } from '../componentes/CartaoDaDificuldade';
 import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/CartaoDaLuzDeHoje';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
@@ -295,6 +296,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             )}
           />
           <CartaoDaLuzDeHoje luz={luzDeHoje} />
+          <CartaoDaDificuldade especie={item.especie} />
           <CartaoDoHistorico
             estado={historico}
             rodape={
