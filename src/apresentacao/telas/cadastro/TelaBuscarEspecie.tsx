@@ -4,6 +4,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
 import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../cadastro/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
@@ -53,7 +54,7 @@ export function TelaBuscarEspecie() {
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <CabecalhoDoCadastro passoAtual={1} />
       <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
-        Qual planta você quer cadastrar?
+        {TEXTOS.cadastro.qualPlanta}
       </Text>
 
       <View style={estilos.campo}>
@@ -64,7 +65,7 @@ export function TelaBuscarEspecie() {
         <TextInput
           value={termo}
           onChangeText={definirTermo}
-          placeholder="Nome da planta"
+          placeholder={TEXTOS.cadastro.nomeDaPlanta}
           placeholderTextColor={CORES.abaInativa}
           autoFocus
           autoCorrect={false}
@@ -81,7 +82,7 @@ export function TelaBuscarEspecie() {
         ItemSeparatorComponent={() => <View style={estilos.divisoria} />}
         ListEmptyComponent={
           resultados !== null && termo.trim() !== '' ? (
-            <Text style={[TEXTO.corpo, estilos.semResultado]}>Não encontramos essa planta no catálogo.</Text>
+            <Text style={[TEXTO.corpo, estilos.semResultado]}>{TEXTOS.cadastro.plantaForaDoCatalogo}</Text>
           ) : null
         }
         renderItem={({ item }) => {

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
 import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
+import { AtualizarLeituras } from '@/aplicacao/casos-de-uso/AtualizarLeituras';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
@@ -11,7 +12,9 @@ import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlant
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
+import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
@@ -19,10 +22,13 @@ import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/
 import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/ArmazenamentoComMigracao';
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDeAvisosAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeAvisosAsyncStorage';
+import { RepositorioDeColheitasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeColheitasAsyncStorage';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { RepositorioDePreferenciasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePreferenciasAsyncStorage';
 import { RepositorioDeRegasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeRegasAsyncStorage';
 import { CacheDeLeiturasAsyncStorage } from '@/infraestrutura/persistencia/CacheDeLeiturasAsyncStorage';
+import { RegistroDeExclusoesPendentesAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeExclusoesPendentesAsyncStorage';
+import { RegistroDeLuzRecebidaAsyncStorage } from '@/infraestrutura/persistencia/RegistroDeLuzRecebidaAsyncStorage';
 import { RepositorioDeJardinsAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDeJardinsAsyncStorage';
 import { CentralDeSensoresBluetooth } from '@/infraestrutura/sensores/CentralDeSensoresBluetooth';
 import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
@@ -39,9 +45,12 @@ import { escolherToquesNaNotificacao } from './escolherToquesNaNotificacao';
 export function criarContainer(): Container {
   const armazenamento = new ArmazenamentoComMigracao(AsyncStorage, new MigradorDoArmazenamento(AsyncStorage));
   const plantas = new RepositorioDePlantasAsyncStorage(armazenamento);
+  const exclusoesPendentes = new RegistroDeExclusoesPendentesAsyncStorage(armazenamento);
   const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
   const regas = new RepositorioDeRegasAsyncStorage(armazenamento);
+  const colheitas = new RepositorioDeColheitasAsyncStorage(armazenamento);
   const leituras = new CacheDeLeiturasAsyncStorage(armazenamento);
+  const luz = new RegistroDeLuzRecebidaAsyncStorage(armazenamento);
   const avisos = new RepositorioDeAvisosAsyncStorage(armazenamento);
   const preferencias = new RepositorioDePreferenciasAsyncStorage(armazenamento);
   const especies = new RepositorioDeEspeciesLocal();
@@ -52,7 +61,7 @@ export function criarContainer(): Container {
     criarSensorBluetooth(armazenamento, relogio),
   );
   const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
-  const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras);
+  const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras, luz);
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
 
@@ -66,14 +75,17 @@ export function criarContainer(): Container {
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas),
+    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
+    registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
+    obterLuzDoDia: new ObterLuzDoDia(luz, relogio, especies),
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
     toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias),
     ajustarPreferencias: new AjustarPreferencias(preferencias),
+    atualizarLeituras: new AtualizarLeituras(jardins, fontes),
   };
 }

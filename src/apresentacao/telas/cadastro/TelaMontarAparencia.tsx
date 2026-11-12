@@ -2,6 +2,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DESTAQUES, FOLHAGENS, VASOS } from '@/dominio/modelos/Aparencia';
+import { TEXTOS } from '@/textos';
 import { AmostrasDeCor } from '../../cadastro/AmostrasDeCor';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
 import { SeletorDeForma } from '../../cadastro/SeletorDeForma';
@@ -42,20 +43,20 @@ export function TelaMontarAparencia() {
       <CabecalhoDoCadastro passoAtual={edicao ? undefined : 2} />
       <ScrollView contentContainerStyle={estilos.conteudo} showsVerticalScrollIndicator={false}>
         <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
-          {edicao ? 'Mude a aparência da planta' : 'Como vai ser a sua planta?'}
+          {edicao ? TEXTOS.cadastro.mudeAAparencia : TEXTOS.cadastro.comoVaiSer}
         </Text>
         <VitrineDaPlanta aparencia={aparencia} etiqueta={edicao?.apelido ?? especie?.nomeComum ?? ''} />
 
         <View style={estilos.secoes}>
           <View style={estilos.secaoDeForma}>
             <View style={estilos.cabecalhoDaForma}>
-              <Text style={TEXTO.rotulo}>FORMA</Text>
+              <Text style={TEXTO.rotulo}>{TEXTOS.cadastro.rotuloDaForma}</Text>
               <Text style={estilos.nomeEscolhido}>{FORMAS_VISUAIS[aparencia.forma].nome}</Text>
             </View>
             <SeletorDeForma aparencia={aparencia} aoEscolher={(forma) => mudarAparencia({ forma })} />
           </View>
           <AmostrasDeCor
-            rotulo="Folhagem"
+            rotulo={TEXTOS.cadastro.folhagem}
             formato="folha"
             opcoes={OPCOES_DE_FOLHAGEM}
             selecionada={aparencia.folhagem}
@@ -71,7 +72,7 @@ export function TelaMontarAparencia() {
             />
           ) : null}
           <AmostrasDeCor
-            rotulo="Vaso"
+            rotulo={TEXTOS.cadastro.vaso}
             formato="vaso"
             opcoes={OPCOES_DE_VASO}
             selecionada={aparencia.vaso}
@@ -81,7 +82,7 @@ export function TelaMontarAparencia() {
       </ScrollView>
       <View style={[estilos.rodape, { paddingBottom: margens.bottom + ESPACO.grande }]}>
         <BotaoPrincipal
-          titulo="Continuar"
+          titulo={TEXTOS.comum.continuar}
           largo
           aoTocar={() =>
             navegador.push(

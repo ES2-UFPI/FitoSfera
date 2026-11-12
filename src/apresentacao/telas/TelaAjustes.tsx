@@ -6,6 +6,8 @@ import {
   ControleDoSensorDeDesenvolvimento,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { TEXTOS } from '@/textos';
+import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from '../componentes/IconesDasCondicoes';
@@ -44,21 +46,33 @@ const GRUPOS: readonly {
   Icone: IconeDaGrandeza;
   cor: ColorValue;
 }[] = [
-  { grandeza: 'umidade', titulo: 'Umidade', detalhe: 'Umidade relativa do ar', Icone: IconeUmidade, cor: CORES.acaoRega },
+  {
+    grandeza: 'umidade',
+    titulo: TEXTOS.simulador.umidade,
+    detalhe: TEXTOS.simulador.detalheDaUmidade,
+    Icone: IconeUmidade,
+    cor: CORES.acaoRega,
+  },
   {
     grandeza: 'temperatura',
-    titulo: 'Temperatura',
-    detalhe: 'Temperatura do ambiente',
+    titulo: TEXTOS.simulador.temperatura,
+    detalhe: TEXTOS.simulador.detalheDaTemperatura,
     Icone: IconeTemperatura,
     cor: CORES.erro,
   },
-  { grandeza: 'luminosidade', titulo: 'Luz', detalhe: 'Luminosidade do ambiente', Icone: IconeLuz, cor: CORES.statusAtencao },
+  {
+    grandeza: 'luminosidade',
+    titulo: TEXTOS.simulador.luz,
+    detalhe: TEXTOS.simulador.detalheDaLuz,
+    Icone: IconeLuz,
+    cor: CORES.statusAtencao,
+  },
 ];
 
 const NIVEIS: readonly { nivel: NivelDoSensorDeDesenvolvimento; titulo: string }[] = [
-  { nivel: 'automatico', titulo: 'Automático' },
-  { nivel: 'baixo', titulo: 'Baixo' },
-  { nivel: 'alto', titulo: 'Alto' },
+  { nivel: 'automatico', titulo: TEXTOS.simulador.automatico },
+  { nivel: 'baixo', titulo: TEXTOS.simulador.baixo },
+  { nivel: 'alto', titulo: TEXTOS.simulador.alto },
 ];
 
 function configuracoesIguais(
@@ -74,14 +88,18 @@ function configuracoesIguais(
 }
 
 function nomeDoNivel(nivel: NivelDoSensorDeDesenvolvimento): string {
-  return nivel === 'automatico' ? 'Automático' : nivel === 'baixo' ? 'Baixo' : 'Alto';
+  return nivel === 'automatico' ? TEXTOS.simulador.automatico : nivel === 'baixo' ? TEXTOS.simulador.baixo : TEXTOS.simulador.alto;
 }
 
 function descrever(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): string {
-  if (configuracao.desconectado) return 'Sensor desativado: nenhuma leitura simulada será enviada.';
+  if (configuracao.desconectado) return TEXTOS.simulador.desconectado;
   const nome = (nivel: NivelDoSensorDeDesenvolvimento) =>
-    nivel === 'automatico' ? 'automática' : nivel === 'baixo' ? 'baixa' : 'alta';
-  return `Combinação atual: umidade ${nome(configuracao.umidade)}, temperatura ${nome(configuracao.temperatura)} e luz ${nome(configuracao.luminosidade)}.`;
+    nivel === 'automatico' ? TEXTOS.simulador.automatica : nivel === 'baixo' ? TEXTOS.simulador.baixa : TEXTOS.simulador.alta;
+  return TEXTOS.simulador.combinacao(
+    nome(configuracao.umidade),
+    nome(configuracao.temperatura),
+    nome(configuracao.luminosidade),
+  );
 }
 
 function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): boolean {
@@ -90,11 +108,6 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
     !configuracoesIguais(configuracao, AUTOMATICO) &&
     !configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)
   );
-}
-
-function formatarHorarioSimulado(horario: Date): string {
-  const doisDigitos = (valor: number) => String(valor).padStart(2, '0');
-  return `${doisDigitos(horario.getDate())}/${doisDigitos(horario.getMonth() + 1)}/${horario.getFullYear()} ${doisDigitos(horario.getHours())}:${doisDigitos(horario.getMinutes())}`;
 }
 
 export function TelaAjustes() {
@@ -119,7 +132,7 @@ export function TelaAjustes() {
         contentInsetAdjustmentBehavior="automatic"
       >
         <Text style={TEXTO.titulo} accessibilityRole="header">
-          Ajustes
+          {TEXTOS.ajustes.titulo}
         </Text>
         <CartaoDosLembretes />
         {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
@@ -128,7 +141,7 @@ export function TelaAjustes() {
             key={idJardimSelecionado}
             controle={controle}
             idJardim={idJardimSelecionado}
-            nomeDoJardim={jardimAtual?.nome ?? 'Jardim principal'}
+            nomeDoJardim={jardimAtual?.nome ?? TEXTOS.comum.jardimPrincipal}
             simuladorAssociado={simuladorAssociado}
             aoAlternarAssociacao={alternarAssociacaoSimulada}
             aoAtualizarLeituras={recarregarJardim}
@@ -197,12 +210,12 @@ function CartaoDoSensorDeDesenvolvimento({
     <View style={estilos.cartao}>
       <View style={estilos.cabecalho}>
         <View style={estilos.titulosDoCabecalho}>
-          <Text style={TEXTO.subtitulo}>Sensor simulado · {nomeDoJardim}</Text>
-          <Text style={estilos.selo}>DADOS SIMULADOS</Text>
+          <Text style={TEXTO.subtitulo}>{TEXTOS.simulador.titulo(nomeDoJardim)}</Text>
+          <Text style={estilos.selo}>{TEXTOS.simulador.selo}</Text>
         </View>
         <Switch
-          accessibilityLabel="Sensor simulado"
-          accessibilityHint="Ativa ou interrompe as leituras simuladas"
+          accessibilityLabel={TEXTOS.simulador.interruptor}
+          accessibilityHint={TEXTOS.simulador.dicaDoInterruptor}
           accessibilityRole="switch"
           value={sensorLigado}
           onValueChange={alternarSensor}
@@ -213,11 +226,11 @@ function CartaoDoSensorDeDesenvolvimento({
 
       <View style={estilos.vinculoDoJardim}>
         <View style={estilos.titulosDoCabecalho}>
-          <Text style={estilos.tituloDaExplicacao}>Jardim monitorado</Text>
-          <Text style={TEXTO.apoio}>{simuladorAssociado ? `Simulador associado a ${nomeDoJardim}` : `Nenhum simulador associado a ${nomeDoJardim}`}</Text>
+          <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.jardimMonitorado}</Text>
+          <Text style={TEXTO.apoio}>{simuladorAssociado ? TEXTOS.simulador.associadoA(nomeDoJardim) : TEXTOS.simulador.naoAssociadoA(nomeDoJardim)}</Text>
         </View>
         <BotaoPrincipal
-          titulo={simuladorAssociado ? 'Desassociar simulador' : 'Associar simulador a este jardim'}
+          titulo={simuladorAssociado ? TEXTOS.simulador.pararDeUsar : TEXTOS.simulador.usarNesteJardim}
           variante="secundaria"
           largo
           aoTocar={() => {
@@ -226,61 +239,60 @@ function CartaoDoSensorDeDesenvolvimento({
           }}
         />
         {falhaAoAssociar ? (
-          <Text style={estilos.erroDoVinculo} accessibilityRole="alert">Não foi possível alterar a associação. Tente novamente.</Text>
+          <Text style={estilos.erroDoVinculo} accessibilityRole="alert">{TEXTOS.simulador.falhaAoTrocar}</Text>
         ) : null}
       </View>
 
       <View style={estilos.estadoDoSensor}>
         <View style={[estilos.indicadorDoSensor, sensorLigado && estilos.indicadorDoSensorAtivo]} />
-        <Text style={estilos.textoDoEstado}>{sensorLigado ? 'Sensor simulado ativo' : 'Sensor simulado desativado'}</Text>
+        <Text style={estilos.textoDoEstado}>{sensorLigado ? TEXTOS.simulador.ativo : TEXTOS.simulador.desligado}</Text>
       </View>
 
-      <Text style={TEXTO.corpo}>Use um atalho ou combine as condições para testar o aplicativo sem hardware.</Text>
+      <Text style={TEXTO.corpo}>{TEXTOS.simulador.explicacao}</Text>
       <View style={estilos.relogioSimulado}>
-        <Text style={estilos.tituloDaExplicacao}>Relógio da simulação</Text>
+        <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.relogio}</Text>
         <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
-          {formatarHorarioSimulado(horarioSimulado)}
+          {formatarData(horarioSimulado, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}
         </Text>
-        <Text style={TEXTO.apoio}>Avance o tempo para testar a variação das leituras e dados antigos. Isso não altera o horário do app.</Text>
+        <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDoRelogio}</Text>
         <View style={estilos.opcoesDeTempo}>
-          <BotaoDeOpcao titulo="−1 hora" aoTocar={() => ajustarHorario(-3_600_000)} />
-          <BotaoDeOpcao titulo="+1 hora" aoTocar={() => ajustarHorario(3_600_000)} />
-          <BotaoDeOpcao titulo="−1 dia" aoTocar={() => ajustarHorario(-86_400_000)} />
-          <BotaoDeOpcao titulo="+1 dia" aoTocar={() => ajustarHorario(86_400_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.menosUmaHora} aoTocar={() => ajustarHorario(-3_600_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.maisUmaHora} aoTocar={() => ajustarHorario(3_600_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.menosUmDia} aoTocar={() => ajustarHorario(-86_400_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.maisUmDia} aoTocar={() => ajustarHorario(86_400_000)} />
         </View>
-        <BotaoPrincipal titulo="Voltar ao horário atual" variante="secundaria" aoTocar={voltarAoHorarioAtual} />
+        <BotaoPrincipal titulo={TEXTOS.simulador.voltarAoHorarioAtual} variante="secundaria" aoTocar={voltarAoHorarioAtual} />
       </View>
       <View style={estilos.explicacaoDoAutomatico}>
-        <Text style={estilos.tituloDaExplicacao}>O que significa automático?</Text>
+        <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.oQueEAutomatico}</Text>
         <Text style={TEXTO.apoio}>
-          A condição varia sozinha ao longo do dia seguindo um ciclo ambiental simulado. Você pode deixar uma
-          grandeza automática e forçar apenas as outras.
+          {TEXTOS.simulador.explicacaoDoAutomatico}
         </Text>
       </View>
 
-      <Text style={TEXTO.rotulo}>ATALHOS</Text>
+      <Text style={TEXTO.rotulo}>{TEXTOS.simulador.rotuloDosAtalhos}</Text>
       <View style={estilos.opcoes}>
         <BotaoDeOpcao
-          titulo="Tudo automático"
+          titulo={TEXTOS.simulador.tudoAutomatico}
           selecionado={configuracoesIguais(configuracao, AUTOMATICO)}
           desabilitado={!sensorLigado}
           aoTocar={() => aplicar(AUTOMATICO)}
         />
         <BotaoDeOpcao
-          titulo="Quente, seco e ensolarado"
+          titulo={TEXTOS.simulador.quenteSecoEnsolarado}
           selecionado={configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)}
           desabilitado={!sensorLigado}
           aoTocar={() => aplicar(QUENTE_SECO_ENSOLARADO)}
         />
         <BotaoDeOpcao
-          titulo="Customizado"
+          titulo={TEXTOS.simulador.personalizado}
           selecionado={configuracaoPersonalizada(configuracao)}
           desabilitado={!configuracaoPersonalizada(configuracao)}
           aoTocar={() => {}}
         />
       </View>
 
-      <Text style={TEXTO.rotulo}>COMBINAÇÃO PERSONALIZADA</Text>
+      <Text style={TEXTO.rotulo}>{TEXTOS.simulador.rotuloDaCombinacao}</Text>
       <View style={estilos.menus}>
         {GRUPOS.map((grupo) => (
           <MenuDaGrandeza
@@ -329,8 +341,8 @@ function MenuDaGrandeza({
     <View style={[estilos.menu, desabilitado && estilos.menuDesabilitado]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Configurar ${titulo.toLocaleLowerCase('pt-BR')}`}
-        accessibilityHint={`${nomeDoNivel(nivel)} selecionado`}
+        accessibilityLabel={TEXTOS.simulador.configurar(titulo.toLocaleLowerCase('pt-BR'))}
+        accessibilityHint={TEXTOS.simulador.selecionado(nomeDoNivel(nivel))}
         accessibilityState={{ expanded: aberto, disabled: desabilitado }}
         disabled={desabilitado}
         onPress={aoAlternar}
@@ -357,7 +369,7 @@ function MenuDaGrandeza({
               <Pressable
                 key={opcao.nivel}
                 accessibilityRole="button"
-                accessibilityLabel={`${titulo}: ${opcao.titulo}`}
+                accessibilityLabel={TEXTOS.simulador.nivelDaMedida(titulo, opcao.titulo)}
                 accessibilityState={{ selected: selecionada }}
                 onPress={() => aoSelecionar(opcao.nivel)}
                 style={({ pressed }) => [

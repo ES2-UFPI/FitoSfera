@@ -59,7 +59,7 @@ web o app continua abrindo, com o sensor indisponível.
 | Arquivo | Papel |
 | --- | --- |
 | [`ContratoDoSensor.ts`](ContratoDoSensor.ts) | UUIDs, comando de leitura e tempo limite, copiados do README do firmware. |
-| [`DecodificadorDoPacote.ts`](DecodificadorDoPacote.ts) | Pacote de 8 bytes (base64) → temperatura, umidade e luz. Testado contra os pacotes de exemplo do firmware. |
+| [`DecodificadorDoPacote.ts`](DecodificadorDoPacote.ts) | Pacotes legado (8 bytes) e atual (19 bytes), em base64 → medições e metadados. Testado contra exemplos do firmware. |
 | [`ClienteBle.ts`](ClienteBle.ts) | O pedaço da biblioteca de que o sensor precisa. |
 | [`ClienteBlePlx.ts`](ClienteBlePlx.ts) | A implementação com a `react-native-ble-plx` e o pedido de permissões. É o único arquivo que importa a biblioteca, e só é carregado quando o módulo nativo existe. |
 | [`SensorBluetooth.ts`](SensorBluetooth.ts) | Implementa `SensorDeAmbiente` e `PareamentoDoSensor` (em `aplicacao/portas/`): conexão, reconexão e pareamento. |
@@ -73,6 +73,35 @@ sensor conecta e espera a primeira leitura (até 20 s); só então é incluído 
 `fitosfera:v2:sensores-pareados`. Parear não associa automaticamente o dispositivo ao jardim: a escolha é feita
 na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua legível após atualizar o app.
 
+**Protocolo e atualização:** o firmware publica automaticamente a cada 5 min. O pacote atual tem 19 bytes, com
+sequência, id do reinício, acumulado de luz desde o boot, tempo sem confirmação e as três medições; o app envia
+`[0x02, sequência]` depois de processar cada pacote válido. Pacote sem temperatura ou umidade é confirmado, mas
+não vira uma leitura parcial no painel; luminosidade ausente vira `null`. O decodificador também mantém compatibilidade
+com o pacote legado de 8 bytes. O acumulado do firmware não é o acumulado diário da planta: o total do dia é calculado a partir dos períodos de luz recebida (veja abaixo).
+
+**Luz recebida sem conexão:** a `Leitura` do pacote atual traz o `contadorDeLuz`: acumulado, id do reinício, segundos
+sem confirmação e, calculada a partir deles, a data e a hora da última comunicação. A cada leitura, o `SensorComCache`
+passa o contador ao `RegistroDeLuzRecebida`, que compara com o último valor salvo do jardim e guarda a diferença. O
+primeiro contador recebido e um reinício do sensor não contam luz, porque o valor não diz nada sobre o período, e o
+reinício deixa um período marcado como incompleto. Um pacote repetido não soma nada, e um pacote atrasado, com contador
+menor, é ignorado. O sensor simulado e o pacote de 8 bytes não têm contador e não geram luz recebida.
+
+**Luz do dia:** a regra [`LuzDoDia`](../../dominio/regras/LuzDoDia.ts) soma os períodos que caem no dia, da meia-noite
+local até agora, e converte lux × minutos em DLI (mol/m²), a unidade da meta `luzDiaria` do catálogo. A conversão usa
+o fator da luz do sol (1 lux ≈ 0,0185 µmol/m²/s), então é uma aproximação que erra mais com LED ou lâmpada.
+
+- Um período que atravessa a meia-noite é dividido entre os dois dias na proporção do tempo. Se ele cobrir mais de
+  3 horas entre as 6h e as 18h, não dá para saber em que dia a luz caiu, e o dia fica incompleto.
+- O dia também fica incompleto com um reinício do sensor ou sem contato com ele há mais de 20 min. Dia incompleto
+  não deve ser lido como falta de luz.
+- O progresso é a luz do dia dividida pelo mínimo da meta. A projeção estima o dia inteiro supondo que a luz segue a
+  curva de um dia de sol, das 6h às 18h. Antes de cerca de 8h30 ela não é feita, porque seria quase um chute.
+- O caso de uso `ObterLuzDoDia` junta a luz do jardim da planta com a meta dela (ou a da espécie no catálogo) e
+  alimenta o cartão "Luz de hoje" do detalhe da planta. O cartão é buscado de novo a cada minuto, para o sensor
+  calado virar "dados incompletos" sem sair da tela, e a cada leitura; por isso o
+  `SensorComCache` só entrega uma leitura observada depois de contabilizar a luz dela. Com o dia incompleto, o cartão
+  mostra um aviso no lugar da porcentagem, a menos que a meta já tenha sido alcançada.
+
 **Reconexão:** quando o app abre, a primeira leitura pedida pelo jardim conecta ao sensor associado. Se a ligação
 cair ou o sensor estiver fora de alcance, o app tenta de novo sozinho, com espera crescente
 (`esperaParaReconectar`): 5 s, 10 s, 20 s, 40 s e, dali em diante, a cada 60 s. A espera volta ao começo assim que
@@ -85,7 +114,8 @@ Os erros da `react-native-ble-plx` são traduzidos em [`ClassificadorDeErroBle.t
 um `FalhaBle`, sem o vocabulário da biblioteca. O `SensorBluetooth` transforma esse tipo no motivo que a interface
 mostra: na tela de pareamento, um `MotivoDaFalhaDoPareamento`; durante o uso, o `problema` da `ConexaoDoSensor`,
 que o indicador de conexão exibe junto do horário da próxima tentativa. Os textos ficam em
-[`textosDoSensor.ts`](../../apresentacao/sensor/textosDoSensor.ts), cada um com o que aconteceu e o que fazer.
+[`src/textos/index.ts`](../../textos/index.ts) (grupos `pareamento.falhas` e `conexao.problemas`), cada um com o
+que aconteceu e o que fazer.
 
 | Situação | Código da biblioteca | Ao parear | Durante o uso |
 | --- | --- | --- | --- |

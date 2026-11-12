@@ -68,3 +68,20 @@ test('usa o relógio virtual para marcar como desatualizado o cache quando o sim
   expect(item?.leituraDesatualizada).toBe(true);
   expect(item?.status).toBe('sem-dados');
 });
+
+test('as leituras do jardim passam pelo registro de luz recebida', async () => {
+  const armazenamento = new ArmazenamentoEmMemoria();
+  const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
+  await jardins.salvar({ id: 'sala', nome: 'Sala', idSensor: 'simulado:sala' });
+  const simulados = new SensoresSimuladosDosJardins(new RelogioParado(new Date(2026, 9, 22)));
+  const registrar = jest.fn(async () => undefined);
+  const fontes = new FontesDosJardins(jardins, null, simulados, new CacheDeLeiturasAsyncStorage(armazenamento), {
+    registrar,
+    listar: async () => [],
+    obterUltimoContato: async () => null,
+  });
+
+  await (await fontes.obter('sala')).lerLeituraAtual();
+
+  expect(registrar).toHaveBeenCalledWith('sala', expect.objectContaining({ umidadePercentual: expect.any(Number) }));
+});

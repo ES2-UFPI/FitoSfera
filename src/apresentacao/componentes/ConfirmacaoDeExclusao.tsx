@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { TEXTOS } from '@/textos';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { TEXTO } from '../tema/tipografia';
@@ -19,18 +20,18 @@ export function ConfirmacaoDeExclusao({ apelido, visivel, excluindo, erro, aoCon
       <Pressable style={estilos.fundo} onPress={excluindo ? undefined : aoCancelar} accessible={false}>
         <Pressable style={estilos.cartao} accessibilityViewIsModal>
           <Text style={TEXTO.subtitulo} accessibilityRole="header">
-            Excluir {apelido}?
+            {TEXTOS.exclusao.titulo(apelido)}
           </Text>
-          <Text style={TEXTO.corpo}>A planta sai da estante junto com o histórico de regas. Não dá para desfazer.</Text>
+          <Text style={TEXTO.corpo}>{TEXTOS.exclusao.explicacao}</Text>
           {erro ? (
             <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-              Não deu para excluir a planta. Tente novamente.
+              {TEXTOS.exclusao.falha}
             </Text>
           ) : null}
           <View style={estilos.botoes}>
-            <BotaoPrincipal titulo="Cancelar" variante="secundaria" aoTocar={aoCancelar} desabilitado={excluindo} />
+            <BotaoPrincipal titulo={TEXTOS.comum.cancelar} variante="secundaria" aoTocar={aoCancelar} desabilitado={excluindo} />
             <BotaoPrincipal
-              titulo={excluindo ? 'Excluindo…' : 'Excluir planta'}
+              titulo={excluindo ? TEXTOS.exclusao.excluindo : TEXTOS.exclusao.excluirPlanta}
               variante="perigo"
               aoTocar={aoConfirmar}
               desabilitado={excluindo}

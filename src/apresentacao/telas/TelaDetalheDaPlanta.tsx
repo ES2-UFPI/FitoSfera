@@ -3,8 +3,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
+import { TEXTOS } from '@/textos';
+import { FormularioDeColheita } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
+import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/CartaoDaLuzDeHoje';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -58,6 +62,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
+  const [luzDeHoje, definirLuzDeHoje] = useState<LuzDoDia | undefined>(undefined);
+  const [tiqueDaLuz, definirTiqueDaLuz] = useState(0);
   const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
   const registroEmAndamento = useRef(false);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
@@ -114,6 +120,28 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       atual = false;
     };
   }, [container, plantaCarregada?.id]);
+
+  // Sem leitura nova, o tempo passando também muda a luz de hoje: o sensor calado deixa o dia incompleto.
+  useEffect(() => {
+    const relogio = setInterval(() => definirTiqueDaLuz((tique) => tique + 1), INTERVALO_DA_LUZ_DE_HOJE_MS);
+    return () => clearInterval(relogio);
+  }, []);
+
+  // Cada versão nova do item (ao abrir, ao voltar para a tela, a cada leitura) pode trazer luz nova do sensor.
+  const itemCarregado = item && item !== 'falhou' ? item : null;
+  useEffect(() => {
+    if (itemCarregado === null) return;
+    let atual = true;
+    container.obterLuzDoDia.executar(itemCarregado.planta).then(
+      (lida) => {
+        if (atual) definirLuzDeHoje(lida);
+      },
+      (falha) => console.warn('Não deu para ler a luz de hoje.', falha),
+    );
+    return () => {
+      atual = false;
+    };
+  }, [container, itemCarregado, tiqueDaLuz]);
 
   async function excluirPlanta() {
     if (exclusao === 'excluindo') return;
@@ -209,14 +237,14 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       </View>
       {item === null ? (
         <View style={estilos.centro}>
-          <Text style={TEXTO.subtitulo}>Planta não encontrada</Text>
-          <Text style={[TEXTO.corpo, estilos.texto]}>Ela pode ter saído da sua estante.</Text>
+          <Text style={TEXTO.subtitulo}>{TEXTOS.comum.plantaNaoEncontrada}</Text>
+          <Text style={[TEXTO.corpo, estilos.texto]}>{TEXTOS.comum.plantaPodeTerSaido}</Text>
         </View>
       ) : null}
       {item === 'falhou' ? (
         <View style={estilos.centro}>
-          <Text style={TEXTO.subtitulo}>Não deu para abrir esta planta agora.</Text>
-          <Text style={[TEXTO.corpo, estilos.texto]}>Volte e tente de novo em instantes.</Text>
+          <Text style={TEXTO.subtitulo}>{TEXTOS.comum.naoDeuParaAbrirAPlanta}</Text>
+          <Text style={[TEXTO.corpo, estilos.texto]}>{TEXTOS.comum.tenteEmInstantes}</Text>
         </View>
       ) : null}
       {item && item !== 'falhou' ? (
@@ -242,11 +270,11 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               <Text style={TEXTO.titulo} accessibilityRole="header">
                 {item.planta.apelido}
               </Text>
-              <Text style={estilos.especie}>{item.especie?.nomeComum ?? 'Espécie desconhecida'}</Text>
+              <Text style={estilos.especie}>{item.especie?.nomeComum ?? TEXTOS.comum.especieDesconhecida}</Text>
               <View
                 style={estilos.status}
                 accessible
-                accessibilityLabel={`Status: ${APRESENTACAO_DO_STATUS[item.status].falado}.`}
+                accessibilityLabel={TEXTOS.detalhe.status(APRESENTACAO_DO_STATUS[item.status].falado)}
               >
                 <View style={[estilos.pontoDoStatus, { backgroundColor: APRESENTACAO_DO_STATUS[item.status].cor }]} />
                 <Text style={estilos.textoDoStatus}>{APRESENTACAO_DO_STATUS[item.status].falado}</Text>
@@ -266,11 +294,12 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               />
             )}
           />
+          <CartaoDaLuzDeHoje luz={luzDeHoje} />
           <CartaoDoHistorico
             estado={historico}
             rodape={
               <BotaoPrincipal
-                titulo="Ver todas as regas"
+                titulo={TEXTOS.detalhe.verTodasAsRegas}
                 variante="secundaria"
                 aoTocar={() => navegador.push({ pathname: '/historico/[id]', params: { id } })}
                 largo
@@ -278,7 +307,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             }
           >
             <BotaoPrincipal
-              titulo={estadoDaRega === 'registrando' ? 'Registrando rega…' : 'Registrar rega'}
+              titulo={estadoDaRega === 'registrando' ? TEXTOS.detalhe.registrandoRega : TEXTOS.detalhe.registrarRega}
               aoTocar={() => void registrarRega()}
               desabilitado={estadoDaRega === 'registrando'}
               icone={
@@ -302,26 +331,27 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             />
             {estadoDaRega === 'sucesso' ? (
               <Text style={[TEXTO.corpo, estilos.confirmacao]} accessibilityLiveRegion="polite">
-                ✓ Rega registrada agora.
+                {TEXTOS.detalhe.regaRegistrada}
               </Text>
             ) : null}
             {estadoDaRega === 'erro' ? (
               <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-                Não deu para registrar a rega. Tente novamente.
+                {TEXTOS.detalhe.falhaAoRegistrarRega}
               </Text>
             ) : null}
           </CartaoDoHistorico>
+          {item.especie?.frutifera ? <FormularioDeColheita idPlanta={item.planta.id} /> : null}
           <View style={estilos.acoes}>
             <View style={estilos.acao}>
               <BotaoPrincipal
-                titulo="Editar"
+                titulo={TEXTOS.detalhe.editar}
                 variante="secundaria"
                 aoTocar={() => navegador.push({ pathname: '/editar/[id]', params: { id } })}
                 largo
               />
             </View>
             <View style={estilos.acao}>
-              <BotaoPrincipal titulo="Excluir" variante="perigo" aoTocar={() => definirExclusao('confirmando')} largo />
+              <BotaoPrincipal titulo={TEXTOS.detalhe.excluir} variante="perigo" aoTocar={() => definirExclusao('confirmando')} largo />
             </View>
           </View>
           <ConfirmacaoDeExclusao

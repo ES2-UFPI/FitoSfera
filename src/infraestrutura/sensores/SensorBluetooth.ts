@@ -24,8 +24,8 @@ export interface GuardaDoSensorPareado {
 export const ESPERA_INICIAL_PARA_RECONECTAR_MS = 5_000;
 export const ESPERA_MAXIMA_PARA_RECONECTAR_MS = 60_000;
 
-/** O firmware publica uma leitura por minuto: até duas publicações perdidas, a guardada ainda serve. */
-export const IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS = 2 * 60_000;
+/** Permite perder uma publicação automática de cinco minutos sem pedir outra medição imediatamente. */
+export const IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS = CONTRATO_DO_SENSOR.idadeMaximaDaLeituraGuardadaMs;
 
 /**
  * Quanto esperar antes da tentativa de número `tentativa` (a partir de 0): 5 s, 10 s, 20 s, 40 s e, dali em
@@ -82,6 +82,7 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   private readonly observadores = new Set<(leitura: Leitura) => void>();
   private readonly esperas = new Set<(leitura: Leitura) => void>();
   private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
+  private readonly pacotesRecentes = new Set<string>();
 
   constructor(
     private readonly cliente: ClienteBle,
@@ -106,6 +107,19 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
     if (guardada !== null && this.relogio.agora().getTime() - guardada.medidaEm.getTime() <= IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS)
       return guardada;
 
+    const proxima = this.esperarLeitura();
+    if (this.conexao !== null) void this.conexao.pedirLeitura().catch(() => undefined);
+    else {
+      this.cancelarReconexao();
+      void this.conectarAoPareado();
+    }
+    return proxima.promessa;
+  }
+
+  /** Pede uma nova medição mesmo que haja uma leitura automática recente guardada. */
+  async atualizarLeitura(): Promise<Leitura | null> {
+    await this.garantirInicio();
+    if (this.pareado === null) return null;
     const proxima = this.esperarLeitura();
     if (this.conexao !== null) void this.conexao.pedirLeitura().catch(() => undefined);
     else {
@@ -301,7 +315,7 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
       this.encerrarConexao = null;
     };
 
-    // O valor lido pode ter até 60 s; o pedido traz um fresco, que chega por notificação.
+    // O valor lido pode ser do último ciclo automático; o pedido traz uma medição nova por notificação.
     this.receber(await conexao.ler().catch(() => null));
     await conexao.pedirLeitura().catch(() => undefined);
   }
@@ -318,11 +332,47 @@ export class SensorBluetooth implements SensorDeAmbiente, PareamentoDoSensor {
   private receber(valor: string | null): void {
     const pacote = decodificarPacote(valor);
     if (pacote === null) return;
-    const leitura: Leitura = { ...pacote, medidaEm: this.relogio.agora() };
+
+    if (pacote.tipo === 'novo') {
+      const chave = `${pacote.idReinicio}:${pacote.sequencia}`;
+      if (this.pacotesRecentes.has(chave)) {
+        this.confirmar(pacote.sequencia);
+        return;
+      }
+      this.pacotesRecentes.add(chave);
+      if (this.pacotesRecentes.size > 255) {
+        const maisAntigo = this.pacotesRecentes.values().next().value;
+        if (maisAntigo !== undefined) this.pacotesRecentes.delete(maisAntigo);
+      }
+    }
+
+    const medidaEm = this.relogio.agora();
+    this.ultimaComunicacao = medidaEm;
+    if (pacote.tipo === 'novo') this.confirmar(pacote.sequencia);
+    if (pacote.temperaturaCelsius === null || pacote.umidadePercentual === null) return;
+
+    const leitura: Leitura = {
+      temperaturaCelsius: pacote.temperaturaCelsius,
+      umidadePercentual: pacote.umidadePercentual,
+      luminosidadeLux: pacote.luminosidadeLux,
+      medidaEm,
+      ...(pacote.tipo === 'novo' && {
+        contadorDeLuz: {
+          idReinicio: pacote.idReinicio,
+          luzAcumuladaLuxMinutos: pacote.luzAcumuladaLuxMinutos,
+          segundosSemConfirmacao: pacote.segundosDesdeUltimaConfirmacao,
+          ultimaComunicacaoEm: new Date(medidaEm.getTime() - pacote.segundosDesdeUltimaConfirmacao * 1000),
+        },
+      }),
+    };
     this.ultimaLeitura = leitura;
-    this.ultimaComunicacao = leitura.medidaEm;
     this.esperas.forEach((resolver) => resolver(leitura));
     this.observadores.forEach((observador) => observador(leitura));
+  }
+
+  private confirmar(sequencia: number): void {
+    void this.conexao?.confirmarPacote(sequencia).catch((falha) =>
+      console.warn('Não foi possível confirmar o pacote recebido do sensor.', falha));
   }
 
   /** Muda o que for informado e avisa os observadores só quando algo mudou de fato. */

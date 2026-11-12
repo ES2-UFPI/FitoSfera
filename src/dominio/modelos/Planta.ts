@@ -1,3 +1,4 @@
+import { TEXTOS } from '@/textos';
 import { Aparencia } from './Aparencia';
 import { FaixasRecomendadas } from './FaixaRecomendada';
 
@@ -6,7 +7,7 @@ export const ID_JARDIM_PRINCIPAL = 'jardim-principal';
 
 export class ApelidoInvalido extends Error {
   constructor() {
-    super(`O apelido precisa ter entre 1 e ${LIMITE_DO_APELIDO} caracteres.`);
+    super(TEXTOS.cadastro.apelidoInvalido(LIMITE_DO_APELIDO));
     this.name = 'ApelidoInvalido';
   }
 }

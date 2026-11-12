@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { Vaso } from '../ilustracao/Vaso';
 import { CORES } from '../tema/cores';
 import { ESPACO } from '../tema/medidas';
@@ -41,7 +42,7 @@ export function AmostrasDeCor<T extends string>({ rotulo, formato, opcoes, selec
               key={opcao.id}
               onPress={() => aoEscolher(opcao.id)}
               accessibilityRole="button"
-              accessibilityLabel={`${rotulo}: ${opcao.nome}`}
+              accessibilityLabel={TEXTOS.cadastro.opcao(rotulo, opcao.nome)}
               accessibilityState={{ selected: marcada }}
               hitSlop={4}
               style={[estilos.alvo, marcada && estilos.marcada]}

@@ -39,6 +39,10 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     return this.medir();
   }
 
+  async atualizarLeitura(): Promise<Leitura | null> {
+    return this.medir();
+  }
+
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao {
     this.observadores.add(aoReceber);
     const temporizador = setInterval(() => {

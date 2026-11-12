@@ -94,3 +94,20 @@ test.each([{ id: 'p1' }, 'lixo', null, { id: 'p1', idEspecie: 'tomate', apelido:
     expect(deRegistro(bruto)).toBeNull();
   },
 );
+
+test('registro antigo, só com as faixas do dia, continua com elas e sem as faixas novas', () => {
+  const { luzDiaria: _l, umidadeDoArNoturna: _u, temperaturaNoturna: _t, ...doDia } = FAIXAS_DE_TESTE;
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', faixasRecomendadas: doDia });
+  expect(planta?.faixasRecomendadas).toEqual(doDia);
+});
+
+test('uma faixa nova malformada fica de fora, sem derrubar as outras faixas', () => {
+  const planta = deRegistro({
+    id: 'p1',
+    idEspecie: 'tomate',
+    apelido: 'Tom',
+    faixasRecomendadas: { ...FAIXAS_DE_TESTE, luzDiaria: { minimo: 20, maximo: 10 } },
+  });
+  expect(planta?.faixasRecomendadas).not.toHaveProperty('luzDiaria');
+  expect(planta?.faixasRecomendadas?.temperaturaNoturna).toEqual(FAIXAS_DE_TESTE.temperaturaNoturna);
+});

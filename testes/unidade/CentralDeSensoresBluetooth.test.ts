@@ -18,6 +18,7 @@ class ClienteFalso implements ClienteBle {
       monitorar: () => () => undefined,
       ler: async () => pacote,
       pedirLeitura: async () => undefined,
+      confirmarPacote: async () => undefined,
       aoCair: () => () => undefined,
       desconectar: async () => undefined,
     };

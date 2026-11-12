@@ -38,7 +38,7 @@ describe('no detalhe da planta', () => {
       ),
     ).toBeTruthy();
     expect(
-      screen.getByText('Últimos dados armazenados · leitura desatualizada · sensor sem conexão · aguardando nova leitura'),
+      screen.getByText('Estes são os últimos valores que chegaram. O sensor está sem conexão, então eles podem não ser os de agora.'),
     ).toBeTruthy();
     expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
     fireEvent.press(screen.getByRole('button', { name: 'Registrar rega' }));

@@ -6,6 +6,7 @@ export const CORES = {
   fundoTopo: '#FCF5EA',
   fundoBase: '#F4E6D2',
   luzDaJanela: '#FFE1A0',
+  luzDoSol: '#E2A13B',
 
   texto: '#3D3326',
   textoApoio: '#7A6550',

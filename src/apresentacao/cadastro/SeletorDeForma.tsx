@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { Aparencia, FORMAS, IdForma } from '@/dominio/modelos/Aparencia';
+import { TEXTOS } from '@/textos';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
 import { FORMAS_VISUAIS } from '../ilustracao/paletas';
 import { CORES } from '../tema/cores';
@@ -24,7 +25,7 @@ export function SeletorDeForma({
             key={forma}
             onPress={() => aoEscolher(forma)}
             accessibilityRole="button"
-            accessibilityLabel={`Forma: ${nome}`}
+            accessibilityLabel={TEXTOS.cadastro.forma(nome)}
             accessibilityState={{ selected: selecionada }}
             style={[estilos.cartao, selecionada && estilos.selecionado]}
           >

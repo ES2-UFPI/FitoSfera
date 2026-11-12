@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { TEXTOS } from '@/textos';
 import { CORES } from '../tema/cores';
 import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
 import { FONTES } from '../tema/tipografia';
@@ -8,11 +9,11 @@ export function BotaoFlutuante({ aoTocar }: { aoTocar: () => void }) {
     <Pressable
       onPress={aoTocar}
       accessibilityRole="button"
-      accessibilityLabel="Nova planta"
+      accessibilityLabel={TEXTOS.jardim.novaPlanta}
       style={({ pressed }) => [estilos.botao, pressed && estilos.pressionado]}
     >
       <Text style={estilos.mais}>+</Text>
-      <Text style={estilos.texto}>Nova planta</Text>
+      <Text style={estilos.texto}>{TEXTOS.jardim.novaPlanta}</Text>
     </Pressable>
   );
 }

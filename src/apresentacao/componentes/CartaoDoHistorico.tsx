@@ -2,45 +2,34 @@ import { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { SituacaoDaRega } from '@/dominio/regras/ProximaRega';
+import { TEXTOS } from '@/textos';
+import { formatarData } from '../formatarData';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
 export type EstadoDoHistorico = HistoricoDaPlanta | undefined | 'falhou';
 
-function doisDigitos(valor: number): string {
-  return String(valor).padStart(2, '0');
-}
-
-export function formatarData(instante: Date): string {
-  return `${doisDigitos(instante.getDate())}/${doisDigitos(instante.getMonth() + 1)}/${instante.getFullYear()}`;
-}
-
-export function formatarDataEHora(instante: Date): string {
-  return `${formatarData(instante)} às ${doisDigitos(instante.getHours())}:${doisDigitos(instante.getMinutes())}`;
-}
-
 /** O quando de uma rega, em tempo relativo: "hoje", "ontem" ou "há N dias". */
 export function descreverQuandoRegou(diasAtras: number): string {
-  if (diasAtras === 0) return 'hoje';
-  if (diasAtras === 1) return 'ontem';
-  return `há ${diasAtras} dias`;
+  if (diasAtras === 0) return TEXTOS.historico.hoje;
+  if (diasAtras === 1) return TEXTOS.historico.ontem;
+  return TEXTOS.historico.haDias(diasAtras);
 }
 
 /** Quando a próxima rega vence, em tempo relativo. Undefined quando não há prazo para anunciar. */
 export function descreverProximaRega({ proximaEm, diasAteAProxima }: SituacaoDaRega): string | undefined {
   if (proximaEm === null || diasAteAProxima === null) return undefined;
   if (diasAteAProxima < 0) {
-    const atraso = -diasAteAProxima;
-    return atraso === 1 ? 'atrasada há 1 dia' : `atrasada há ${atraso} dias`;
+    return TEXTOS.historico.atrasada(-diasAteAProxima);
   }
-  if (diasAteAProxima === 0) return 'é hoje';
-  return diasAteAProxima === 1 ? 'é amanhã' : `em ${diasAteAProxima} dias`;
+  if (diasAteAProxima === 0) return TEXTOS.historico.eHoje;
+  return diasAteAProxima === 1 ? TEXTOS.historico.eAmanha : TEXTOS.historico.emDias(diasAteAProxima);
 }
 
 export function descreverTempoNoJardim(dias: number): string {
-  if (dias === 0) return 'chegou hoje';
-  return dias === 1 ? 'há 1 dia no jardim' : `há ${dias} dias no jardim`;
+  if (dias === 0) return TEXTOS.historico.chegouHoje;
+  return TEXTOS.historico.diasNoJardim(dias);
 }
 
 function Linha({ rotulo, valor, detalhe }: { rotulo: string; valor: string; detalhe?: string }) {
@@ -66,29 +55,29 @@ export function CartaoDoHistorico({
   return (
     <View style={estilos.cartao}>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Rega e histórico
+        {TEXTOS.historico.titulo}
       </Text>
       {children}
 
-      {estado === undefined ? <Text style={TEXTO.corpo}>Buscando o histórico da planta…</Text> : null}
+      {estado === undefined ? <Text style={TEXTO.corpo}>{TEXTOS.historico.buscando}</Text> : null}
 
       {estado === 'falhou' ? (
         <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-          Não deu para ler o histórico agora.
+          {TEXTOS.historico.falha}
         </Text>
       ) : null}
 
       {estado !== undefined && estado !== 'falhou' ? (
         <>
           <Linha
-            rotulo="No jardim desde"
-            valor={estado.cadastradaEm ? formatarData(estado.cadastradaEm) : 'data desconhecida'}
+            rotulo={TEXTOS.historico.noJardimDesde}
+            valor={estado.cadastradaEm ? formatarData(estado.cadastradaEm) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.dataDesconhecida}
             detalhe={estado.diasNoJardim !== null ? descreverTempoNoJardim(estado.diasNoJardim) : undefined}
           />
           <Linha
-            rotulo="Última rega"
+            rotulo={TEXTOS.historico.ultimaRega}
             valor={
-              estado.ultimaRega ? formatarDataEHora(estado.ultimaRega.regadaEm) : 'nenhuma rega registrada'
+              estado.ultimaRega ? formatarData(estado.ultimaRega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.nenhumaRega
             }
             detalhe={
               estado.diasDesdeAUltimaRega !== null
@@ -97,21 +86,21 @@ export function CartaoDoHistorico({
             }
           />
           <Linha
-            rotulo="Próxima rega"
+            rotulo={TEXTOS.historico.proximaRega}
             valor={
               estado.proximaRega.proximaEm
-                ? formatarData(estado.proximaRega.proximaEm)
-                : 'sem intervalo conhecido'
+                ? formatarData(estado.proximaRega.proximaEm) ?? TEXTOS.historico.dataDesconhecida
+                : TEXTOS.historico.semPrevisao
             }
             detalhe={descreverProximaRega(estado.proximaRega)}
           />
           {estado.regasRecentes.length > 0 ? (
             <View style={estilos.linha}>
-              <Text style={TEXTO.rotulo}>REGAS RECENTES</Text>
+              <Text style={TEXTO.rotulo}>{TEXTOS.historico.regasRecentes}</Text>
               {estado.regasRecentes.map((rega) => (
                 <View key={rega.id} style={estilos.itemDaLista}>
                   <View style={estilos.marcador} />
-                  <Text style={TEXTO.corpo}>{formatarDataEHora(rega.regadaEm)}</Text>
+                  <Text style={TEXTO.corpo}>{formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}</Text>
                 </View>
               ))}
             </View>

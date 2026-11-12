@@ -8,11 +8,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 75, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 18, "maximo": 28, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 85, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 23, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 60}
+    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 60},
+    "frutifera": true
   },
   {
     "id": "alecrim",
@@ -23,11 +27,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 30, "maximo": 60, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 15, "maximo": 28, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 30, "maximo": 70, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 23, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 5,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": false
   },
   {
     "id": "alface",
@@ -38,11 +46,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 60, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 15, "maximo": 24, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 60, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 19, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 70}
+    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 70},
+    "frutifera": false
   },
   {
     "id": "anturio",
@@ -53,11 +65,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 60, "maximo": 80, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 20, "maximo": 30, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 3000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 3000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 6, "maximo": 10, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz media"},
+      "umidadeDoArNoturna": {"minimo": 60, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "babosa",
@@ -68,11 +84,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 20, "maximo": 50, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 15, "maximo": 32, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 20, "maximo": 60, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 27, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "begonia",
@@ -83,11 +103,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 18, "maximo": 26, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 5000, "maximo": 20000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 5000, "maximo": 20000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 6, "maximo": 10, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz media"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 21, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "boldo",
@@ -98,11 +122,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 40, "maximo": 70, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 18, "maximo": 30, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 15000, "maximo": 60000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 15000, "maximo": 60000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 40, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": false
   },
   {
     "id": "cacto",
@@ -113,11 +141,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 20, "maximo": 50, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 15, "maximo": 35, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 20, "maximo": 60, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 30, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "camomila",
@@ -128,11 +160,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 40, "maximo": 70, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 15, "maximo": 25, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 40, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 20, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "capim-limao",
@@ -143,11 +179,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 20, "maximo": 35, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 30, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 120, "maximo": 150}
+    "cicloAteColheitaEmDias": {"minimo": 120, "maximo": 150},
+    "frutifera": false
   },
   {
     "id": "cebolinha",
@@ -158,11 +198,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 15, "maximo": 25, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 20, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "cenoura",
@@ -173,11 +217,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 16, "maximo": 22, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 20000, "maximo": 60000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 20000, "maximo": 60000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 11, "maximo": 17, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 85, "maximo": 110}
+    "cicloAteColheitaEmDias": {"minimo": 85, "maximo": 110},
+    "frutifera": false
   },
   {
     "id": "coentro",
@@ -188,11 +236,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 18, "maximo": 25, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 20, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 40, "maximo": 60}
+    "cicloAteColheitaEmDias": {"minimo": 40, "maximo": 60},
+    "frutifera": false
   },
   {
     "id": "costela-de-adao",
@@ -203,11 +255,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 75, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 30, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 2000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 2000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 6, "maximo": 10, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz media"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 85, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "couve",
@@ -218,11 +274,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 16, "maximo": 24, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 11, "maximo": 19, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "espada-de-sao-jorge",
@@ -233,11 +293,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 30, "maximo": 60, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 32, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 500, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 500, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 3, "maximo": 6, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz baixa"},
+      "umidadeDoArNoturna": {"minimo": 30, "maximo": 70, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 27, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "geranio",
@@ -248,11 +312,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 40, "maximo": 60, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 15, "maximo": 26, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 40, "maximo": 70, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 21, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "hortela",
@@ -263,11 +331,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 15, "maximo": 25, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 10000, "maximo": 40000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 10000, "maximo": 40000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 20, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "jiboia",
@@ -278,11 +350,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 40, "maximo": 70, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 30, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 1000, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 1000, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 3, "maximo": 6, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz baixa"},
+      "umidadeDoArNoturna": {"minimo": 40, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "lavanda",
@@ -293,11 +369,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 30, "maximo": 55, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 15, "maximo": 28, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 30, "maximo": 65, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 23, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 5,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "limoeiro",
@@ -308,11 +388,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Embrapa Mandioca e Fruticultura, cultivo de citros"},
       "temperatura": {"minimo": 20, "maximo": 30, "fonte": "Embrapa Mandioca e Fruticultura, cultivo de citros"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Mandioca e Fruticultura, cultivo de citros"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Mandioca e Fruticultura, cultivo de citros"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": true
   },
   {
     "id": "manjericao",
@@ -323,11 +407,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 20, "maximo": 30, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "morango",
@@ -338,11 +426,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 60, "maximo": 75, "fonte": "Embrapa Clima Temperado, sistema de produção de morango"},
       "temperatura": {"minimo": 15, "maximo": 25, "fonte": "Embrapa Clima Temperado, sistema de produção de morango"},
-      "luminosidade": {"minimo": 25000, "maximo": 70000, "fonte": "Embrapa Clima Temperado, sistema de produção de morango"}
+      "luminosidade": {"minimo": 25000, "maximo": 70000, "fonte": "Embrapa Clima Temperado, sistema de produção de morango"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 60, "maximo": 85, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 20, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": true
   },
   {
     "id": "oregano",
@@ -353,11 +445,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 30, "maximo": 60, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
       "temperatura": {"minimo": 15, "maximo": 28, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
-      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"}
+      "luminosidade": {"minimo": 20000, "maximo": 70000, "fonte": "Embrapa, cultivo de plantas medicinais e aromáticas"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 30, "maximo": 70, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 23, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 4,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 80, "maximo": 100}
+    "cicloAteColheitaEmDias": {"minimo": 80, "maximo": 100},
+    "frutifera": false
   },
   {
     "id": "orquidea",
@@ -368,11 +464,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 29, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 5000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 5000, "maximo": 15000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 6, "maximo": 10, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz media"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 24, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 7,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "pimenta",
@@ -383,11 +483,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 21, "maximo": 30, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 16, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "pimentao",
@@ -398,11 +502,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 20, "maximo": 30, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "rucula",
@@ -413,11 +521,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 15, "maximo": 24, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 19, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 30, "maximo": 45}
+    "cicloAteColheitaEmDias": {"minimo": 30, "maximo": 45},
+    "frutifera": false
   },
   {
     "id": "salsinha",
@@ -428,11 +540,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 80, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 15, "maximo": 24, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 15000, "maximo": 50000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 90, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 19, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90}
+    "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
+    "frutifera": false
   },
   {
     "id": "samambaia",
@@ -443,11 +559,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 60, "maximo": 90, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 26, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 2000, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 2000, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 3, "maximo": 6, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz baixa"},
+      "umidadeDoArNoturna": {"minimo": 60, "maximo": 95, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 21, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "suculenta",
@@ -458,11 +578,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 20, "maximo": 50, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
       "temperatura": {"minimo": 15, "maximo": 32, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
-      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"}
+      "luminosidade": {"minimo": 20000, "maximo": 80000, "fonte": "Royal Horticultural Society (RHS), guia de cultivo"},
+      "luzDiaria": {"minimo": 12, "maximo": 16, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz alta"},
+      "umidadeDoArNoturna": {"minimo": 20, "maximo": 60, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 10, "maximo": 27, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 10,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   },
   {
     "id": "tomate",
@@ -473,11 +597,15 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 50, "maximo": 70, "fonte": "Embrapa Hortaliças, sistemas de produção"},
       "temperatura": {"minimo": 20, "maximo": 28, "fonte": "Embrapa Hortaliças, sistemas de produção"},
-      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"}
+      "luminosidade": {"minimo": 25000, "maximo": 80000, "fonte": "Embrapa Hortaliças, sistemas de produção"},
+      "luzDiaria": {"minimo": 18, "maximo": 30, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz muito alta"},
+      "umidadeDoArNoturna": {"minimo": 50, "maximo": 80, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 15, "maximo": 23, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120}
+    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
+    "frutifera": true
   },
   {
     "id": "zamioculca",
@@ -488,10 +616,14 @@
     "faixasIdeais": {
       "umidadeDoAr": {"minimo": 30, "maximo": 60, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
       "temperatura": {"minimo": 18, "maximo": 30, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
-      "luminosidade": {"minimo": 500, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"}
+      "luminosidade": {"minimo": 500, "maximo": 10000, "fonte": "University of Florida IFAS Extension, plantas ornamentais de interior"},
+      "luzDiaria": {"minimo": 3, "maximo": 6, "fonte": "Iowa State University Extension, Important Considerations for Providing Supplemental Light to Indoor Plants (tabela DLI Needs of Indoor Plants), luz baixa"},
+      "umidadeDoArNoturna": {"minimo": 30, "maximo": 70, "fonte": "Estimativa: mínimo do dia e máximo 10 pontos acima (até 95%), pela alta natural da umidade relativa à noite"},
+      "temperaturaNoturna": {"minimo": 13, "maximo": 25, "fonte": "Estimativa: faixa do dia 5 °C abaixo, pela regra de noites mais frias das extensões universitárias (Iowa State, Maryland, Illinois)"}
     },
     "intervaloDeRegaEmDias": 14,
     "nivelDeDificuldade": "facil",
-    "cicloAteColheitaEmDias": null
+    "cicloAteColheitaEmDias": null,
+    "frutifera": false
   }
 ]

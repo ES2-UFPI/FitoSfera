@@ -9,12 +9,18 @@ export interface FaixaIdeal extends FaixaRecomendada {
 }
 
 export interface FaixasIdeais {
-  /** Umidade relativa do ar, em %. */
+  /** Umidade relativa do ar durante o dia, em %. */
   readonly umidadeDoAr: FaixaIdeal;
-  /** Temperatura do ar, em °C. */
+  /** Temperatura do ar durante o dia, em °C. */
   readonly temperatura: FaixaIdeal;
-  /** Luminosidade, em lux. */
+  /** Luminosidade num instante, em lux. */
   readonly luminosidade: FaixaIdeal;
+  /** Luz somada ao longo do dia (DLI), em mol/m²/dia. */
+  readonly luzDiaria: FaixaIdeal;
+  /** Umidade relativa do ar durante a noite, em %. */
+  readonly umidadeDoArNoturna: FaixaIdeal;
+  /** Temperatura do ar durante a noite, em °C. */
+  readonly temperaturaNoturna: FaixaIdeal;
 }
 
 /** Dias entre o plantio e a primeira colheita. */
@@ -37,4 +43,9 @@ export interface EspecieVegetal {
   readonly nivelDeDificuldade: NivelDeDificuldade;
   /** null para espécies que não se colhem, como as ornamentais. */
   readonly cicloAteColheitaEmDias: CicloAteColheita | null;
+  /**
+   * Se a espécie dá frutos, como o tomate e o morango. Só as frutíferas registram colheitas e mostram rendimento
+   * (US15). Não é o mesmo que ter ciclo até a colheita: a alface se colhe sem dar fruto.
+   */
+  readonly frutifera: boolean;
 }

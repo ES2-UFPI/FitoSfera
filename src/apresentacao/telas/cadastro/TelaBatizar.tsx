@@ -3,6 +3,7 @@ import { useEffect , useRef , useState  } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_APELIDO } from '@/dominio/modelos/Planta';
+import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
 import { VitrineDaPlanta } from '../../cadastro/VitrineDaPlanta';
 import { BotaoPrincipal } from '../../componentes/BotaoPrincipal';
@@ -73,7 +74,7 @@ export function TelaBatizar() {
         <CabecalhoDoCadastro passoAtual={edicao ? undefined : 3} />
         <ScrollView contentContainerStyle={estilos.conteudo} keyboardShouldPersistTaps="handled">
           <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
-            Como você vai chamar esta planta?
+            {TEXTOS.cadastro.comoVaiChamar}
           </Text>
           <VitrineDaPlanta aparencia={aparencia} etiqueta={apelido.trim() || nomeDaEspecie} />
 
@@ -82,7 +83,7 @@ export function TelaBatizar() {
               value={apelido}
               onChangeText={definirApelido}
               editable={!emAndamento}
-              accessibilityLabel="Apelido da planta"
+              accessibilityLabel={TEXTOS.cadastro.apelidoDaPlanta}
               placeholder={nomeDaEspecie}
               placeholderTextColor={CORES.abaInativa}
               autoCapitalize="sentences"
@@ -100,7 +101,7 @@ export function TelaBatizar() {
         </ScrollView>
         <View style={[estilos.rodape, { paddingBottom: margens.bottom + ESPACO.grande }]}>
           <BotaoPrincipal
-            titulo={edicao ? 'Salvar alterações' : 'Colocar na estante'}
+            titulo={edicao ? TEXTOS.cadastro.salvarAlteracoes : TEXTOS.cadastro.colocarNaEstante}
             largo
             desabilitado={!valido || emAndamento}
             aoTocar={() => void colocarNaEstante()}
@@ -115,18 +116,18 @@ function MensagemDoCampo({ estado }: { estado: EstadodoCadastro }) {
   if(estado.tipo === 'sucesso'){
     return (
       <Text style={[estilos.textoDeAjuda, estilos.confirmacao]} accessibilityLiveRegion='polite'>
-        {estado.apelidoSalvo} entrou para a estante!
+        {TEXTOS.cadastro.entrouNaEstante(estado.apelidoSalvo)}
       </Text>
     );
   }
   if(estado.tipo === 'erro'){
     return (
       <Text style={[estilos.textoDeAjuda, estilos.erro]} accessibilityRole='alert'>
-        Ocorreu um erro ao salvar. Tente novamente.
+        {TEXTOS.cadastro.falhaAoSalvar}
       </Text>
     )
   }
-  return <Text style = {estilos.textoDeAjuda}>Esse nome aparece na etiqueta da estante</Text>
+  return <Text style = {estilos.textoDeAjuda}>{TEXTOS.cadastro.ajudaDoApelido}</Text>
 }
 
 const estilos = StyleSheet.create({

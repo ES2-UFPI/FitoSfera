@@ -7,6 +7,7 @@ import {
   JanelaDeLembretes,
 } from '@/dominio/modelos/JanelaDeLembretes';
 import { deslocarHorario } from '@/dominio/regras/HorarioDoLembrete';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -21,7 +22,7 @@ export const PASSO_EM_MINUTOS = 30;
 
 type Limite = 'inicio' | 'fim';
 
-const ROTULOS: Record<Limite, string> = { inicio: 'Começa às', fim: 'Vai até' };
+const ROTULOS: Record<Limite, string> = { inicio: TEXTOS.lembretes.comeca, fim: TEXTOS.lembretes.vaiAte };
 
 /**
  * A janela de horários em que o app pode avisar (#54). Cada ajuste é gravado na hora: quem sai da tela pelo
@@ -77,22 +78,21 @@ export function TelaHorarioDosLembretes() {
         scrollIndicatorInsets={{ bottom: margens.bottom }}
       >
         <Text style={TEXTO.titulo} accessibilityRole="header">
-          Horário dos lembretes
+          {TEXTOS.lembretes.tituloDaTela}
         </Text>
         <Text style={TEXTO.corpo}>
-          Escolha a faixa de horas em que o app pode avisar. Um desvio detectado fora dela espera a próxima
-          abertura da janela, em vez de chegar de madrugada.
+          {TEXTOS.lembretes.explicacao}
         </Text>
 
         {janela === null ? (
           <Text style={TEXTO.corpo} accessibilityLiveRegion="polite">
-            Lendo o horário salvo…
+            {TEXTOS.lembretes.lendo}
           </Text>
         ) : (
           <>
             {falhaAoLer ? (
               <Text style={estilos.alerta} accessibilityRole="alert">
-                Não deu para ler o horário salvo. A tela está mostrando o padrão.
+                {TEXTOS.lembretes.falhaAoLer}
               </Text>
             ) : null}
 
@@ -112,13 +112,13 @@ export function TelaHorarioDosLembretes() {
 
             {falhaAoGravar ? (
               <Text style={estilos.alerta} accessibilityRole="alert">
-                Não deu para guardar o horário no aparelho. Tente ajustar de novo.
+                {TEXTOS.lembretes.falhaAoGuardar}
               </Text>
             ) : null}
 
             {janelasIguais(janela, JANELA_PADRAO) ? null : (
               <BotaoPrincipal
-                titulo="Voltar ao horário padrão"
+                titulo={TEXTOS.lembretes.voltarAoPadrao}
                 variante="secundaria"
                 largo
                 aoTocar={() => trocar(JANELA_PADRAO)}
@@ -140,7 +140,7 @@ function LinhaDoLimite({
   horario: HorarioDoDia;
   aoDeslocar(minutos: number): void;
 }) {
-  const nome = limite === 'inicio' ? 'início' : 'fim';
+  const nome = limite === 'inicio' ? TEXTOS.lembretes.inicio : TEXTOS.lembretes.fim;
   return (
     <View style={estilos.linha}>
       <View style={estilos.textosDaLinha}>
@@ -150,8 +150,8 @@ function LinhaDoLimite({
         </Text>
       </View>
       <View style={estilos.passos}>
-        <BotaoDePasso rotulo={`Adiantar o ${nome}`} sinal="−" aoTocar={() => aoDeslocar(-PASSO_EM_MINUTOS)} />
-        <BotaoDePasso rotulo={`Atrasar o ${nome}`} sinal="+" aoTocar={() => aoDeslocar(PASSO_EM_MINUTOS)} />
+        <BotaoDePasso rotulo={TEXTOS.lembretes.adiantar(nome)} sinal="−" aoTocar={() => aoDeslocar(-PASSO_EM_MINUTOS)} />
+        <BotaoDePasso rotulo={TEXTOS.lembretes.atrasar(nome)} sinal="+" aoTocar={() => aoDeslocar(PASSO_EM_MINUTOS)} />
       </View>
     </View>
   );
@@ -170,7 +170,7 @@ function BotaoDePasso({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={rotulo}
-      accessibilityHint={`Muda de ${PASSO_EM_MINUTOS} em ${PASSO_EM_MINUTOS} minutos`}
+      accessibilityHint={TEXTOS.lembretes.passo(PASSO_EM_MINUTOS)}
       onPress={aoTocar}
       style={({ pressed }) => [estilos.passo, pressed && estilos.pressionado]}
     >
