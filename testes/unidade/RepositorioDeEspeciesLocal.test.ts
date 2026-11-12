@@ -49,3 +49,15 @@ test('obterPorId acha a espécie e devolve null para id inexistente', async () =
   expect((await repo.obterPorId('jiboia'))?.nomeComum).toBe('Jiboia');
   expect(await repo.obterPorId('nao-existe')).toBeNull();
 });
+
+test('o catálogo embutido fornece a média e os estágios da frutífera, sem exigir dados de quem não dá frutos', async () => {
+  const catalogo = new RepositorioDeEspeciesLocal();
+  expect(await catalogo.obterPorId('tomate')).toEqual(expect.objectContaining({
+    frutifera: true,
+    tempoMedioAteColheitaEmDias: 75,
+    estagiosDeDesenvolvimento: expect.arrayContaining([{ nome: 'frutificação', duracaoEmDias: 42 }]),
+  }));
+  const alface = await catalogo.obterPorId('alface');
+  expect(alface?.frutifera).toBe(false);
+  expect(alface?.tempoMedioAteColheitaEmDias).toBeUndefined();
+});

@@ -15,8 +15,15 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 45, "maximo": 60},
-    "frutifera": true
+    "cicloAteColheitaEmDias": {"minimo": 40, "maximo": 50},
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 45,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 7},
+      {"nome": "crescimento", "duracaoEmDias": 20},
+      {"nome": "floração", "duracaoEmDias": 8},
+      {"nome": "frutificação", "duracaoEmDias": 10}
+    ]
   },
   {
     "id": "alecrim",
@@ -395,8 +402,15 @@
     },
     "intervaloDeRegaEmDias": 3,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": null,
-    "frutifera": true
+    "cicloAteColheitaEmDias": {"minimo": 545, "maximo": 1365},
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 955,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 30},
+      {"nome": "crescimento", "duracaoEmDias": 670},
+      {"nome": "floração", "duracaoEmDias": 30},
+      {"nome": "frutificação", "duracaoEmDias": 225}
+    ]
   },
   {
     "id": "manjericao",
@@ -434,7 +448,14 @@
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
     "cicloAteColheitaEmDias": {"minimo": 60, "maximo": 90},
-    "frutifera": true
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 60,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 7},
+      {"nome": "crescimento", "duracaoEmDias": 15},
+      {"nome": "floração", "duracaoEmDias": 8},
+      {"nome": "frutificação", "duracaoEmDias": 30}
+    ]
   },
   {
     "id": "oregano",
@@ -490,8 +511,15 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "medio",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
-    "frutifera": true
+    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 140},
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 140,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 7},
+      {"nome": "crescimento", "duracaoEmDias": 80},
+      {"nome": "floração", "duracaoEmDias": 8},
+      {"nome": "frutificação", "duracaoEmDias": 45}
+    ]
   },
   {
     "id": "pimentao",
@@ -509,8 +537,15 @@
     },
     "intervaloDeRegaEmDias": 2,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 100, "maximo": 120},
-    "frutifera": true
+    "cicloAteColheitaEmDias": {"minimo": 70, "maximo": 85},
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 80,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 7},
+      {"nome": "crescimento", "duracaoEmDias": 35},
+      {"nome": "floração", "duracaoEmDias": 8},
+      {"nome": "frutificação", "duracaoEmDias": 30}
+    ]
   },
   {
     "id": "rucula",
@@ -604,8 +639,15 @@
     },
     "intervaloDeRegaEmDias": 1,
     "nivelDeDificuldade": "dificil",
-    "cicloAteColheitaEmDias": {"minimo": 90, "maximo": 120},
-    "frutifera": true
+    "cicloAteColheitaEmDias": {"minimo": 65, "maximo": 90},
+    "frutifera": true,
+    "tempoMedioAteColheitaEmDias": 75,
+    "estagiosDeDesenvolvimento": [
+      {"nome": "muda", "duracaoEmDias": 7},
+      {"nome": "crescimento", "duracaoEmDias": 20},
+      {"nome": "floração", "duracaoEmDias": 6},
+      {"nome": "frutificação", "duracaoEmDias": 42}
+    ]
   },
   {
     "id": "zamioculca",

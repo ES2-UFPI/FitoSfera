@@ -23,10 +23,15 @@ export interface FaixasIdeais {
   readonly temperaturaNoturna: FaixaIdeal;
 }
 
-/** Dias entre o plantio e a primeira colheita. */
+/** Para frutíferas, dias entre o plantio da muda e a primeira colheita. */
 export interface CicloAteColheita {
   readonly minimo: number;
   readonly maximo: number;
+}
+
+export interface EstagioDeDesenvolvimento {
+  readonly nome: string;
+  readonly duracaoEmDias: number;
 }
 
 /** Uma espécie do catálogo, com o que a busca, o painel e os lembretes precisam. */
@@ -48,4 +53,8 @@ export interface EspecieVegetal {
    * (US15). Não é o mesmo que ter ciclo até a colheita: a alface se colhe sem dar fruto.
    */
   readonly frutifera: boolean;
+  /** Dias desde o plantio da muda até a primeira colheita; ausente nas não frutíferas. */
+  readonly tempoMedioAteColheitaEmDias?: number;
+  /** shortcut: durações dos estágios são estimativas, recalibrar com dados por cultivar. */
+  readonly estagiosDeDesenvolvimento?: readonly EstagioDeDesenvolvimento[];
 }

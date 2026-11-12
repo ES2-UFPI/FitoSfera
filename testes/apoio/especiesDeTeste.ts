@@ -39,7 +39,17 @@ export function especieDeTeste(
 export const ESPECIES_DE_TESTE: readonly EspecieVegetal[] = [
   especieDeTeste(
     { id: 'tomate', nomeComum: 'Tomate', nomeCientifico: 'Solanum lycopersicum', nomesAlternativos: ['Tomateiro'] },
-    { frutifera: true },
+    {
+      frutifera: true,
+      cicloAteColheitaEmDias: { minimo: 65, maximo: 90 },
+      tempoMedioAteColheitaEmDias: 75,
+      estagiosDeDesenvolvimento: [
+        { nome: 'muda', duracaoEmDias: 7 },
+        { nome: 'crescimento', duracaoEmDias: 20 },
+        { nome: 'floração', duracaoEmDias: 6 },
+        { nome: 'frutificação', duracaoEmDias: 42 },
+      ],
+    },
   ),
   especieDeTeste({ id: 'jiboia', nomeComum: 'Jiboia', nomeCientifico: 'Epipremnum aureum', nomesAlternativos: ['Pothos'] }),
   especieDeTeste({
