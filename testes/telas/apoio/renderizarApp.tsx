@@ -29,6 +29,7 @@ import RotaEditarAparencia from '../../../app/editar/[id]/index';
 import RotaHistorico from '../../../app/historico/[id]';
 import RotaLembretes from '../../../app/lembretes';
 import RotaPlanta from '../../../app/planta/[id]';
+import RotaRendimento from '../../../app/rendimento';
 import RotaSensor from '../../../app/sensor';
 import {
   criarContainerDeTeste,
@@ -135,6 +136,7 @@ export function renderizarApp(
       'planta/[id]': RotaPlanta,
       'historico/[id]': RotaHistorico,
       sensor: RotaSensor,
+      rendimento: RotaRendimento,
       lembretes: RotaLembretes,
       'editar/[id]/_layout': LayoutDaEdicao,
       'editar/[id]/index': RotaEditarAparencia,

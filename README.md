@@ -65,9 +65,10 @@ app/
 │   ├── ajustes             Ajustes: lembretes, sensor pareado e sensor simulado
 │   └── ambiente            escondida da barra enquanto for só "Em breve"
 ├── cadastro/               modal: buscar espécie → aparência → apelido
-├── planta/[id]             detalhe: condições, rega, histórico, editar e excluir
+├── planta/[id]             detalhe: condições, rega, histórico, colheita, editar e excluir
 ├── historico/[id]          todas as regas da planta
 ├── editar/[id]/            modal: aparência → apelido, reaproveitando o cadastro
+├── rendimento              comparar o rendimento das plantas frutíferas do jardim
 ├── sensor                  pareamento do sensor BLE
 └── lembretes               horário dos lembretes
 ```
@@ -79,10 +80,12 @@ app/
 | Ver o detalhe da planta | tocar no vaso | 1 |
 | Registrar rega | vaso → **Registrar rega** | 2 |
 | Ver todas as regas | vaso → **Ver todas as regas** | 2 |
+| Registrar colheita (planta frutífera) | vaso → formulário de colheita → **Registrar colheita** | 2 + preencher |
+| Comparar rendimento (planta frutífera) | vaso → **Comparar com outras plantas** | 2 |
 | Editar a planta | vaso → **Editar** → passos da edição | 2 |
 | Excluir a planta | vaso → **Excluir** → confirmar | 2 + confirmação |
 | Trocar de jardim | cartão do jardim → escolher o jardim | 2 |
-| Associar ou parear sensor | cartão do sensor → **Associar …** ou **Parear novo sensor** | 2 |
+| Usar ou parear sensor | cartão do sensor → **Usar …** ou **Parear novo sensor** | 2 |
 | Horário dos lembretes | aba **Ajustes** → **Mudar o horário dos lembretes** | 2 |
 
 Tocar numa notificação de desvio abre direto o detalhe da planta citada. Os caminhos da tabela são verificados em

@@ -3,6 +3,7 @@ import {
   calcularRendimento,
   calcularRendimentoPorUnidade,
   PeriodoDeRendimento,
+  periodoDosUltimosDias,
 } from '@/dominio/regras/RendimentoDaColheita';
 
 let sequencia = 0;
@@ -154,5 +155,21 @@ describe('calcularRendimentoPorUnidade', () => {
       unidades: { unidade: 'unidades', quantidadeTotal: 17, numeroDeColheitas: 2 },
       gramas: { unidade: 'gramas', quantidadeTotal: 0, numeroDeColheitas: 0 },
     });
+  });
+});
+
+describe('periodoDosUltimosDias', () => {
+  const agora = new Date(2026, 10, 12, 15, 30);
+
+  test('os últimos 7 dias começam à meia-noite de seis dias atrás e vão até agora', () => {
+    expect(periodoDosUltimosDias(agora, 7)).toEqual({ inicio: new Date(2026, 10, 6), fim: agora });
+  });
+
+  test('o último dia é o de hoje, desde a meia-noite', () => {
+    expect(periodoDosUltimosDias(agora, 1)).toEqual({ inicio: new Date(2026, 10, 12), fim: agora });
+  });
+
+  test('atravessa a virada do mês', () => {
+    expect(periodoDosUltimosDias(new Date(2026, 11, 3, 9, 0), 7).inicio).toEqual(new Date(2026, 10, 27));
   });
 });

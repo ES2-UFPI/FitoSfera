@@ -54,3 +54,12 @@ export function calcularRendimentoPorUnidade(
     UNIDADES_DE_COLHEITA.map((unidade) => [unidade, calcularRendimento(registros, periodo, unidade)]),
   ) as Record<UnidadeDeColheita, Rendimento>;
 }
+
+/**
+ * Os últimos `dias` do calendário até agora: hoje e os `dias - 1` anteriores, desde a meia-noite. Assim "últimos 7
+ * dias" de uma quinta à tarde começa na sexta anterior à meia-noite, e a colheita de hoje de manhã conta.
+ */
+export function periodoDosUltimosDias(agora: Date, dias: number): PeriodoDeRendimento {
+  const inicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - (Math.max(1, dias) - 1));
+  return { inicio, fim: agora };
+}
