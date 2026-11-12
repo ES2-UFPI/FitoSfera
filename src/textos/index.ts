@@ -170,6 +170,7 @@ export const TEXTOS = {
 
   detalhe: {
     status: (falado: string) => `Status: ${falado}.`,
+    cuidadosDaEspecie: 'Cuidados desta espécie',
     registrarRega: 'Registrar rega',
     registrandoRega: 'Registrando rega…',
     regaRegistrada: '✓ Rega registrada agora.',

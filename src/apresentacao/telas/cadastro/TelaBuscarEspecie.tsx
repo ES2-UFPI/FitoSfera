@@ -6,6 +6,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
+import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../componentes/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
@@ -84,32 +85,56 @@ export function TelaBuscarEspecie() {
             <Text style={[TEXTO.corpo, estilos.semResultado]}>{TEXTOS.cadastro.plantaForaDoCatalogo}</Text>
           ) : null
         }
-        renderItem={({ item }) => (
-          <Pressable
-            testID="resultado-especie"
-            onPress={() => escolher(item)}
-            accessibilityRole="button"
-            accessibilityLabel={item.nomeComum}
-            style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
-          >
-            <View style={estilos.nomes}>
-              <Text testID="nome-comum" style={estilos.nomeComum}>
-                {item.nomeComum}
-              </Text>
-              <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
-            </View>
-            <Svg width={14} height={14} viewBox="0 0 14 14">
-              <Path
-                d="M5 2 L10 7 L5 12"
-                stroke={CORES.rotulo}
-                strokeWidth={2}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const dificuldade = APRESENTACAO_DA_DIFICULDADE[item.nivelDeDificuldade];
+          // Ficha de manejo ainda não pesquisada, então a observação cita só o que o catálogo mede: rega e luz.
+          const observacao = observacaoDaDificuldade(item.nivelDeDificuldade, { ...item, exigencias: null });
+          // "Nome. Estado.", como a etiqueta da estante: o nível é informação, não enfeite, e precisa ser falado.
+          const falado = observacao?.falado ?? `${dificuldade.falado}.`;
+          return (
+            <Pressable
+              testID="resultado-especie"
+              onPress={() => escolher(item)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.nomeComum}. ${falado}`}
+              style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
+            >
+              <View style={estilos.nomes}>
+                <View style={estilos.linhaDoNome}>
+                  <Text testID="nome-comum" style={estilos.nomeComum}>
+                    {item.nomeComum}
+                  </Text>
+                  <Text testID="selo-dificuldade" style={[estilos.selo, { color: dificuldade.cor }]}>
+                    {dificuldade.curto}
+                  </Text>
+                </View>
+                <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
+                {observacao !== null && (
+                  <View testID="observacao-dificuldade" style={estilos.motivos}>
+                    {observacao.itens.map((motivo) => (
+                      <View key={motivo} style={estilos.motivo}>
+                        <Text style={estilos.marcador}>•</Text>
+                        <Text testID="motivo-da-dificuldade" style={estilos.textoDoMotivo}>
+                          {motivo}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+              <Svg width={14} height={14} viewBox="0 0 14 14">
+                <Path
+                  d="M5 2 L10 7 L5 12"
+                  stroke={CORES.rotulo}
+                  strokeWidth={2}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </Pressable>
+          );
+        }}
       />
     </FundoAconchegante>
   );
@@ -133,10 +158,18 @@ const estilos = StyleSheet.create({
   entrada: { flex: 1, fontFamily: FONTES.texto, fontSize: 15, color: CORES.texto, paddingVertical: ESPACO.medio },
   lista: { paddingHorizontal: ESPACO.amplo, paddingTop: ESPACO.medio },
   divisoria: { height: 1, backgroundColor: CORES.bordaSuave },
-  resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.pequeno },
+  resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.medio },
   pressionado: { opacity: 0.6 },
   nomes: { flex: 1, gap: 1 },
-  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto },
+  linhaDoNome: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto, flexShrink: 1 },
+  /** Selo do nível ao lado do nome: maiúsculas pequenas, na cor do nível. */
+  selo: { fontFamily: FONTES.forte, fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase' },
+  motivos: { marginTop: ESPACO.minimo },
+  motivo: { flexDirection: 'row', gap: ESPACO.minimo + 2 },
+  marcador: { fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
+  /** O `flex: 1` deixa a linha que quebra alinhada com o texto, e não embaixo do marcador. */
+  textoDoMotivo: { flex: 1, fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
   nomeCientifico: { fontFamily: FONTES.italico, fontSize: 12.5, color: CORES.textoApoio },
   semResultado: { textAlign: 'center', marginTop: ESPACO.folgado },
 });

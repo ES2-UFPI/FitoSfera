@@ -3,7 +3,7 @@ import { renderizarApp } from './apoio/renderizarApp';
 
 async function irAtePasso3(opcoes: { falhaAoCadastrar?: boolean } = {}) {
   const resultado = renderizarApp({ ...opcoes, url: '/cadastro' });
-  fireEvent.press(await screen.findByRole('button', { name: 'Tomate' }));
+  fireEvent.press(await screen.findByRole('button', { name: /^Tomate\./ }));
   await screen.findByText('Como vai ser a sua planta?');
   fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
   await screen.findByText('Como você vai chamar esta planta?');

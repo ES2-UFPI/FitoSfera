@@ -99,3 +99,55 @@ como "sem dados".
 As faixas da primeira versão são valores de referência para cultivo doméstico, compilados a partir das fontes
 citadas em cada faixa. Ao revisar uma espécie, confira o valor na fonte e, se ele mudar, atualize também a
 `fonte` com a publicação exata.
+
+## Fichas de manejo
+
+O arquivo [`exigencias-de-manejo.json`](exigencias-de-manejo.json) guarda, por id de espécie, os três fatos de
+manejo que o [`ClassificadorDeDificuldade`](../../dominio/regras/ClassificadorDeDificuldade.ts) soma à rega e à
+`luzDiaria` para decidir o nível de dificuldade (US12). A luz entra pelas categorias da tabela acima: "luz
+muito alta" vale 2 pontos, "luz alta" vale 1 e sombra não pesa, porque pouca luz é o que uma casa dá de graça. Ele é separado do catálogo porque nem toda espécie tem ficha
+pesquisada, e porque o nível passa a ser **calculado**: o campo `nivelDeDificuldade` do catálogo continua sendo
+o valor curado, usado como gabarito da calibração, não como resposta.
+
+```json
+{
+  "tomate": {
+    "exigeControleDePraga": { "presente": true, "fonte": "Embrapa Hortaliças, sistemas de produção" },
+    "morreComEncharcamento": { "presente": false, "fonte": "Embrapa Hortaliças, sistemas de produção" },
+    "exigeManejoEstrutural": { "presente": true, "fonte": "Embrapa Hortaliças, sistemas de produção" }
+  }
+}
+```
+
+| Campo | Regra |
+| --- | --- |
+| chave do bloco | Um `id` que exista em `catalogo-plantas.json`. Espécie ainda não pesquisada simplesmente não aparece no arquivo. |
+| `<fato>.presente` | `true` ou `false`, pelo protocolo abaixo. Não existe "revisar" nem valor em branco: ficha entra completa ou não entra. |
+| `<fato>.fonte` | A publicação consultada, no mesmo rigor que o catálogo exige das faixas ideais. |
+
+### Protocolo de resposta
+
+O critério vale igual para todas as espécies, e a pergunta é sempre o que a ficha de cultivo **diz**, não o que
+a gente acha da planta:
+
+| Fato | Responda `true` quando | Responda `false` quando |
+| --- | --- | --- |
+| `exigeControleDePraga` | A fonte descreve praga ou doença recorrente com verbo de ação obrigatória: controlar, tratar, aplicar. | A fonte usa verbo de vigilância (monitorar, observar, fique atento) ou condicional (pode ocorrer). |
+| `morreComEncharcamento` | A fonte menciona podridão de raiz, apodrecimento ou morte e declínio por excesso de água. | A fonte só pede solo bem drenado — isso quase toda ficha pede, e sozinho não basta. |
+| `exigeManejoEstrutural` | Poda, desbrota, tutoramento ou amarração são necessários para a planta produzir ou não se quebrar. | A fonte apresenta a poda como escolha de forma, aparência ou momento de colheita. |
+
+Ficha pela metade é pior que ficha nenhuma: um fato em branco contaria como "não" e baixaria a dificuldade sem
+ninguém ter lido a fonte. Por isso a validação exige os três fatos com fonte, e espécie sem ficha fica de fora
+do arquivo — `idsSemFichaDeManejo` lista essas pendências.
+
+### Como acrescentar uma ficha
+
+1. Abra a fonte citada nas faixas daquela espécie, ou outra publicação de mesmo nível (Embrapa, extensões
+   universitárias, sociedades de horticultura).
+2. Responda os três fatos pelo protocolo acima e escreva a publicação em cada `fonte`.
+3. Rode a validação, a mesma que o CI roda:
+
+   ```bash
+   npm run validar-catalogo
+   ```
+

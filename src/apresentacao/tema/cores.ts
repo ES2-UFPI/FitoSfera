@@ -39,5 +39,16 @@ export const CORES = {
   statusOk: '#4D7A43',
   statusAtencao: '#B45309',
   statusSemDados: '#8A7A68',
+
+  /**
+   * Fundos suaves para um cartão inteiro dizer em que nível a coisa está, sem depender só do texto. Sobre
+   * qualquer um deles o corpo precisa usar `texto`, e não `textoApoio`: em 14 px o apoio fica abaixo dos
+   * 4,5:1 de contraste nos dois tons quentes.
+   */
+  fundoTranquilo: '#E3EDDC',
+  bordaTranquila: '#BCD2AE',
   fundoAtencao: '#FFD9AE',
+  bordaDeAtencao: '#E8A765',
+  fundoAlerta: '#F7E0D8',
+  bordaDeAlerta: '#DFAE9D',
 } as const;
