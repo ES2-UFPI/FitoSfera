@@ -215,6 +215,35 @@ export const TEXTOS = {
     falhaAoGravar: 'Não deu para registrar a colheita. Tente novamente.',
   },
 
+  rendimento: {
+    compararComOutras: 'Comparar com outras plantas',
+    titulo: 'Comparar rendimento',
+    explicacao: 'Veja quais plantas produziram mais no mesmo período. Escolha pelo menos duas.',
+    rotuloDoPeriodo: 'PERÍODO',
+    periodos: {
+      7: 'Últimos 7 dias',
+      30: 'Últimos 30 dias',
+      90: 'Últimos 3 meses',
+      365: 'Último ano',
+    },
+    rotuloDaMedida: 'COMO FOI MEDIDO',
+    contados: 'Frutos contados',
+    pesados: 'Pesados em gramas',
+    rotuloDasPlantas: 'PLANTAS',
+    marcaDeEscolhida: '✓',
+    plantaEscolhida: (apelido: string, especie: string) => `${apelido}, ${especie}`,
+    escolhaMaisUma: 'Escolha mais uma planta para comparar.',
+    poucasFrutiferas:
+      'Para comparar, você precisa de pelo menos duas plantas que dão frutos neste jardim. Cadastre outra e volte aqui.',
+    calculando: 'Calculando o rendimento…',
+    falha: 'Não deu para calcular o rendimento agora. Tente de novo.',
+    rotuloDoResultado: 'DO MAIOR PARA O MENOR',
+    posicao: (posicao: number) => `${posicao}º`,
+    colheitas: (quantidade: number) => (quantidade === 0 ? 'nenhuma colheita no período' : `em ${plural(quantidade, 'colheita', 'colheitas')}`),
+    linhaDoResultado: (posicao: number, apelido: string, total: string, colheitas: string) =>
+      `${posicao}º lugar: ${apelido}, ${total}, ${colheitas}.`,
+  },
+
   condicoes: {
     titulo: 'Condições agora',
     seloDeExemplo: 'VALORES DE EXEMPLO',

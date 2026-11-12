@@ -66,6 +66,7 @@ function Navegacao() {
         <Stack.Screen name="historico/[id]" />
         <Stack.Screen name="editar/[id]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="sensor" />
+        <Stack.Screen name="rendimento" />
         <Stack.Screen name="lembretes" />
       </Stack>
       <CamadaDaAbertura jardimCarregado={plantas !== null} />

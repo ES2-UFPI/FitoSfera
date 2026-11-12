@@ -104,6 +104,14 @@ test('parear um sensor: 2 toques', async () => {
   expect(toques()).toBeLessThanOrEqual(LIMITE_DE_TOQUES);
 });
 
+test('comparar o rendimento de uma planta frutífera: 2 toques', async () => {
+  const { tocar, toques } = abrirAppNoJardim();
+  await tocar(vaso());
+  await tocar(botao('Comparar com outras plantas'));
+  await waitFor(() => expect(screen).toHavePathname('/rendimento'));
+  expect(toques()).toBeLessThanOrEqual(LIMITE_DE_TOQUES);
+});
+
 test('horário dos lembretes: 2 toques, pela aba Ajustes', async () => {
   const { tocar, toques } = abrirAppNoJardim();
   await vaso();

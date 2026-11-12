@@ -39,6 +39,7 @@ test('o leitor de tela percorre planta, condições, luz de hoje, rega e histór
     'Registrar rega',
     'Ver todas as regas',
     'Registrar colheita',
+    'Comparar com outras plantas',
     'Editar',
     'Excluir',
   ]);

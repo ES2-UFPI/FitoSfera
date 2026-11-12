@@ -340,7 +340,19 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               </Text>
             ) : null}
           </CartaoDoHistorico>
-          {item.especie?.frutifera ? <FormularioDeColheita idPlanta={item.planta.id} /> : null}
+          {item.especie?.frutifera ? (
+            <>
+              <FormularioDeColheita idPlanta={item.planta.id} />
+              <View style={estilos.atalhoDoRendimento}>
+                <BotaoPrincipal
+                  titulo={TEXTOS.rendimento.compararComOutras}
+                  variante="secundaria"
+                  aoTocar={() => navegador.push({ pathname: '/rendimento', params: { planta: item.planta.id } })}
+                  largo
+                />
+              </View>
+            </>
+          ) : null}
           <View style={estilos.acoes}>
             <View style={estilos.acao}>
               <BotaoPrincipal
@@ -397,6 +409,7 @@ const estilos = StyleSheet.create({
   pontoDoStatus: { width: 8, height: 8, borderRadius: RAIO.pilula },
   textoDoStatus: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.textoDoPapel },
   acoes: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
+  atalhoDoRendimento: { alignSelf: 'stretch', maxWidth: 520, width: '100%' },
   acao: { flexGrow: 1, flexBasis: 140 },
   confirmacao: { color: CORES.texto, textAlign: 'center' },
   erro: { color: CORES.erro, textAlign: 'center' },
