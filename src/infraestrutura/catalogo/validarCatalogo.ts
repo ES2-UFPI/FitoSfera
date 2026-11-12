@@ -57,6 +57,8 @@ export function validarCatalogo(dados: unknown): string[] {
       erro(`nivelDeDificuldade precisa ser um de: ${NIVEIS_DE_DIFICULDADE.join(', ')}`);
     validarCiclo(especie.cicloAteColheitaEmDias, erro);
     if (typeof especie.frutifera !== 'boolean') erro('frutifera precisa ser true ou false');
+    if (especie.frutifera === true || especie.tempoMedioAteColheitaEmDias !== undefined || especie.estagiosDeDesenvolvimento !== undefined)
+      validarDesenvolvimento(especie, erro);
   });
 
   return erros;
@@ -79,6 +81,25 @@ function validarCiclo(ciclo: unknown, erro: (mensagem: string) => void) {
   if (!ehRegistro(ciclo) || !ehInteiroPositivo(ciclo.minimo) || !ehInteiroPositivo(ciclo.maximo))
     return erro('cicloAteColheitaEmDias precisa ser null ou ter minimo e maximo inteiros positivos');
   if (ciclo.minimo > ciclo.maximo) erro('cicloAteColheitaEmDias tem minimo maior que o maximo');
+}
+
+function validarDesenvolvimento(especie: Registro, erro: (mensagem: string) => void) {
+  const media = especie.tempoMedioAteColheitaEmDias;
+  if (!ehInteiroPositivo(media)) erro('tempoMedioAteColheitaEmDias precisa ser um inteiro positivo');
+  const estagios = especie.estagiosDeDesenvolvimento;
+  if (!Array.isArray(estagios) || estagios.length === 0)
+    return erro('estagiosDeDesenvolvimento precisa ser uma lista não vazia');
+
+  let total = 0;
+  let validos = true;
+  estagios.forEach((estagio, indice) => {
+    if (!ehRegistro(estagio) || !ehTextoPreenchido(estagio.nome) || !ehInteiroPositivo(estagio.duracaoEmDias)) {
+      erro(`estagiosDeDesenvolvimento[${indice}] precisa de nome e duracaoEmDias inteiro positivo`);
+      validos = false;
+    } else total += estagio.duracaoEmDias;
+  });
+  if (validos && ehInteiroPositivo(media) && total !== media)
+    erro('a soma dos estágios precisa ser igual ao tempoMedioAteColheitaEmDias');
 }
 
 function rotulo(especie: unknown, posicao: number): string {

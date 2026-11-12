@@ -41,10 +41,29 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
 | `faixasIdeais.*.fonte` | sim | De onde veio a faixa (instituição e publicação). |
 | `intervaloDeRegaEmDias` | sim | Inteiro positivo: de quantos em quantos dias regar em condições normais. |
 | `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. |
-| `cicloAteColheitaEmDias` | sim | Dias do plantio à primeira colheita (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. |
+| `cicloAteColheitaEmDias` | sim | Dias do plantio da muda à primeira colheita das frutíferas (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. Os ciclos das demais espécies ainda são os valores anteriores do catálogo. |
 | `frutifera` | sim | `true` para espécies que dão frutos (tomate, morango, pimenta…). Só elas registram colheitas e mostram rendimento (US15). Ter ciclo até a colheita não basta: a alface se colhe e não é frutífera. |
+| `tempoMedioAteColheitaEmDias` | nas frutíferas | Inteiro positivo: estimativa desde o plantio da muda até a primeira colheita. |
+| `estagiosDeDesenvolvimento` | nas frutíferas | Lista ordenada de `{ "nome": "muda", "duracaoEmDias": 7 }`, com nomes preenchidos e dias inteiros positivos. A soma das durações deve ser igual ao tempo médio. |
 
 O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/EspecieVegetal.ts`.
+
+## Estimativas para espécies frutíferas
+
+O dia zero é o **plantio de uma muda**, não a semeadura. O ciclo termina na **primeira colheita**;
+flores e frutos posteriores podem aparecer ao mesmo tempo em plantas que continuam produzindo. Os estágios
+`muda`, `crescimento`, `floração` e `frutificação` são uma **distribuição aproximada para exibição** do tempo total:
+as publicações não fornecem as quatro durações exatas para cada espécie. A média não representa uma previsão
+individual, que depende da cultivar, da estação e das condições de cultivo.
+
+| Espécie | Referência para os dias e interpretação |
+| --- | --- |
+| Abobrinha | [Oregon State University Extension, *Squash (Summer)*](https://extension.oregonstate.edu/imported-publication/squash-summer): mudas levam cerca de 40–50 dias até a maturidade; referência de 45 dias. |
+| Limoeiro (`Citrus × limon`) | [Clemson Extension, *In-Ground Citrus Production*](https://hgic.clemson.edu/factsheet/in-ground-citrus/): limões jovens enxertados levam cerca de 1–3 anos para superar a juvenilidade; [University of Maryland Extension, *Growing Dwarf Citrus*](https://extension.umd.edu/resource/growing-dwarf-citrus): o fruto pode levar 6–9 meses para amadurecer. A faixa aproximada de 545–1365 dias e o ponto médio de 955 dias combinam esses dois intervalos (ano de 365 dias e mês de 30); pressupõem uma muda jovem **enxertada**, não uma árvore já adulta nem uma planta de semente. |
+| Morango | [Purdue University, *Planting Bare-root Strawberry Plants*](https://fff.hort.purdue.edu/article/planting-bare-root-strawberry-plants/): cultivar de dia neutro pode produzir em cerca de dois meses após o plantio; [Penn State Extension, *Growing Strawberries*](https://extension.psu.edu/growing-strawberries): fruto amadurece cerca de 28–30 dias após a floração. Média de 60 dias; o máximo de 90 dias já existia no catálogo e é apenas uma margem, não um dado dessas publicações. Não se aplica a cultivares que só produzem no segundo ano. |
+| Pimenta (`Capsicum frutescens`) | [Oklahoma State University Extension, *Pepper Production*](https://extension.okstate.edu/fact-sheets/pepper-production): pimentas picantes levam cerca de 100 dias da muda ao fruto verde ou 140 dias ao fruto vermelho. A média de 140 dias considera a pimenta madura/vermelha; a faixa inclui a colheita verde. |
+| Pimentão | [University of Georgia Extension, *Home Garden Peppers*](https://fieldreport.caes.uga.edu/publications/C1005/home-garden-peppers/): 70–85 dias desde o transplante; média aproximada de 80 dias para o fruto verde. [Utah State University Extension, *Harvest and Handling*](https://extension.usu.edu/vegetableguide/tomato-pepper-eggplant/harvest-handling): cerca de 30 dias da floração ao pimentão verde. |
+| Tomate | [University of Maryland Extension, *Growing Tomatoes in a Home Garden*](https://extension.umd.edu/resource/growing-tomatoes-home-garden): 65–90 dias desde o transplante; [University of Georgia Extension, *Commercial Tomato Production Handbook*](https://fieldreport.caes.uga.edu/publications/B1312/commercial-tomato-production-handbook/): cerca de 75 dias até a primeira colheita; [South Dakota State University Extension, *Will Heat Make My Tomatoes Ripen Faster?*](https://extension.sdstate.edu/will-heat-make-my-tomatoes-ripen-faster): cerca de 42 dias da floração à maturação em condições favoráveis. |
 
 ## Como acrescentar uma espécie
 
