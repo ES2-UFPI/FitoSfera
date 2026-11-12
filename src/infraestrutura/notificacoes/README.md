@@ -32,7 +32,7 @@ pendente que poderia abrir um detalhe inexistente.
 ## Quem dispara a verificação
 
 O caso de uso [`AvaliarLeitura`](../../aplicacao/casos-de-uso/AvaliarLeitura.ts) compara a leitura com a faixa
-de cada planta e notifica os desvios novos. Ele roda em três momentos, e nunca lança: em segundo plano não há
+de cada planta e notifica os desvios novos, e avisa a planta que vai fechar o dia com pouca luz. Ele roda em três momentos, e nunca lança: em segundo plano não há
 tela para mostrar erro, e uma falha derrubaria a verificação inteira.
 
 | Momento | Quem chama |
@@ -102,6 +102,33 @@ lembra a assinatura já avisada de cada planta, e o caso de uso só notifica qua
 - uma grandeza a mais sair da faixa é um desvio novo e avisa;
 - a leitura voltar para dentro da faixa esquece a planta, e o mesmo desvio mais tarde volta a avisar;
 - um aviso que não chegou a ser entregue é tentado de novo na verificação seguinte.
+
+## Dia e noite, e o tempo mínimo do desvio
+
+Para não avisar por algo que é normal, a leitura passa por dois filtros antes de virar aviso:
+
+- **Faixa do período.** A hora em que a leitura foi medida decide a faixa: das 6h às 18h valem a temperatura e a
+  umidade do dia; das 18h às 6h, as da noite (`temperaturaNoturna` e `umidadeDoArNoturna`), ou as do dia, se a
+  planta não tiver as da noite. À noite a luminosidade não é comparada: escuro à noite é o normal. O horário é o
+  mesmo sol simplificado do cálculo da luz do dia, em [`PeriodoDoDia`](../../dominio/regras/PeriodoDoDia.ts).
+- **Tempo mínimo.** Um desvio só avisa depois de durar 30 minutos (`TEMPO_MINIMO_DO_DESVIO_MS`), contados desde a
+  primeira leitura em que ele apareceu. Cada desvio (grandeza e sentido) conta o seu tempo; o que volta para a
+  faixa sai da conta e, se voltar a desviar, recomeça do zero. Como a verificação roda em execuções separadas, o
+  início de cada desvio fica no [`RegistroDeDesviosEmAberto`](../../dominio/portas/RegistroDeDesviosEmAberto.ts).
+  Sem leitura recente, a contagem fica como estava.
+
+Na prática, o primeiro aviso de um desvio chega na primeira verificação depois dos 30 minutos, e as verificações
+em segundo plano rodam de 15 em 15 minutos ou mais.
+
+## Aviso de falta de luz
+
+A partir das 17h (`HORA_DO_AVISO_DE_LUZ`), quando já não sobra sol para recuperar, a verificação calcula a luz do
+dia de cada planta ([`LuzDoDia`](../../dominio/regras/LuzDoDia.ts)) e avisa se a projeção do total ficar abaixo do
+mínimo da meta diária. O aviso diz quanto da meta a planta recebeu até agora, como a tela de detalhes.
+
+- **Dia incompleto nunca avisa:** se faltou contato com o sensor, a luz que falta pode ter caído nesse intervalo.
+- **Um por dia:** a memória de avisos guarda o dia do aviso na chave `<idPlanta>:luz`. Fora da janela de
+  lembretes, ou se a entrega falhar, nada é guardado, e a próxima verificação do mesmo dia tenta de novo.
 
 O texto que a pessoa lê é montado por [`MensagemDoAviso`](../../dominio/servicos/MensagemDoAviso.ts), com o
 valor medido e uma indicação curta de que ele está acima ou abaixo do ideal. Os limites detalhados ficam no

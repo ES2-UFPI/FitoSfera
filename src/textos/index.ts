@@ -516,5 +516,7 @@ export const TEXTOS = {
     },
     titulo: (apelido: string, pedido: string) => `${apelido} ${pedido}`,
     desvio: (medida: string, valor: string, sentido: string) => `${medida} está em ${valor}, ${sentido} do ideal.`,
+    faltaDeLuz: 'precisa de mais luz',
+    luzRecebida: (percentual: number) => `Até agora, recebeu ${percentual}% da luz de que precisa hoje.`,
   },
 } as const;

@@ -20,6 +20,8 @@ export const CHAVES = {
   colheitasIlegiveisDaPlanta: (idPlanta: string) => `fitosfera:v4:colheitas:${idPlanta}:ilegivel`,
   /** Assinatura do desvio já avisado de cada planta, para a notificação não se repetir. */
   avisos: 'fitosfera:v2:avisos',
+  /** Desde quando cada desvio ainda não avisado de cada planta vem aparecendo, para medir o tempo mínimo. */
+  desviosEmAberto: 'fitosfera:v4:desvios-em-aberto',
   /** O sensor BLE escolhido na tela de pareamento: `{ id, nome }`. */
   sensorPareado: 'fitosfera:v2:sensor-pareado',
   /** Jardins, sensor associado e seleção ativa; ausente em instalações antigas. */

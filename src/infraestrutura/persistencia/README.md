@@ -16,7 +16,8 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v4:colheitas:<idPlanta>` | Array JSON de `{ id, quantidade, unidade, colhidaEm }` de uma planta, da colheita mais recente para a mais antiga, sem limite. | `RepositorioDeColheitasAsyncStorage` |
 | `fitosfera:v4:colheitas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de colheitas da planta que não era um array JSON. | `RepositorioDeColheitasAsyncStorage` |
-| `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>", "<idPlanta>:luz": "AAAA-MM-DD" }` com o desvio já avisado de cada planta e o dia do último aviso de falta de luz, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v4:desvios-em-aberto` | Objeto JSON `{ "<idPlanta>": { "<grandeza>:<sentido>": "<data ISO>" } }` com desde quando cada desvio ainda não avisado vem aparecendo, para medir o tempo mínimo. | `RegistroDeDesviosEmAbertoAsyncStorage` |
 | `fitosfera:v2:jardins` | Jardins (`id`, `nome`, `idSensor`) e ID do jardim selecionado. Ausente em instalações antigas, que usam o Jardim principal. | `RepositorioDeJardinsAsyncStorage` |
 | `fitosfera:v2:sensores-pareados` | Lista de sensores Bluetooth (`id`, `nome`), independentes da associação aos jardins. | `RepositorioDeSensoresPareadosAsyncStorage` |
 | `fitosfera:v2:sensor-pareado` | Formato antigo de sensor único, lido apenas enquanto a lista nova não foi gravada. | Compatibilidade com instalações anteriores |
@@ -186,6 +187,7 @@ O app abre mesmo com dados ruins:
   desaparece na próxima gravação da planta.
 - **Avisos:** um mapa de avisos ilegível é lido como "nenhum desvio avisado" e sobrescrito na próxima
   gravação, sem cópia `:ilegivel`: ali não há dado da pessoa para preservar, e o pior que acontece é um aviso
-  se repetir uma vez.
+  se repetir uma vez. O mesmo vale para os desvios em aberto: ilegível é lido como vazio, e o pior que acontece é
+  um desvio esperar o tempo mínimo de novo.
 - **Falha na migração:** o aviso vai para o console, o app segue com o que já estiver no formato atual e a
   migração é tentada de novo na próxima abertura, porque a versão gravada não avançou.
