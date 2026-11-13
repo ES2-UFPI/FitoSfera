@@ -1,3 +1,4 @@
+import { NIVEIS_DE_DIFICULDADE, ordemDaDificuldade } from '@/dominio/modelos/EspecieVegetal';
 import { ExigenciasDeManejo } from '@/dominio/modelos/ExigenciasDeManejo';
 import {
   classificarDificuldade,
@@ -127,5 +128,17 @@ describe('motivosDaDificuldade', () => {
 
   test('espécie tranquila não tem motivo nenhum', () => {
     expect(motivosDaDificuldade(criterios({ rega: 14, luzDiaria: 3 }))).toEqual([]);
+  });
+});
+
+describe('a escala dos níveis', () => {
+  test('vai de fácil a exigente, nessa ordem', () => {
+    expect(ordemDaDificuldade('facil')).toBeLessThan(ordemDaDificuldade('medio'));
+    expect(ordemDaDificuldade('medio')).toBeLessThan(ordemDaDificuldade('dificil'));
+  });
+
+  test('cobre os três níveis, sem deixar nenhum fora da escala', () => {
+    // Um nível que não estivesse no array daria -1 e iria para o topo da lista ordenada, em silêncio.
+    expect(NIVEIS_DE_DIFICULDADE.map(ordemDaDificuldade)).toEqual([0, 1, 2]);
   });
 });

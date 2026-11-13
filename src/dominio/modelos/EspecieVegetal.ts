@@ -1,8 +1,20 @@
+import type { ExigenciasDeManejo } from './ExigenciasDeManejo';
+import type { FaixaRecomendada } from './FaixaRecomendada';
+
+/** Em ordem crescente de exigência: a posição no array **é** a escala, e `ordemDaDificuldade` a lê. */
 export const NIVEIS_DE_DIFICULDADE = ['facil', 'medio', 'dificil'] as const;
 export type NivelDeDificuldade = (typeof NIVEIS_DE_DIFICULDADE)[number];
 
-import type { ExigenciasDeManejo } from './ExigenciasDeManejo';
-import type { FaixaRecomendada } from './FaixaRecomendada';
+/**
+ * Posição do nível na escala de exigência: 0 fácil, 1 médio, 2 exigente.
+ *
+ * Existe para quem ordena não precisar saber que a ordem do array é a escala. Reordenar
+ * `NIVEIS_DE_DIFICULDADE` muda o resultado de toda ordenação por dificuldade, e é o teste desta função que
+ * trava isso.
+ */
+export function ordemDaDificuldade(nivel: NivelDeDificuldade): number {
+  return NIVEIS_DE_DIFICULDADE.indexOf(nivel);
+}
 
 /** Faixa ideal de uma grandeza do ambiente, com a referência de onde o valor veio. */
 export interface FaixaIdeal extends FaixaRecomendada {
