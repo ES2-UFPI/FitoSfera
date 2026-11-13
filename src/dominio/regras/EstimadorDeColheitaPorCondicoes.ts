@@ -2,7 +2,7 @@ import { EstimadorDeColheita, EstimativaDeColheita } from '@/dominio/portas/Esti
 import { EspecieVegetal, FaixaIdeal } from '@/dominio/modelos/EspecieVegetal';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { Planta } from '@/dominio/modelos/Planta';
-import { diasNoJardim } from './TempoNoJardim';
+import { diasDesde } from './TempoNoJardim';
 import { ehNoite, NASCER_DO_SOL, POR_DO_SOL } from './PeriodoDoDia';
 
 export const JANELA_DA_ESTIMATIVA_MS = 24 * 60 * 60_000;
@@ -10,7 +10,7 @@ export const VALIDADE_DA_LEITURA_MS = 30 * 60_000;
 export const COBERTURA_MINIMA_PARA_AJUSTE_MS = 6 * 60 * 60_000;
 export const ATRASO_MAXIMO_DA_ESTIMATIVA = 0.3;
 
-/** Política conservadora: desvios ambientais podem atrasar, mas nunca antecipar, a primeira colheita. */
+/** Política conservadora: desvios ambientais podem atrasar, mas nunca antecipar, a colheita prevista. */
 export class EstimadorDeColheitaPorCondicoes implements EstimadorDeColheita {
   estimar(
     planta: Planta,
@@ -18,13 +18,16 @@ export class EstimadorDeColheitaPorCondicoes implements EstimadorDeColheita {
     leituras: readonly Leitura[],
     agora: Date,
   ): EstimativaDeColheita {
-    const dataDeCadastro = planta.cadastradaEm;
-    if (dataDeCadastro === null || Number.isNaN(dataDeCadastro.getTime()) || Number.isNaN(agora.getTime())) {
-      return { disponivel: false, motivo: 'sem-data-de-cadastro' };
+    if (Number.isNaN(agora.getTime())) return { disponivel: false, motivo: 'sem-data-de-plantio' };
+    const dataDeReferencia = planta.colheitaIniciada ? planta.floracaoIniciadaEm : planta.plantadaEm;
+    if (dataDeReferencia === null || Number.isNaN(dataDeReferencia.getTime())) {
+      return { disponivel: false, motivo: planta.colheitaIniciada ? 'sem-data-de-floracao' : 'sem-data-de-plantio' };
     }
 
-    const cicloMedio = especie.tempoMedioAteColheitaEmDias;
-    if (cicloMedio === undefined || !Number.isFinite(cicloMedio) || cicloMedio <= 0) {
+    const duracaoAteColheita = planta.colheitaIniciada
+      ? diasDaFloracaoAteColheita(especie)
+      : especie.tempoMedioAteColheitaEmDias;
+    if (duracaoAteColheita === undefined || !Number.isFinite(duracaoAteColheita) || duracaoAteColheita <= 0) {
       return { disponivel: false, motivo: 'sem-tempo-medio' };
     }
     const faixas = especie.faixasIdeais;
@@ -35,13 +38,15 @@ export class EstimadorDeColheitaPorCondicoes implements EstimadorDeColheita {
     const ajustada = coberturaMs >= COBERTURA_MINIMA_PARA_AJUSTE_MS;
     const proporcaoForaDoIdeal = ajustada && coberturaMs > 0 ? desvioMs / coberturaMs : 0;
     const fator = 1 + ATRASO_MAXIMO_DA_ESTIMATIVA * proporcaoForaDoIdeal;
-    const cicloEstimadoEmDias = cicloMedio * fator;
-    const dias = diasNoJardim(dataDeCadastro, agora) ?? 0;
+    const diasDesdeReferencia = diasDesde(dataDeReferencia, agora);
+    const cicloEstimadoEmDias = planta.colheitaIniciada
+      ? diasDesdeReferencia + Math.max(0, duracaoAteColheita - diasDesdeReferencia) * fator
+      : duracaoAteColheita * fator;
 
     return {
       disponivel: true,
       cicloEstimadoEmDias,
-      diasRestantes: Math.max(0, Math.ceil(cicloEstimadoEmDias - dias)),
+      diasRestantes: Math.max(0, Math.ceil(cicloEstimadoEmDias - diasDesdeReferencia)),
       ajustada,
       coberturaEmHoras: Math.round((coberturaMs / 3_600_000) * 100) / 100,
     };
@@ -83,6 +88,16 @@ export class EstimadorDeColheitaPorCondicoes implements EstimadorDeColheita {
     }
     return { coberturaMs, desvioMs };
   }
+}
+
+/** Duração entre o início da floração e a primeira colheita, somando a floração e as fases seguintes. */
+export function diasDaFloracaoAteColheita(especie: EspecieVegetal): number | undefined {
+  const estagios = especie.estagiosDeDesenvolvimento;
+  if (!estagios || estagios.length === 0) return undefined;
+  const indiceDaFloracao = estagios.findIndex((estagio) => /flor/i.test(estagio.nome));
+  if (indiceDaFloracao < 0) return undefined;
+  const duracao = estagios.slice(indiceDaFloracao).reduce((total, estagio) => total + estagio.duracaoEmDias, 0);
+  return Number.isFinite(duracao) && duracao > 0 ? duracao : undefined;
 }
 
 function estaNasFaixas(leitura: Leitura, especie: EspecieVegetal, instante: Date): boolean {

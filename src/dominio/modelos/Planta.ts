@@ -22,6 +22,12 @@ export class Planta {
     readonly aparencia: Aparencia,
     /** Null para plantas gravadas antes de o app registrar a data de cadastro. */
     readonly cadastradaEm: Date | null,
+    /** Data de plantio da muda; null quando a idade é desconhecida ou a planta não é frutífera. */
+    readonly plantadaEm: Date | null,
+    /** Indica que a planta já entrou em produção. */
+    readonly colheitaIniciada: boolean,
+    /** Início aproximado da floração que representa a leva produtiva atual. */
+    readonly floracaoIniciadaEm: Date | null,
     /** Copiadas da espécie no cadastro; null quando a espécie não tinha faixa. */
     readonly faixasRecomendadas: FaixasRecomendadas | null,
     /** Copiado da espécie no cadastro; null em planta gravada antes de o app guardar o intervalo. */
@@ -35,6 +41,9 @@ export class Planta {
     apelido: string;
     aparencia: Aparencia;
     cadastradaEm?: Date | null;
+    plantadaEm?: Date | null;
+    colheitaIniciada?: boolean;
+    floracaoIniciadaEm?: Date | null;
     faixasRecomendadas?: FaixasRecomendadas | null;
     intervaloDeRegaEmDias?: number | null;
   }): Planta {
@@ -49,6 +58,9 @@ export class Planta {
       apelido,
       dados.aparencia,
       dados.cadastradaEm ?? null,
+      dados.plantadaEm ?? null,
+      dados.colheitaIniciada ?? false,
+      dados.floracaoIniciadaEm ?? null,
       dados.faixasRecomendadas ?? null,
       dados.intervaloDeRegaEmDias ?? null,
     );

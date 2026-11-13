@@ -10,6 +10,7 @@ function montar(sensor: SensorFixo) {
   let cache: Leitura | null = null;
   const repositorio: CacheDeLeituras = {
     obter: async () => cache,
+    obterHistorico: async () => cache === null ? [] : [cache],
     salvar: async (_id, valor) => { cache = valor; },
   };
   return { sensor, leituras: repositorio, obterCache: () => cache };

@@ -5,6 +5,9 @@ import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 export interface EdicaoDaPlanta {
   readonly idPlanta: string;
   readonly apelido: string;
+  readonly plantadaEm: Date | null;
+  readonly colheitaIniciada: boolean;
+  readonly floracaoIniciadaEm: Date | null;
 }
 
 interface Rascunho {

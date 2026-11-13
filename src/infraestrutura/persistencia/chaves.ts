@@ -31,6 +31,8 @@ export const CHAVES = {
   preferencias: 'fitosfera:v2:preferencias',
   /** Última leitura recebida, separada por jardim. */
   leituraDoJardim: (idJardim: string) => `fitosfera:v3:leitura:${encodeURIComponent(idJardim)}`,
+  /** Histórico ambiental recente, separado da última leitura usada nos demais fluxos. */
+  historicoDeLeiturasDoJardim: (idJardim: string) => `fitosfera:v4:leituras-recentes:${encodeURIComponent(idJardim)}`,
   /** Último contador de luz contabilizado e períodos de luz recebida, separados por jardim. */
   luzDoJardim: (idJardim: string) => `fitosfera:v3:luz:${encodeURIComponent(idJardim)}`,
   /** IDs em exclusão, para retomar a remoção de regas e colheitas após interrupção do app. */

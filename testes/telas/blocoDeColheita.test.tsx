@@ -19,7 +19,7 @@ const tomate = especieDeTeste(
 
 test('mostra prazo e estágio atual no detalhe de uma frutífera', async () => {
   renderizarApp({
-    plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 12, 14, 0) })],
+    plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 17, 14, 0), plantadaEm: new Date(2026, 9, 12, 14, 0) })],
     especies: [tomate],
     url: '/planta/p1',
     agora,
@@ -58,4 +58,50 @@ test('mostra estimativa indisponível quando a espécie não tem ciclo médio ca
 
   expect(await screen.findByText('Estimativa indisponível')).toBeTruthy();
   expect(screen.queryByText(/Faltam cerca de/)).toBeNull();
+});
+
+test('estima a leva atual a partir da data aproximada de início da floração', async () => {
+  renderizarApp({
+    plantas: [plantaDeTeste({
+      plantadaEm: new Date(2026, 8, 1),
+      colheitaIniciada: true,
+      floracaoIniciadaEm: new Date(2026, 9, 1),
+    })],
+    especies: [tomate],
+    url: '/planta/p1',
+    agora,
+  });
+
+  expect(await screen.findByText('Faltam cerca de 49 dias')).toBeTruthy();
+  expect(screen.getByText('Prazo calculado a partir do início aproximado desta floração.')).toBeTruthy();
+});
+
+test('sem data de início da floração, pede a referência necessária para prever a leva', async () => {
+  renderizarApp({
+    plantas: [plantaDeTeste({ colheitaIniciada: true, floracaoIniciadaEm: null })],
+    especies: [tomate],
+    url: '/planta/p1',
+    agora,
+  });
+
+  expect(await screen.findByText('Estimativa indisponível')).toBeTruthy();
+  expect(screen.getByText('Informe quando começou a floração para estimar esta leva.')).toBeTruthy();
+});
+
+test('usa o histórico ambiental guardado para ajustar o prazo exibido', async () => {
+  const leituras = Array.from({ length: 16 }, (_, indice) => ({
+    temperaturaCelsius: 40,
+    umidadePercentual: 100,
+    luminosidadeLux: 1000,
+    medidaEm: new Date(agora.getTime() - 8 * 60 * 60_000 + indice * 30 * 60_000),
+  }));
+  renderizarApp({
+    plantas: [plantaDeTeste({ plantadaEm: new Date(2026, 9, 12, 14, 0) })],
+    especies: [tomate],
+    historicoDeLeituras: { leituras },
+    url: '/planta/p1',
+    agora,
+  });
+
+  expect(await screen.findByText('Faltam cerca de 93 dias')).toBeTruthy();
 });

@@ -11,6 +11,9 @@ test('ida e volta preserva todos os campos', () => {
     apelido: 'Tom',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
     cadastradaEm: new Date('2026-10-17T14:00:00.000Z'),
+    plantadaEm: new Date('2026-09-17T14:00:00.000Z'),
+    colheitaIniciada: true,
+    floracaoIniciadaEm: new Date('2026-10-01T14:00:00.000Z'),
     faixasRecomendadas: FAIXAS_DE_TESTE,
     intervaloDeRegaEmDias: 3,
   });
@@ -56,6 +59,21 @@ test('a data de cadastro é gravada como texto ISO', () => {
     cadastradaEm: new Date('2026-10-17T14:00:00.000Z'),
   });
   expect(paraRegistro(planta).cadastradaEm).toBe('2026-10-17T14:00:00.000Z');
+});
+
+test('a data de plantio e o estado de produção são persistidos', () => {
+  const plantadaEm = new Date('2026-09-17T14:00:00.000Z');
+  const planta = Planta.criar({
+    id: 'p1', idEspecie: 'tomate', apelido: 'Tom', aparencia: APARENCIA_INICIAL,
+    plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm,
+  });
+  expect(paraRegistro(planta)).toMatchObject({ plantadaEm: plantadaEm.toISOString(), colheitaIniciada: true, floracaoIniciadaEm: plantadaEm.toISOString() });
+  expect(deRegistro(paraRegistro(planta))).toMatchObject({ plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm });
+});
+
+test('registros antigos sem os campos novos continuam legíveis, mas com idade desconhecida', () => {
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom' });
+  expect(planta).toMatchObject({ plantadaEm: null, colheitaIniciada: false, floracaoIniciadaEm: null });
 });
 
 test.each([undefined, null, 'ontem', 42])('registro antigo com data %p continua legível, com data desconhecida', (data) => {

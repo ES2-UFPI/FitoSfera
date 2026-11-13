@@ -12,6 +12,7 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 | `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"4"`). | `MigradorDoArmazenamento` |
 | `fitosfera:v4:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
 | `fitosfera:v4:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v4:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v4:leituras-recentes:<idJardim>` | Até 24h de leituras ambientais recentes do jardim, em ordem cronológica, limitado a 2.000 entradas. | `CacheDeLeiturasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v4:colheitas:<idPlanta>` | Array JSON de `{ id, quantidade, unidade, colhidaEm }` de uma planta, da colheita mais recente para a mais antiga, sem limite. | `RepositorioDeColheitasAsyncStorage` |
@@ -59,6 +60,9 @@ de segurança:
   "apelido": "Tomatinho",
   "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
   "cadastradaEm": "2026-10-17T14:00:00.000Z",
+  "plantadaEm": "2026-09-17T14:00:00.000Z",
+  "colheitaIniciada": false,
+  "floracaoIniciadaEm": null,
   "faixasRecomendadas": {
     "umidadeDoAr": { "minimo": 50, "maximo": 70 },
     "temperatura": { "minimo": 20, "maximo": 28 },
@@ -78,6 +82,13 @@ dados existentes sem exigir uma nova versão do schema.
 `cadastradaEm` é a data e hora do cadastro em ISO 8601. Registros gravados antes de esse campo existir, ou com
 uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não
 exigiu uma nova versão do schema.
+
+`plantadaEm` é a data aproximada de plantio da muda, independente da data de cadastro. A expectativa de colheita e
+o estágio usam essa data. Registros anteriores a esse campo continuam válidos com idade desconhecida (`null`), sem
+inferir que uma planta adulta recém-cadastrada acabou de ser plantada. `colheitaIniciada` indica que a planta já
+está produzindo; ausente em registros antigos equivale a `false`. `floracaoIniciadaEm` guarda a referência informada
+para estimar a leva produtiva atual, independente dos registros de colheita. Ausente em registros antigos é `null`.
+Esses campos opcionais não exigem nova versão do schema e são gravados na próxima atualização do registro.
 
 `faixasRecomendadas` é uma cópia das faixas da espécie, feita no cadastro (umidade do ar em %, temperatura em
 °C e luminosidade em lux, sem a fonte). O status da planta é calculado com essa cópia, então revisar o catálogo

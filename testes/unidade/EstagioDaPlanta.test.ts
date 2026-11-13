@@ -22,8 +22,8 @@ const especie: EspecieVegetal = {
   ],
 };
 
-function planta(cadastradaEm: Date | null): Planta {
-  return Planta.criar({ id: 'p1', idEspecie: especie.id, apelido: 'Tomatinho', aparencia: APARENCIA_INICIAL, cadastradaEm });
+function planta(plantadaEm: Date | null): Planta {
+  return Planta.criar({ id: 'p1', idEspecie: especie.id, apelido: 'Tomatinho', aparencia: APARENCIA_INICIAL, plantadaEm });
 }
 
 function data(dias: number): Date {
@@ -45,11 +45,11 @@ describe('estagioDaPlanta', () => {
     expect(estagioDaPlanta(planta(data(0)), especie, data(dias))?.nome).toBe(nomeEsperado);
   });
 
-  test('sem data de cadastro retorna null', () => {
+  test('sem data de plantio retorna null', () => {
     expect(estagioDaPlanta(planta(null), especie, data(10))).toBeNull();
   });
 
-  test('com data de cadastro inválida retorna null', () => {
+  test('com data de plantio inválida retorna null', () => {
     expect(estagioDaPlanta(planta(new Date('inválida')), especie, data(10))).toBeNull();
   });
 
@@ -65,7 +65,15 @@ describe('estagioDaPlanta', () => {
     expect(estagioDaPlanta(planta(data(0)), { ...especie, estagiosDeDesenvolvimento: [] }, data(10))).toBeNull();
   });
 
-  test('relógio anterior ao cadastro mantém o primeiro estágio', () => {
+  test('relógio anterior ao plantio mantém o primeiro estágio', () => {
     expect(estagioDaPlanta(planta(data(10)), especie, data(0))?.nome).toBe('muda');
+  });
+
+  test('para planta produtiva calcula a fase a partir do início da floração', () => {
+    const produtiva = Planta.criar({
+      id: 'p1', idEspecie: especie.id, apelido: 'Tomatinho', aparencia: APARENCIA_INICIAL,
+      colheitaIniciada: true, floracaoIniciadaEm: data(20), plantadaEm: data(0),
+    });
+    expect(estagioDaPlanta(produtiva, especie, data(30))?.nome).toBe('frutificação');
   });
 });

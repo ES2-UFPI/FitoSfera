@@ -10,15 +10,17 @@ import { TEXTO } from '../tema/tipografia';
 export function BlocoDeColheita({
   estimativa,
   estagio,
+  colheitaIniciada = false,
 }: {
   estimativa: EstimativaDeColheita;
   estagio: EstagioDeDesenvolvimento | null;
+  colheitaIniciada?: boolean;
 }) {
   const prazo = estimativa.disponivel
-    ? estimativa.diasRestantes === 0
-      ? TEXTOS.detalhe.colheitaPrevistaParaHoje
-      : TEXTOS.detalhe.faltamDiasParaColheita(estimativa.diasRestantes)
-    : TEXTOS.detalhe.estimativaIndisponivel;
+      ? estimativa.diasRestantes === 0
+        ? TEXTOS.detalhe.colheitaPrevistaParaHoje
+        : TEXTOS.detalhe.faltamDiasParaColheita(estimativa.diasRestantes)
+      : TEXTOS.detalhe.estimativaIndisponivel;
 
   return (
     <View style={estilos.cartao} testID="bloco-de-colheita">
@@ -29,8 +31,16 @@ export function BlocoDeColheita({
       <Text style={TEXTO.apoio}>
         {estagio ? TEXTOS.detalhe.estagio(estagio.nome) : TEXTOS.detalhe.estagioIndisponivel}
       </Text>
+      {colheitaIniciada && estimativa.disponivel ? (
+        <Text style={TEXTO.apoio}>{TEXTOS.detalhe.estimativaDesdeFloracao}</Text>
+      ) : null}
+      {colheitaIniciada && !estimativa.disponivel && estimativa.motivo === 'sem-data-de-floracao' ? (
+        <Text style={TEXTO.apoio}>{TEXTOS.detalhe.informeInicioDaFloracao}</Text>
+      ) : null}
       {estimativa.disponivel && !estimativa.ajustada ? (
-        <Text style={TEXTO.apoio}>{TEXTOS.detalhe.estimativaSemAjusteAmbiental}</Text>
+        <Text style={TEXTO.apoio}>
+          {colheitaIniciada ? TEXTOS.detalhe.estimativaSemAjusteDaFloracao : TEXTOS.detalhe.estimativaSemAjusteAmbiental}
+        </Text>
       ) : null}
     </View>
   );

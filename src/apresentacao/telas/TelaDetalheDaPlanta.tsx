@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { estagioDaPlanta } from '@/dominio/regras/EstagioDaPlanta';
+import { JANELA_DA_ESTIMATIVA_MS } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
 import { TEXTOS } from '@/textos';
 import { CartaoDasColheitas, EstadoDasColheitas } from '../colheita/CartaoDasColheitas';
 import { BlocoDeColheita } from '../colheita/BlocoDeColheita';
@@ -67,6 +68,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
   const [colheitas, definirColheitas] = useState<EstadoDasColheitas>(undefined);
+  const [leiturasRecentes, definirLeiturasRecentes] = useState<readonly import('@/dominio/modelos/Leitura').Leitura[]>([]);
   const [luzDeHoje, definirLuzDeHoje] = useState<LuzDoDia | undefined>(undefined);
   const [tiqueDaLuz, definirTiqueDaLuz] = useState(0);
   const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
@@ -135,6 +137,29 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
 
   // Só as frutíferas têm colheitas: as outras plantas nem leem o armazenamento delas.
   const frutiferaCarregada = item && item !== 'falhou' && item.especie?.frutifera ? item.planta.id : null;
+  const jardimDaFrutifera = frutiferaCarregada !== null && item && item !== 'falhou' ? item.planta.idJardim : null;
+  const instanteDaUltimaLeitura = jardimDaFrutifera !== null && item && item !== 'falhou'
+    ? item.ultimaLeitura?.medidaEm.getTime() ?? null
+    : null;
+  useEffect(() => {
+    if (jardimDaFrutifera === null) {
+      definirLeiturasRecentes([]);
+      return;
+    }
+    let atual = true;
+    const agora = container.relogio.agora();
+    container.obterLeiturasRecentes.executar(
+      jardimDaFrutifera,
+      new Date(agora.getTime() - JANELA_DA_ESTIMATIVA_MS),
+    ).then(
+      (lidas) => { if (atual) definirLeiturasRecentes(lidas); },
+      (falha) => {
+        console.warn('Não deu para ler o histórico ambiental.', falha);
+        if (atual) definirLeiturasRecentes([]);
+      },
+    );
+    return () => { atual = false; };
+  }, [container, jardimDaFrutifera, instanteDaUltimaLeitura]);
   useEffect(() => {
     if (frutiferaCarregada === null) return;
     let atual = true;
@@ -332,10 +357,11 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               estimativa={container.estimadorDeColheita.estimar(
                 item.planta,
                 item.especie,
-                item.ultimaLeitura ? [item.ultimaLeitura] : [],
+                leiturasRecentes,
                 container.relogio.agora(),
               )}
               estagio={estagioDaPlanta(item.planta, item.especie, container.relogio.agora())}
+              colheitaIniciada={item.planta.colheitaIniciada}
             />
           ) : null}
           <CartaoDoHistorico
