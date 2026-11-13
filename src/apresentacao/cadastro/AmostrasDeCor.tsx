@@ -3,7 +3,7 @@ import Svg, { Path } from 'react-native-svg';
 import { TEXTOS } from '@/textos';
 import { Vaso } from '../ilustracao/Vaso';
 import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
+import { ALVO_DE_TOQUE_MINIMO, ESPACO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
 
 export type FormatoDaAmostra = 'folha' | 'redonda' | 'vaso';
@@ -44,7 +44,6 @@ export function AmostrasDeCor<T extends string>({ rotulo, formato, opcoes, selec
               accessibilityRole="button"
               accessibilityLabel={TEXTOS.cadastro.opcao(rotulo, opcao.nome)}
               accessibilityState={{ selected: marcada }}
-              hitSlop={4}
               style={[estilos.alvo, marcada && estilos.marcada]}
             >
               <Amostra formato={formato} cores={opcao.cores} />
@@ -79,9 +78,9 @@ const estilos = StyleSheet.create({
   nomeEscolhido: { fontFamily: FONTES.texto, fontSize: 11.5, color: CORES.textoApoio },
   amostras: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
   alvo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: ALVO_DE_TOQUE_MINIMO,
+    height: ALVO_DE_TOQUE_MINIMO,
+    borderRadius: ALVO_DE_TOQUE_MINIMO / 2,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,

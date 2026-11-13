@@ -114,6 +114,9 @@ export function TelaAjustes() {
   const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
+  // Uma ação principal por tela: sem sensor pareado, parear é o mais urgente; senão, o horário dos lembretes.
+  const [temPareado, definirTemPareado] = useState(true);
+  const faltaParear = pareamento !== null && !temPareado;
   const margens = useSafeAreaInsets();
   const jardimAtual = jardins.find((jardim) => jardim.id === idJardimSelecionado);
   const simuladorAssociado = jardimAtual?.idSensor === 'simulado' || jardimAtual?.idSensor === `simulado:${idJardimSelecionado}`;
@@ -134,8 +137,8 @@ export function TelaAjustes() {
         <Text style={TEXTO.titulo} accessibilityRole="header">
           {TEXTOS.ajustes.titulo}
         </Text>
-        <CartaoDosLembretes />
-        {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
+        <CartaoDosLembretes emDestaque={!faltaParear} />
+        {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} aoSaberSeTemPareado={definirTemPareado} /> : null}
         {controle ? (
           <CartaoDoSensorDeDesenvolvimento
             key={idJardimSelecionado}

@@ -13,8 +13,11 @@ import { descreverJanela } from './textosDosLembretes';
 /** undefined: ainda lendo a preferência gravada. */
 type EstadoDoCartao = JanelaDeLembretes | undefined;
 
-/** O horário gravado, nos Ajustes, com o caminho para a tela que o muda. */
-export function CartaoDosLembretes() {
+/**
+ * O horário gravado, nos Ajustes, com o caminho para a tela que o muda. `emDestaque` diz se o botão é a ação
+ * principal da tela; os Ajustes tiram o destaque quando falta parear o sensor, que passa a ser o mais urgente.
+ */
+export function CartaoDosLembretes({ emDestaque = true }: { emDestaque?: boolean }) {
   const { container } = useAplicativo();
   const navegador = useRouter();
   const [janela, definirJanela] = useState<EstadoDoCartao>(undefined);
@@ -44,7 +47,12 @@ export function CartaoDosLembretes() {
           : TEXTOS.lembretes.resumo(descreverJanela(janela))}
       </Text>
       {janela === undefined ? null : (
-        <BotaoPrincipal titulo={TEXTOS.lembretes.mudarHorario} aoTocar={() => navegador.push('/lembretes')} largo />
+        <BotaoPrincipal
+          titulo={TEXTOS.lembretes.mudarHorario}
+          variante={emDestaque ? 'padrao' : 'secundaria'}
+          aoTocar={() => navegador.push('/lembretes')}
+          largo
+        />
       )}
     </View>
   );

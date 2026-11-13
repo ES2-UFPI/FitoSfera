@@ -18,6 +18,12 @@ export const RAIO = {
 /** Altura mínima de qualquer coisa tocável. */
 export const ALVO_DE_TOQUE = 48;
 
+/**
+ * O menor alvo aceito (44 × 44 pontos, o mínimo das diretrizes do iOS e da US07), para ícones e amostras que
+ * não cabem em `ALVO_DE_TOQUE`. Nada tocável fica abaixo disto, nem contando só a parte visível.
+ */
+export const ALVO_DE_TOQUE_MINIMO = 44;
+
 export const ALTURA_DA_BARRA_DE_ABAS = 58;
 
 /** Estante: cada prateleira tem altura fixa, para dar para contar quantas cabem na tela. */
