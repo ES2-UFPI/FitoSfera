@@ -1,5 +1,5 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PareamentoDoSensor, SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
 import { TEXTOS } from '@/textos';
@@ -13,7 +13,17 @@ import { finalDoEndereco } from './textosDoSensor';
 /** undefined: carregando. */
 type EstadoDoCartao = SensorPareado | null | undefined;
 
-export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDoSensor }) {
+/**
+ * Sem sensor pareado, "Parear sensor" é a ação principal dos Ajustes; com um pareado, trocar vira secundário.
+ * `aoSaberSeTemPareado` avisa a tela, para ela decidir o destaque dos outros cartões.
+ */
+export function CartaoDoSensorPareado({
+  pareamento,
+  aoSaberSeTemPareado,
+}: {
+  pareamento: PareamentoDoSensor;
+  aoSaberSeTemPareado?: (temPareado: boolean) => void;
+}) {
   const { container, recarregarJardim, recarregarJardins } = useAplicativo();
   const navegador = useRouter();
   const [pareado, definirPareado] = useState<EstadoDoCartao>(undefined);
@@ -32,6 +42,10 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
       };
     }, [pareamento]),
   );
+
+  useEffect(() => {
+    if (pareado !== undefined) aoSaberSeTemPareado?.(pareado !== null);
+  }, [pareado, aoSaberSeTemPareado]);
 
   async function esquecer(sensor: SensorPareado) {
     for (const jardim of await container.gerenciarJardins.listar()) {
@@ -73,6 +87,7 @@ export function CartaoDoSensorPareado({ pareamento }: { pareamento: PareamentoDo
         <View style={estilos.botoes}>
           <BotaoPrincipal
             titulo={pareado ? TEXTOS.sensor.trocar : TEXTOS.sensor.parear}
+            variante={pareado ? 'secundaria' : 'padrao'}
             aoTocar={() => navegador.push('/sensor')}
             largo
           />

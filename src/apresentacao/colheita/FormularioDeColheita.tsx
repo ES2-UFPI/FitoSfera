@@ -149,6 +149,8 @@ export function FormularioDeColheita({
         titulo={estado.tipo === 'registrando' ? TEXTOS.colheita.registrando : TEXTOS.colheita.registrar}
         aoTocar={() => void enviar()}
         desabilitado={estado.tipo === 'registrando'}
+        // Na tela da planta, a ação principal é registrar a rega; a colheita é o que vem depois.
+        variante="secundaria"
         largo
       />
 

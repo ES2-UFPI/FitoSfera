@@ -178,7 +178,13 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
               <Text style={TEXTO.corpo}>{TEXTOS.pareamento.nenhumEncontrado}</Text>
             ) : null}
             {!etapa.buscando ? (
-              <BotaoPrincipal titulo={TEXTOS.pareamento.procurarDeNovo} variante="secundaria" aoTocar={procurar} largo />
+              // Achou sensores: escolher um deles é o principal. Não achou nenhum: procurar de novo passa a ser.
+              <BotaoPrincipal
+                titulo={TEXTOS.pareamento.procurarDeNovo}
+                variante={encontrados.size === 0 ? 'padrao' : 'secundaria'}
+                aoTocar={procurar}
+                largo
+              />
             ) : null}
           </View>
         ) : null}

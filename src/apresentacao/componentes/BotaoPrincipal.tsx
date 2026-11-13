@@ -11,7 +11,18 @@ interface Props {
   largo?: boolean;
   testID?: string;
   icone?: ReactNode;
-  variante?: 'padrao' | 'rega' | 'secundaria' | 'perigo';
+  variante?: VarianteDoBotao;
+}
+
+/**
+ * `padrao`, `rega` e `perigo` são preenchidos e com sombra: a ação principal da tela, e só uma por tela (US07).
+ * `secundaria` e `perigoDiscreto` têm só contorno, para o resto. `perigo` cheio fica para a confirmação de algo
+ * que não se desfaz; fora dela, excluir é `perigoDiscreto` e não compete com a ação principal.
+ */
+export type VarianteDoBotao = 'padrao' | 'rega' | 'secundaria' | 'perigo' | 'perigoDiscreto';
+
+export function ehVariantePrincipal(variante: VarianteDoBotao): boolean {
+  return variante === 'padrao' || variante === 'rega' || variante === 'perigo';
 }
 
 export function BotaoPrincipal({
@@ -36,6 +47,7 @@ export function BotaoPrincipal({
         variante === 'rega' && estilos.rega,
         variante === 'secundaria' && estilos.secundaria,
         variante === 'perigo' && estilos.perigo,
+        variante === 'perigoDiscreto' && estilos.perigoDiscreto,
         largo && estilos.largo,
         pressed && estilos.pressionado,
         desabilitado && estilos.desabilitado,
@@ -43,7 +55,15 @@ export function BotaoPrincipal({
     >
       <View style={estilos.conteudo}>
         {icone}
-        <Text style={[TEXTO.botao, variante === 'secundaria' && estilos.textoSecundario]}>{titulo}</Text>
+        <Text
+          style={[
+            TEXTO.botao,
+            variante === 'secundaria' && estilos.textoSecundario,
+            variante === 'perigoDiscreto' && estilos.textoDoPerigoDiscreto,
+          ]}
+        >
+          {titulo}
+        </Text>
       </View>
     </Pressable>
   );
@@ -76,6 +96,14 @@ const estilos = StyleSheet.create({
   },
   textoSecundario: { color: CORES.acao },
   perigo: { backgroundColor: CORES.erro, shadowColor: CORES.erro, shadowOpacity: 0.2 },
+  perigoDiscreto: {
+    backgroundColor: CORES.superficie,
+    borderWidth: 1.5,
+    borderColor: CORES.erro,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  textoDoPerigoDiscreto: { color: CORES.erro },
   pressionado: { transform: [{ scale: 0.97 }] },
   desabilitado: { opacity: 0.45 },
 });

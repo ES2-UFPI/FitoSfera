@@ -433,7 +433,12 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               />
             </View>
             <View style={estilos.acao}>
-              <BotaoPrincipal titulo={TEXTOS.detalhe.excluir} variante="perigo" aoTocar={() => definirExclusao('confirmando')} largo />
+              <BotaoPrincipal
+                titulo={TEXTOS.detalhe.excluir}
+                variante="perigoDiscreto"
+                aoTocar={() => definirExclusao('confirmando')}
+                largo
+              />
             </View>
           </View>
           <ConfirmacaoDeExclusao
