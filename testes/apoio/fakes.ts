@@ -45,6 +45,7 @@ import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
 import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
+import { EstimadorDeColheitaPorCondicoes } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
 
@@ -489,6 +490,7 @@ export function criarContainerDeTeste(
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
+    estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
     obterColheitas: new ObterColheitasDaPlanta(colheitas, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

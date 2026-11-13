@@ -20,6 +20,7 @@ import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
+import { EstimadorDeColheita } from '@/dominio/portas/EstimadorDeColheita';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
@@ -35,6 +36,7 @@ export interface Container {
   readonly registrarRega: RegistrarRega;
   readonly registrarColheita: RegistrarColheita;
   readonly compararRendimento: CompararRendimento;
+  readonly estimadorDeColheita: EstimadorDeColheita;
   readonly obterColheitas: ObterColheitasDaPlanta;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;

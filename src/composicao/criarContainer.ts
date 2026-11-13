@@ -38,6 +38,7 @@ import { FontesDosJardins } from '@/infraestrutura/sensores/FontesDosJardins';
 import { SensorSimulado } from '@/infraestrutura/sensores/SensorSimulado';
 import { SensoresSimuladosDosJardins } from '@/infraestrutura/sensores/SensoresSimuladosDosJardins';
 import { RelogioDoSistema } from '@/infraestrutura/tempo/RelogioDoSistema';
+import { EstimadorDeColheitaPorCondicoes } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
 import { Container } from './Container';
 import { escolherNotificador } from './escolherNotificador';
 import { criarSensorBluetooth } from './criarSensorBluetooth';
@@ -84,6 +85,7 @@ export function criarContainer(): Container {
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
+    estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
     obterColheitas: new ObterColheitasDaPlanta(colheitas, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
