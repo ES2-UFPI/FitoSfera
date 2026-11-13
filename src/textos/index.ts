@@ -216,6 +216,21 @@ export const TEXTOS = {
     falhaAoGravar: 'Não deu para registrar a colheita. Tente novamente.',
   },
 
+  colheitas: {
+    titulo: 'Colheitas',
+    rotuloDoIndicador: (dias: number) => `RENDIMENTO NOS ÚLTIMOS ${dias} DIAS`,
+    rendimentoDaMedida: (total: string, colheitas: number) =>
+      `${total} em ${plural(colheitas, 'colheita', 'colheitas')}`,
+    nadaNoPeriodo: (dias: number) => `Nenhuma colheita nos últimos ${dias} dias.`,
+    rotuloDaLista: 'TODAS AS COLHEITAS',
+    itemDaLista: (data: string, quantidade: string) => `${data} · ${quantidade}`,
+    itemFalado: (data: string, quantidade: string) => `Colheita de ${quantidade} em ${data}.`,
+    vazio: 'Nenhuma colheita registrada ainda.',
+    comoComecar: 'Quando colher, anote logo abaixo para acompanhar quanto esta planta produz.',
+    carregando: 'Buscando as colheitas…',
+    falha: 'Não deu para ler as colheitas agora. Volte e tente de novo em instantes.',
+  },
+
   rendimento: {
     compararComOutras: 'Comparar com outras plantas',
     titulo: 'Comparar rendimento',
