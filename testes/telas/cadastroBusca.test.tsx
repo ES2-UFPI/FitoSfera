@@ -98,7 +98,7 @@ describe('o nível de dificuldade ao lado da espécie', () => {
     renderizarApp({ url: '/cadastro', especies });
     const resultados = await screen.findAllByTestId('resultado-especie');
     const selos = resultados.map((item) => within(item).getByTestId('selo-dificuldade').props.children);
-    expect(selos).toEqual(['fácil', 'médio', 'difícil']);
+    expect(selos).toEqual(['fácil', 'médio', 'exigente']);
   });
 
   test('lista o que pesou em médio e em difícil, e não escreve nada em fácil', async () => {
@@ -126,7 +126,7 @@ describe('o nível de dificuldade ao lado da espécie', () => {
     renderizarApp({ url: '/cadastro', especies });
     expect(await screen.findByLabelText('Jiboia. Fácil de cuidar.')).toBeTruthy();
     expect(
-      screen.getByLabelText('Tomate. Difícil: Necessita de rega frequente. Necessita de sol pleno.'),
+      screen.getByLabelText('Tomate. Exigente: Necessita de rega frequente. Necessita de sol pleno.'),
     ).toBeTruthy();
   });
 });

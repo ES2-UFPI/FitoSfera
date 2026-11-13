@@ -4,6 +4,7 @@ import { TEXTOS } from '@/textos';
 import { CORES } from '../tema/cores';
 import { ESPACO, RAIO } from '../tema/medidas';
 import { FONTES, TEXTO } from '../tema/tipografia';
+import { SeloDeDificuldade } from './SeloDeDificuldade';
 import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from './textosDaDificuldade';
 
 /**
@@ -28,9 +29,7 @@ export function CartaoDaDificuldade({ especie }: { especie: EspecieVegetal | nul
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
           {TEXTOS.detalhe.cuidadosDaEspecie}
         </Text>
-        <Text testID="selo-dificuldade" style={estilos.selo}>
-          {dificuldade.curto}
-        </Text>
+        <SeloDeDificuldade nivel={especie.nivelDeDificuldade} sobreFundoTingido />
       </View>
 
       {observacao === null ? (
@@ -63,13 +62,6 @@ const estilos = StyleSheet.create({
     gap: ESPACO.medio,
   },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACO.pequeno },
-  selo: {
-    fontFamily: FONTES.forte,
-    fontSize: 10.5,
-    letterSpacing: 1.3,
-    textTransform: 'uppercase',
-    color: CORES.texto,
-  },
   motivos: { gap: ESPACO.minimo },
   motivo: { flexDirection: 'row', gap: ESPACO.pequeno },
   /** `texto`, e não `textoApoio`: sobre os fundos tingidos o apoio fica abaixo de 4,5:1 em 14 px. */

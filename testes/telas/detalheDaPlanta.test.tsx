@@ -297,7 +297,7 @@ describe('os cuidados da espécie no detalhe', () => {
   test('lista o que pesou numa espécie difícil', async () => {
     renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
     expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
-    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('difícil');
+    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('exigente');
     expect(motivosNaTela()).toEqual(['Necessita de rega frequente', 'Necessita de sol pleno']);
   });
 
@@ -312,7 +312,7 @@ describe('os cuidados da espécie no detalhe', () => {
   test('o leitor de tela ouve os motivos em uma frase só', async () => {
     renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
     expect(
-      await screen.findByLabelText('Difícil: Necessita de rega frequente. Necessita de sol pleno.'),
+      await screen.findByLabelText('Exigente: Necessita de rega frequente. Necessita de sol pleno.'),
     ).toBeTruthy();
   });
 
