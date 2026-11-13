@@ -275,8 +275,12 @@ describe('histórico da planta', () => {
 
 describe('os cuidados da espécie no detalhe', () => {
   const fonte = 'Fonte de teste';
-  /** O tomate do catálogo de verdade: rega diária e DLI de 18 a 30, que é "luz muito alta". */
-  const tomateDificil: EspecieVegetal = (() => {
+  /**
+   * O tomate como está no catálogo: rega diária (2 pontos), DLI de 18 a 30, que é "luz muito alta"
+   * (2 pontos), e poda ou tutor na ficha de manejo (1 ponto). Total 5, o corte de exigente. O nível não é
+   * declarado aqui — ele sai da conta.
+   */
+  const tomateExigente: EspecieVegetal = (() => {
     const base = especieDeTeste({
       id: 'tomate',
       nomeComum: 'Tomate',
@@ -285,9 +289,13 @@ describe('os cuidados da espécie no detalhe', () => {
     });
     return {
       ...base,
-      nivelDeDificuldade: 'dificil',
       intervaloDeRegaEmDias: 1,
       faixasIdeais: { ...base.faixasIdeais!, luzDiaria: { minimo: 18, maximo: 30, fonte } },
+      exigencias: {
+        exigeControleDePraga: { presente: false, fonte },
+        morreComEncharcamento: { presente: false, fonte },
+        exigeManejoEstrutural: { presente: true, fonte },
+      },
     };
   })();
 
@@ -295,10 +303,14 @@ describe('os cuidados da espécie no detalhe', () => {
     screen.queryAllByTestId('motivo-da-dificuldade').map((linha) => linha.props.children);
 
   test('lista o que pesou numa espécie difícil', async () => {
-    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
     expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
     expect(screen.getByTestId('selo-dificuldade').props.children).toBe('exigente');
-    expect(motivosNaTela()).toEqual(['Necessita de rega frequente', 'Necessita de sol pleno']);
+    expect(motivosNaTela()).toEqual([
+      'Necessita de rega frequente',
+      'Necessita de sol pleno',
+      'Necessita de poda ou tutor',
+    ]);
   });
 
   test('numa espécie fácil diz que ela é tranquila, sem lista de motivos', async () => {
@@ -310,9 +322,11 @@ describe('os cuidados da espécie no detalhe', () => {
   });
 
   test('o leitor de tela ouve os motivos em uma frase só', async () => {
-    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateDificil], url: '/planta/p1' });
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
     expect(
-      await screen.findByLabelText('Exigente: Necessita de rega frequente. Necessita de sol pleno.'),
+      await screen.findByLabelText(
+        'Exigente: Necessita de rega frequente. Necessita de sol pleno. Necessita de poda ou tutor.',
+      ),
     ).toBeTruthy();
   });
 

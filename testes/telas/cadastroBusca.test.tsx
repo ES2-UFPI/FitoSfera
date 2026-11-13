@@ -71,27 +71,36 @@ test('o cabeçalho do cadastro marca o passo 1 de 3', async () => {
 
 describe('o nível de dificuldade ao lado da espécie', () => {
   const fonte = 'Fonte de teste';
-  /** `luzDiaria` é o mínimo da faixa de DLI, em mol/m²/dia, como no catálogo. */
-  const comDificuldade = (
+  const fato = (presente: boolean) => ({ presente, fonte });
+
+  /**
+   * O nível não é declarado: ele sai da conta. Por isso o que o teste informa são as **entradas** — rega em
+   * dias, mínimo da faixa de DLI e os fatos de manejo —, e a asserção cobra o nível que elas produzem.
+   */
+  const especieCom = (
     nomeComum: string,
-    nivel: EspecieVegetal['nivelDeDificuldade'],
     rega: number,
     luzDiaria: number,
+    fatos: { praga?: boolean; encharcamento?: boolean; manejo?: boolean } = {},
   ): EspecieVegetal => {
     const base = especieDeTeste({ id: nomeComum.toLowerCase(), nomeComum, nomeCientifico: 'X x', nomesAlternativos: [] });
     return {
       ...base,
-      nivelDeDificuldade: nivel,
       intervaloDeRegaEmDias: rega,
       faixasIdeais: { ...base.faixasIdeais!, luzDiaria: { minimo: luzDiaria, maximo: 30, fonte } },
+      exigencias: {
+        exigeControleDePraga: fato(fatos.praga ?? false),
+        morreComEncharcamento: fato(fatos.encharcamento ?? false),
+        exigeManejoEstrutural: fato(fatos.manejo ?? false),
+      },
     };
   };
 
-  // Os três com os valores que eles têm no catálogo de verdade.
+  // Uma espécie de cada nível, em ordem alfabética, com a conta que leva a ele.
   const especies = [
-    comDificuldade('Jiboia', 'facil', 7, 3),
-    comDificuldade('Samambaia', 'medio', 2, 3),
-    comDificuldade('Tomate', 'dificil', 1, 18),
+    especieCom('Jiboia', 7, 3), //                              0 + 0 + 0 = 0 → fácil
+    especieCom('Samambaia', 2, 12, { encharcamento: true }), //  2 + 1 + 1 = 4 → médio
+    especieCom('Tomate', 1, 18, { manejo: true }), //            2 + 2 + 1 = 5 → exigente
   ];
 
   test('mostra o selo do nível em toda espécie da lista', async () => {
@@ -111,8 +120,8 @@ describe('o nível de dificuldade ao lado da espécie', () => {
     );
     expect(motivos).toEqual([
       [],
-      ['Necessita de rega frequente'],
-      ['Necessita de rega frequente', 'Necessita de sol pleno'],
+      ['Necessita de rega frequente', 'Cuidado com encharcamento. A planta morre se encharcar'],
+      ['Necessita de rega frequente', 'Necessita de sol pleno', 'Necessita de poda ou tutor'],
     ]);
   });
 
@@ -126,7 +135,9 @@ describe('o nível de dificuldade ao lado da espécie', () => {
     renderizarApp({ url: '/cadastro', especies });
     expect(await screen.findByLabelText('Jiboia. Fácil de cuidar.')).toBeTruthy();
     expect(
-      screen.getByLabelText('Tomate. Exigente: Necessita de rega frequente. Necessita de sol pleno.'),
+      screen.getByLabelText(
+        'Tomate. Exigente: Necessita de rega frequente. Necessita de sol pleno. Necessita de poda ou tutor.',
+      ),
     ).toBeTruthy();
   });
 });
