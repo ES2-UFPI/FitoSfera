@@ -19,9 +19,9 @@ export const TEXTO_DO_MOTIVO: Record<MotivoDaDificuldade, string> = {
  * Como cada nível aparece: o selo, o que o leitor de tela fala, a cor do selo sobre fundo claro e o par de
  * cores de quando o nível tinge um cartão inteiro.
  *
- * `cor` serve ao selo solto na lista do cadastro, sobre a superfície clara. `fundo` e `borda` servem ao
- * cartão do detalhe, e dentro dele o selo **não** usa `cor`: sobre o fundo do próprio nível ela fica abaixo
- * dos 4,5:1 de contraste (3,78:1 no médio). Ali o fundo já comunica o nível, e o selo vai em `CORES.texto`.
+ * `cor` serve ao selo sobre superfície clara; `fundo` e `borda`, ao cartão do detalhe, que o nível tinge
+ * inteiro. Quem decide entre as duas situações é o `SeloDeDificuldade`, e o porquê está documentado nele:
+ * sobre o fundo do próprio nível a `cor` fica abaixo dos 4,5:1 de contraste (3,78:1 no médio).
  */
 export const APRESENTACAO_DA_DIFICULDADE: Record<
   NivelDeDificuldade,
@@ -42,8 +42,8 @@ export const APRESENTACAO_DA_DIFICULDADE: Record<
     borda: CORES.bordaDeAtencao,
   },
   dificil: {
-    curto: 'difícil',
-    falado: 'Difícil de cuidar',
+    curto: 'exigente',
+    falado: 'Exige bastante cuidado',
     cor: CORES.erro,
     fundo: CORES.fundoAlerta,
     borda: CORES.bordaDeAlerta,

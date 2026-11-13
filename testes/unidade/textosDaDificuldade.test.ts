@@ -99,7 +99,7 @@ describe('observacaoDaDificuldade', () => {
   test('um item por motivo, na ordem em que o domínio aponta', () => {
     expect(observacaoDaDificuldade('dificil', criterios({ rega: 2, luzDiaria: 18 }))).toEqual({
       itens: ['Necessita de rega frequente', 'Necessita de sol pleno'],
-      falado: 'Difícil: Necessita de rega frequente. Necessita de sol pleno.',
+      falado: 'Exigente: Necessita de rega frequente. Necessita de sol pleno.',
     });
   });
 
@@ -138,7 +138,7 @@ describe('observacaoDaDificuldade', () => {
     // É o caso da orquídea: rega de 7 dias e DLI de 6 a 10, difícil por cuidados que o catálogo não mede.
     expect(observacaoDaDificuldade('dificil', criterios({ rega: 7, luzDiaria: 6 }))).toEqual({
       itens: ['Exige cuidados que o catálogo ainda não detalha'],
-      falado: 'Difícil: Exige cuidados que o catálogo ainda não detalha.',
+      falado: 'Exigente: Exige cuidados que o catálogo ainda não detalha.',
     });
   });
 });

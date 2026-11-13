@@ -8,6 +8,7 @@ import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
 import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../componentes/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
+import { SeloDeDificuldade } from '../../componentes/SeloDeDificuldade';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
 import { CORES } from '../../tema/cores';
@@ -104,9 +105,7 @@ export function TelaBuscarEspecie() {
                   <Text testID="nome-comum" style={estilos.nomeComum}>
                     {item.nomeComum}
                   </Text>
-                  <Text testID="selo-dificuldade" style={[estilos.selo, { color: dificuldade.cor }]}>
-                    {dificuldade.curto}
-                  </Text>
+                  <SeloDeDificuldade nivel={item.nivelDeDificuldade} />
                 </View>
                 <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
                 {observacao !== null && (
@@ -163,8 +162,6 @@ const estilos = StyleSheet.create({
   nomes: { flex: 1, gap: 1 },
   linhaDoNome: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
   nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto, flexShrink: 1 },
-  /** Selo do nível ao lado do nome: maiúsculas pequenas, na cor do nível. */
-  selo: { fontFamily: FONTES.forte, fontSize: 9.5, letterSpacing: 1.2, textTransform: 'uppercase' },
   motivos: { marginTop: ESPACO.minimo },
   motivo: { flexDirection: 'row', gap: ESPACO.minimo + 2 },
   marcador: { fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
