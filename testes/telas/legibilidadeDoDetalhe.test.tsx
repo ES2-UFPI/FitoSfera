@@ -32,6 +32,7 @@ test('o leitor de tela percorre planta, condições, luz de hoje, cuidados, rega
     'Luz de hoje',
     // Os cuidados da espécie (#120) são informação de referência: vêm depois do que está acontecendo agora.
     'Cuidados desta espécie',
+    'Expectativa de colheita',
     'Rega e histórico',
     // O tomate dá frutos: o histórico de colheitas (#133) e o registro (#130) vêm depois da rega e antes das ações.
     'Colheitas',
