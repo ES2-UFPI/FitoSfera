@@ -1,9 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, TEXTO } from '../tema';
+import { Cartao } from './Cartao';
 import { SeloDeDificuldade } from './SeloDeDificuldade';
 import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from './textosDaDificuldade';
 
@@ -23,10 +22,8 @@ export function CartaoDaDificuldade({ especie }: { especie: EspecieVegetal | nul
   });
 
   return (
-    <View
-      testID="cartao-dificuldade"
-      style={[estilos.cartao, { backgroundColor: dificuldade.fundo, borderColor: dificuldade.borda }]}
-    >
+    // O fundo e a borda vêm do nível, em `APRESENTACAO_DA_DIFICULDADE`; o resto é o cartão de sempre.
+    <Cartao testID="cartao-dificuldade" estilo={{ backgroundColor: dificuldade.fundo, borderColor: dificuldade.borda }}>
       <View style={estilos.cabecalho}>
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
           {TEXTOS.detalhe.cuidadosDaEspecie}
@@ -49,20 +46,11 @@ export function CartaoDaDificuldade({ especie }: { especie: EspecieVegetal | nul
           ))}
         </View>
       )}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  /** O fundo e a borda vêm do nível, em `APRESENTACAO_DA_DIFICULDADE`. */
-  cartao: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    gap: ESPACO.medio,
-  },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACO.pequeno },
   motivos: { gap: ESPACO.minimo },
   motivo: { flexDirection: 'row', gap: ESPACO.pequeno },

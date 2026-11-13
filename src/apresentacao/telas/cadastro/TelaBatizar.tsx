@@ -11,9 +11,7 @@ import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
 import { escreverDataDePlantio, lerDataDePlantio } from '../../colheita/entradaDePlantio';
-import { CORES } from '../../tema/cores';
-import { ESPACO, RAIO } from '../../tema/medidas';
-import { FONTES, TEXTO } from '../../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 
 const ESPERA_DA_CONFIRMACAO = 1200
 

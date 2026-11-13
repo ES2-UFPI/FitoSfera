@@ -3,10 +3,10 @@ import { ColheitasDaPlanta, DIAS_DO_INDICADOR_DE_RENDIMENTO } from '@/aplicacao/
 import { UNIDADES_DE_COLHEITA } from '@/dominio/modelos/RegistroDeColheita';
 import { TEXTOS } from '@/textos';
 import { formatarData } from '../formatarData';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { Cartao } from '../componentes/Cartao';
 import { descreverQuantidade } from './FormularioDeColheita';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 
 /** undefined: carregando. */
 export type EstadoDasColheitas = ColheitasDaPlanta | undefined | 'falhou';
@@ -51,7 +51,7 @@ function Indicador({ colheitas }: { colheitas: ColheitasDaPlanta }) {
  */
 export function CartaoDasColheitas({ estado }: { estado: EstadoDasColheitas }) {
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.colheitas.titulo}
       </Text>
@@ -64,10 +64,7 @@ export function CartaoDasColheitas({ estado }: { estado: EstadoDasColheitas }) {
       ) : null}
 
       {estado !== undefined && estado !== 'falhou' && estado.registros.length === 0 ? (
-        <View style={estilos.vazio} accessible testID="colheitas-vazias">
-          <Text style={estilos.total}>{TEXTOS.colheitas.vazio}</Text>
-          <Text style={TEXTO.apoio}>{TEXTOS.colheitas.comoComecar}</Text>
-        </View>
+        <MensagemDeVazio titulo={TEXTOS.colheitas.vazio} texto={TEXTOS.colheitas.comoComecar} testID="colheitas-vazias" />
       ) : null}
 
       {estado !== undefined && estado !== 'falhou' && estado.registros.length > 0 ? (
@@ -94,23 +91,13 @@ export function CartaoDasColheitas({ estado }: { estado: EstadoDasColheitas }) {
           </View>
         </>
       ) : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-    gap: ESPACO.medio,
-  },
   indicador: {
-    gap: 2,
+    gap: ESPACO.fino,
     padding: ESPACO.medio,
     borderRadius: RAIO.medio,
     backgroundColor: CORES.papel,
@@ -119,6 +106,5 @@ const estilos = StyleSheet.create({
   lista: { gap: ESPACO.pequeno },
   item: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acao },
-  vazio: { gap: 2 },
   erro: { color: CORES.erro },
 });

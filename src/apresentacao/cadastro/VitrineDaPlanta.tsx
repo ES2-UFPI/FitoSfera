@@ -3,7 +3,7 @@ import { Aparencia } from '@/dominio/modelos/Aparencia';
 import { EtiquetaDePapel } from '../estante/EtiquetaDePapel';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
-import { ESPACO } from '../tema/medidas';
+import { ESPACO } from '../tema';
 
 const LARGURA_DA_PREVIA = 92;
 

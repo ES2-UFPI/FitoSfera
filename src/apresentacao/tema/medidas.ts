@@ -1,6 +1,11 @@
-/** Escala de espaçamento e raios, para as telas não inventarem números soltos. */
+/**
+ * Escala de espaçamento e raios, para as telas não inventarem números soltos. `fino` e `curto` são os ajustes
+ * finos (entre linhas de um mesmo bloco, dentro de etiquetas); o resto separa blocos.
+ */
 export const ESPACO = {
+  fino: 2,
   minimo: 4,
+  curto: 6,
   pequeno: 8,
   medio: 12,
   grande: 16,
@@ -9,11 +14,21 @@ export const ESPACO = {
 } as const;
 
 export const RAIO = {
+  fino: 4,
   pequeno: 6,
   medio: 14,
   grande: 22,
   pilula: 999,
 } as const;
+
+/** Até onde um cartão ou o conteúdo de uma tela cresce: num tablet, a leitura não vira uma linha comprida. */
+export const LARGURA_DO_CONTEUDO = 520;
+
+/** Um modal é mais estreito que o conteúdo: a caixa fica no meio da tela, com a tela de baixo aparecendo em volta. */
+export const LARGURA_DO_MODAL = 440;
+
+/** Uma frase centralizada não passa disto, para ler sem virar a cabeça. */
+export const LARGURA_DA_LEITURA = 300;
 
 /** Altura mínima de qualquer coisa tocável. */
 export const ALVO_DE_TOQUE = 48;

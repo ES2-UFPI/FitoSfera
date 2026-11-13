@@ -10,12 +10,11 @@ import { deslocarHorario } from '@/dominio/regras/HorarioDoLembrete';
 import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
+import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { descreverJanela, formatarHorario } from '../lembretes/textosDosLembretes';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 
 /** De meia em meia hora: a janela tem resolução de minuto, mas ninguém escolhe lembrete minuto a minuto. */
 export const PASSO_EM_MINUTOS = 30;
@@ -96,7 +95,7 @@ export function TelaHorarioDosLembretes() {
               </Text>
             ) : null}
 
-            <View style={estilos.cartao}>
+            <Cartao>
               {(['inicio', 'fim'] as const).map((limite) => (
                 <LinhaDoLimite
                   key={limite}
@@ -106,9 +105,9 @@ export function TelaHorarioDosLembretes() {
                 />
               ))}
               <Text style={estilos.resumo} accessibilityLiveRegion="polite">
-                Os avisos chegam {descreverJanela(janela)}.
+                {TEXTOS.lembretes.quandoChegam(descreverJanela(janela))}
               </Text>
-            </View>
+            </Cartao>
 
             {falhaAoGravar ? (
               <Text style={estilos.alerta} accessibilityRole="alert">
@@ -192,16 +191,8 @@ function janelasIguais(primeira: JanelaDeLembretes, segunda: JanelaDeLembretes):
 const estilos = StyleSheet.create({
   topo: { paddingHorizontal: ESPACO.grande },
   conteudo: { paddingHorizontal: ESPACO.grande, paddingTop: ESPACO.grande, gap: ESPACO.grande },
-  cartao: {
-    padding: ESPACO.grande,
-    gap: ESPACO.grande,
-    borderRadius: RAIO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-  },
   linha: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.medio },
-  textosDaLinha: { flex: 1, gap: 2 },
+  textosDaLinha: { flex: 1, gap: ESPACO.fino },
   rotuloDaLinha: { ...TEXTO.rotulo, textTransform: 'uppercase' },
   horario: { fontFamily: FONTES.titulo, fontSize: 30, lineHeight: 34, color: CORES.texto },
   passos: { flexDirection: 'row', gap: ESPACO.pequeno },

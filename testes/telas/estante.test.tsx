@@ -1,5 +1,5 @@
 import { fireEvent, screen } from 'expo-router/testing-library';
-import { ALTURA_DA_PRATELEIRA, FOLGA_DO_BOTAO_FLUTUANTE } from '@/apresentacao/tema/medidas';
+import { ALTURA_DA_PRATELEIRA, FOLGA_DO_BOTAO_FLUTUANTE } from '@/apresentacao/tema';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 

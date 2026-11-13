@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { TEXTOS } from '@/textos';
-import { ESPACO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { ESPACO, TEXTO } from '../tema';
 import { dataPorExtenso, descreverQuantidade, saudacaoPara } from './textosDoCabecalho';
 
 /** Data, saudação pelo horário e quantas plantas estão na estante. */
@@ -20,6 +19,6 @@ export function CabecalhoDoJardim({ quantidade }: { quantidade: number }) {
 }
 
 const estilos = StyleSheet.create({
-  cabecalho: { paddingHorizontal: ESPACO.amplo, paddingTop: ESPACO.medio, gap: ESPACO.minimo + 2 },
-  titulo: { marginTop: 2 },
+  cabecalho: { paddingHorizontal: ESPACO.amplo, paddingTop: ESPACO.medio, gap: ESPACO.curto },
+  titulo: { marginTop: ESPACO.fino },
 });

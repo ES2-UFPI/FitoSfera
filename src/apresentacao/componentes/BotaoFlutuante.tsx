@@ -1,8 +1,6 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO } from '../tema';
 
 export function BotaoFlutuante({ aoTocar }: { aoTocar: () => void }) {
   return (
@@ -26,7 +24,7 @@ const estilos = StyleSheet.create({
     minHeight: ALVO_DE_TOQUE,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: ESPACO.curto,
     paddingHorizontal: ESPACO.amplo,
     borderRadius: RAIO.pilula,
     backgroundColor: CORES.acao,

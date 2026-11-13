@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react-native';
 import { SeloDeDificuldade } from '@/apresentacao/componentes/SeloDeDificuldade';
 import { APRESENTACAO_DA_DIFICULDADE } from '@/apresentacao/componentes/textosDaDificuldade';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 import { NivelDeDificuldade, NIVEIS_DE_DIFICULDADE } from '@/dominio/modelos/EspecieVegetal';
 
 /** O selo recém-desenhado, isolado: cada teste monta o seu e lê o único elemento com o testID. */

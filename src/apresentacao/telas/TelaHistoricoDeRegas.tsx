@@ -9,10 +9,9 @@ import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
 import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 
 type Estado =
   | { tipo: 'carregando' }
@@ -109,17 +108,12 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
 /** A planta nunca foi regada: nada de lista vazia, e sim o convite para registrar a primeira rega. */
 function SemRegas() {
   return (
-    <View style={estilos.vazio}>
-      <View style={estilos.regador} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <IconeRegador cor={CORES.acaoRega} tamanho={44} />
-      </View>
-      <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        {TEXTOS.historico.semRegasTitulo}
-      </Text>
-      <Text style={[TEXTO.corpo, estilos.texto]}>
-        {TEXTOS.historico.semRegasTexto}
-      </Text>
-    </View>
+    <MensagemDeVazio
+      forma="tela"
+      titulo={TEXTOS.historico.semRegasTitulo}
+      texto={TEXTOS.historico.semRegasTexto}
+      icone={<IconeRegador cor={CORES.acaoRega} tamanho={44} />}
+    />
   );
 }
 
@@ -129,7 +123,7 @@ const estilos = StyleSheet.create({
   cabecalho: { gap: ESPACO.minimo },
   apelido: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
   lista: {
-    maxWidth: 520,
+    maxWidth: LARGURA_DO_CONTEUDO,
     padding: ESPACO.grande,
     borderRadius: RAIO.medio,
     borderWidth: 1,
@@ -140,8 +134,5 @@ const estilos = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACO.pequeno },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acaoRega },
   quando: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },
-  vazio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: ESPACO.pequeno, paddingBottom: ESPACO.folgado * 2 },
-  regador: { marginBottom: ESPACO.pequeno },
-  texto: { textAlign: 'center', maxWidth: 300 },
   erro: { color: CORES.erro },
 });

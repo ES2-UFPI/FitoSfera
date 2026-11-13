@@ -12,9 +12,7 @@ import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { SeloDeDificuldade } from '../../componentes/SeloDeDificuldade';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
-import { CORES } from '../../tema/cores';
-import { ESPACO, RAIO } from '../../tema/medidas';
-import { FONTES, TEXTO } from '../../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 
 export const ATRASO_DA_BUSCA_MS = 300;
 
@@ -173,7 +171,7 @@ const estilos = StyleSheet.create({
     gap: ESPACO.pequeno,
     marginHorizontal: ESPACO.amplo,
     marginTop: ESPACO.grande,
-    paddingHorizontal: ESPACO.medio + 2,
+    paddingHorizontal: ESPACO.medio + ESPACO.fino,
     minHeight: 50,
     borderRadius: RAIO.medio,
     borderWidth: 1.5,
@@ -185,11 +183,11 @@ const estilos = StyleSheet.create({
   divisoria: { height: 1, backgroundColor: CORES.bordaSuave },
   resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.medio },
   pressionado: { opacity: 0.6 },
-  nomes: { flex: 1, gap: 1 },
+  nomes: { flex: 1, gap: ESPACO.fino },
   linhaDoNome: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
   nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto, flexShrink: 1 },
   motivos: { marginTop: ESPACO.minimo },
-  motivo: { flexDirection: 'row', gap: ESPACO.minimo + 2 },
+  motivo: { flexDirection: 'row', gap: ESPACO.curto },
   marcador: { fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
   /** O `flex: 1` deixa a linha que quebra alinhada com o texto, e não embaixo do marcador. */
   textoDoMotivo: { flex: 1, fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },

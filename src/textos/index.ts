@@ -469,6 +469,7 @@ export const TEXTOS = {
     titulo: 'Lembretes',
     lendo: 'Lendo o horário salvo…',
     resumo: (janela: string) => `Os avisos chegam ${janela}. Fora desse horário, eles esperam.`,
+    quandoChegam: (janela: string) => `Os avisos chegam ${janela}.`,
     mudarHorario: 'Mudar o horário dos lembretes',
     qualquerHora: 'a qualquer hora do dia',
     entre: (inicio: string, fim: string) => `das ${inicio} às ${fim}`,

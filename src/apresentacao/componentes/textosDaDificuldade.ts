@@ -4,7 +4,7 @@ import {
   MotivoDaDificuldade,
   motivosDaDificuldade,
 } from '@/dominio/regras/ClassificadorDeDificuldade';
-import { CORES } from '../tema/cores';
+import { CORES } from '../tema';
 
 /** Cada motivo é uma frase inteira e começa em maiúscula, **sem** o ponto final: quem monta a observação põe. */
 export const TEXTO_DO_MOTIVO: Record<MotivoDaDificuldade, string> = {

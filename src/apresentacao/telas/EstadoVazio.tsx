@@ -13,9 +13,16 @@ import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { Prateleira } from '../estante/Prateleira';
 import { VasoFantasma } from '../estante/VasoFantasma';
-import { CORES } from '../tema/cores';
-import { ALTURA_DA_AREA_DOS_VASOS, ESPACO, LARGURA_DO_VASO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import {
+  ALTURA_DA_AREA_DOS_VASOS,
+  CORES,
+  ESPACO,
+  FONTES,
+  LARGURA_DA_LEITURA,
+  LARGURA_DO_VASO,
+  RAIO,
+  TEXTO,
+} from '../tema';
 
 const GrupoAnimado = Animated.createAnimatedComponent(G);
 
@@ -104,13 +111,13 @@ const estilos = StyleSheet.create({
   estante: { marginTop: ESPACO.grande, paddingHorizontal: ESPACO.medio },
   lugar: { flex: 1, height: ALTURA_DA_AREA_DOS_VASOS, alignItems: 'center' },
   convite: { alignItems: 'center', paddingHorizontal: ESPACO.folgado, gap: ESPACO.medio },
-  texto: { textAlign: 'center', maxWidth: 300 },
+  texto: { textAlign: 'center', maxWidth: LARGURA_DA_LEITURA },
   passos: { flexDirection: 'row', gap: ESPACO.medio, marginTop: ESPACO.minimo },
-  passo: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.minimo + 1 },
+  passo: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.minimo },
   numero: {
     width: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: RAIO.pilula,
     backgroundColor: CORES.bolinhaDePasso,
     alignItems: 'center',
     justifyContent: 'center',

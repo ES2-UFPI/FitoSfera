@@ -39,6 +39,27 @@ test('as telas não escrevem texto direto: tudo vem do módulo de textos', () =>
   expect(achados).toEqual([]);
 });
 
+/**
+ * O teste de cima só vê texto que abre e fecha na mesma linha. Este pega o que fica sozinho numa linha logo abaixo
+ * da tag, como "Os avisos chegam {janela}.", que escapou na primeira revisão (#38, achado na #40).
+ */
+test('as telas também não escrevem texto numa linha própria, embaixo da tag', () => {
+  const achados = [...arquivosDe('src/apresentacao'), ...arquivosDe('app')].flatMap((arquivo) => {
+    const linhas = fs
+      .readFileSync(path.join(RAIZ, arquivo), 'utf8')
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      .split(/\r?\n/)
+      .map((linha) => linha.trim());
+    return linhas.flatMap((linha, indice) => {
+      const anterior = linhas.slice(0, indice).reverse().find((outra) => outra !== '') ?? '';
+      const abreTag = anterior.endsWith('>') && !anterior.endsWith('=>');
+      const ehTexto = /^[A-Za-zÀ-ú✓•·]/.test(linha) && !/^[a-z]\w*\s*[.(&?=]/.test(linha);
+      return abreTag && ehTexto ? [`${arquivo}:${indice + 1}: ${linha}`] : [];
+    });
+  });
+  expect(achados).toEqual([]);
+});
+
 test('nenhum texto usa termo técnico do projeto', () => {
   const JARGAO = /\b(hardware|development build|expo go|grandezas?|desvios?|cache|rssi|ble|associad[oa]s?|associar|desassociar|monitorad[oa])\b/i;
   expect(todosOsTextos(TEXTOS).filter((texto) => JARGAO.test(texto))).toEqual([]);

@@ -1,9 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { Cartao } from './Cartao';
 
 /**
  * De quanto em quanto tempo a tela aberta recalcula a luz de hoje, mesmo sem leitura nova: é assim que o sensor
@@ -28,7 +27,7 @@ export function CartaoDaLuzDeHoje({ luz }: { luz: LuzDoDia | undefined }) {
   const frase = luz.incompleta ? TEXTOS.luzDeHoje.metaJaAlcancada : fraseDoRitmo(luz);
 
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.luzDeHoje.titulo}
       </Text>
@@ -54,28 +53,18 @@ export function CartaoDaLuzDeHoje({ luz }: { luz: LuzDoDia | undefined }) {
           {mostrarPorcentagem ? null : <Text style={estilos.textoDoAviso}>{TEXTOS.luzDeHoje.parteNaoContada}</Text>}
         </View>
       ) : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-    gap: ESPACO.medio,
-  },
   progresso: { gap: ESPACO.pequeno },
   linhaDoValor: { flexDirection: 'row', alignItems: 'baseline', gap: ESPACO.pequeno },
   valor: { fontFamily: FONTES.titulo, fontSize: 34, lineHeight: 40, color: CORES.texto },
   legenda: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
   trilho: { height: 8, borderRadius: RAIO.pilula, backgroundColor: CORES.bolinhaDePasso, overflow: 'hidden' },
   preenchido: { height: '100%', borderRadius: RAIO.pilula, backgroundColor: CORES.luzDoSol },
-  aviso: { gap: 2, padding: ESPACO.medio, borderRadius: RAIO.pequeno, backgroundColor: CORES.fundoAtencao },
+  aviso: { gap: ESPACO.fino, padding: ESPACO.medio, borderRadius: RAIO.pequeno, backgroundColor: CORES.fundoAtencao },
   tituloDoAviso: { fontFamily: FONTES.forte, fontSize: 14, color: CORES.texto },
   textoDoAviso: { fontFamily: FONTES.texto, fontSize: 13.5, lineHeight: 19, color: CORES.texto },
 });

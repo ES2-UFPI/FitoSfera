@@ -10,10 +10,9 @@ import { TEXTOS } from '@/textos';
 import { descreverQuantidade } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 
 const PERIODOS = [7, 30, 90, 365] as const;
 type Periodo = (typeof PERIODOS)[number];
@@ -85,7 +84,7 @@ export function TelaCompararRendimento({ idInicial }: { idInicial?: string }) {
         <Text style={TEXTO.corpo}>{TEXTOS.rendimento.explicacao}</Text>
 
         {frutiferas.length < MINIMO_DE_PLANTAS_PARA_COMPARAR ? (
-          <Text style={[TEXTO.corpo, estilos.aviso]}>{TEXTOS.rendimento.poucasFrutiferas}</Text>
+          <MensagemDeVazio titulo={TEXTOS.rendimento.poucasFrutiferas} />
         ) : (
           <>
             <Grupo rotulo={TEXTOS.rendimento.rotuloDoPeriodo}>
@@ -221,7 +220,7 @@ function Opcao({ titulo, escolhida, aoTocar }: { titulo: string; escolhida: bool
 
 const estilos = StyleSheet.create({
   topo: { paddingHorizontal: ESPACO.grande },
-  conteudo: { width: '100%', maxWidth: 560, alignSelf: 'center', padding: ESPACO.grande, gap: ESPACO.amplo },
+  conteudo: { width: '100%', maxWidth: LARGURA_DO_CONTEUDO, alignSelf: 'center', padding: ESPACO.grande, gap: ESPACO.amplo },
   grupo: { gap: ESPACO.pequeno },
   opcoes: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
   opcao: {

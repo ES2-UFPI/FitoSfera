@@ -2,9 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TEXTOS } from '@/textos';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
-import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, TEXTO } from '../tema';
 
 /** Abas que ainda vão ganhar conteúdo em outras histórias. */
 export function TelaEmBreve({ titulo, descricao }: { titulo: string; descricao: string }) {

@@ -14,6 +14,7 @@ import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import {
@@ -23,9 +24,7 @@ import {
   ordenarPorSinal,
   resumirLeitura,
 } from '../sensor/textosDoSensor';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { TelaEmBreve } from './TelaEmBreve';
 
 export const DURACAO_DA_BUSCA_MS = 15_000;
@@ -175,7 +174,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
               </Pressable>
             ))}
             {!etapa.buscando && encontrados.size === 0 ? (
-              <Text style={TEXTO.corpo}>{TEXTOS.pareamento.nenhumEncontrado}</Text>
+              <MensagemDeVazio titulo={TEXTOS.pareamento.nenhumEncontrado} />
             ) : null}
             {!etapa.buscando ? (
               // Achou sensores: escolher um deles é o principal. Não achou nenhum: procurar de novo passa a ser.
@@ -245,7 +244,7 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     borderColor: CORES.bordaSuave,
     backgroundColor: CORES.superficie,
-    gap: 2,
+    gap: ESPACO.fino,
   },
   pressionado: { opacity: 0.78 },
   nome: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },

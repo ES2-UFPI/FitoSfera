@@ -1,14 +1,13 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text } from 'react-native';
 import { JANELA_PADRAO, JanelaDeLembretes } from '@/dominio/modelos/JanelaDeLembretes';
 import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { TEXTO } from '../tema';
 import { descreverJanela } from './textosDosLembretes';
+import { Cartao } from '../componentes/Cartao';
 
 /** undefined: ainda lendo a preferência gravada. */
 type EstadoDoCartao = JanelaDeLembretes | undefined;
@@ -37,7 +36,7 @@ export function CartaoDosLembretes({ emDestaque = true }: { emDestaque?: boolean
   );
 
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.lembretes.titulo}
       </Text>
@@ -54,17 +53,6 @@ export function CartaoDosLembretes({ emDestaque = true }: { emDestaque?: boolean
           largo
         />
       )}
-    </View>
+    </Cartao>
   );
 }
-
-const estilos = StyleSheet.create({
-  cartao: {
-    padding: ESPACO.grande,
-    gap: ESPACO.grande,
-    borderRadius: RAIO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-  },
-});

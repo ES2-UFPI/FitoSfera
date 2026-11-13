@@ -7,9 +7,7 @@ import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { ProvedorDoRascunho } from '../contextos/RascunhoDoCadastro';
-import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, TEXTO } from '../tema';
 
 /** Abre os passos de aparência e apelido do cadastro já preenchidos com a planta. */
 export function LayoutDaEdicao({ id }: { id: string }) {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
-import { ALTURA_DA_PRATELEIRA, ESPACO, FOLGA_DO_BOTAO_FLUTUANTE } from '../tema/medidas';
+import { ALTURA_DA_PRATELEIRA, ESPACO, FOLGA_DO_BOTAO_FLUTUANTE } from '../tema';
 import { contarPrateleirasQueCabem, distribuirNaEstante, Lugar, MINIMO_DE_PRATELEIRAS } from './distribuirNaEstante';
 import { Prateleira } from './Prateleira';
 import { VasoFantasma } from './VasoFantasma';

@@ -1,6 +1,6 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { RefreshControl } from 'react-native';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { especieDeTeste } from '../apoio/especiesDeTeste';
 import { plantaDeTeste, SensorFixo } from '../apoio/fakes';

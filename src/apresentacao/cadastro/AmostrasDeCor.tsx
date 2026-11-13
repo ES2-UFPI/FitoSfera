@@ -2,9 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { TEXTOS } from '@/textos';
 import { Vaso } from '../ilustracao/Vaso';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE_MINIMO, ESPACO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE_MINIMO, CORES, ESPACO, FONTES, TEXTO } from '../tema';
 
 export type FormatoDaAmostra = 'folha' | 'redonda' | 'vaso';
 
@@ -73,10 +71,10 @@ function Amostra({ formato, cores }: { formato: FormatoDaAmostra; cores: readonl
 }
 
 const estilos = StyleSheet.create({
-  secao: { paddingHorizontal: ESPACO.amplo, gap: 6 },
+  secao: { paddingHorizontal: ESPACO.amplo, gap: ESPACO.curto },
   cabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   nomeEscolhido: { fontFamily: FONTES.texto, fontSize: 11.5, color: CORES.textoApoio },
-  amostras: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+  amostras: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.fino },
   alvo: {
     width: ALVO_DE_TOQUE_MINIMO,
     height: ALVO_DE_TOQUE_MINIMO,

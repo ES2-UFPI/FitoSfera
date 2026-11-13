@@ -5,10 +5,9 @@ import { PareamentoDoSensor, SensorPareado } from '@/aplicacao/portas/Pareamento
 import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { finalDoEndereco } from './textosDoSensor';
+import { Cartao } from '../componentes/Cartao';
 
 /** undefined: carregando. */
 type EstadoDoCartao = SensorPareado | null | undefined;
@@ -60,7 +59,7 @@ export function CartaoDoSensorPareado({
   }
 
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.sensor.titulo}
       </Text>
@@ -96,19 +95,11 @@ export function CartaoDoSensorPareado({
           ) : null}
         </View>
       ) : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    padding: ESPACO.grande,
-    gap: ESPACO.grande,
-    borderRadius: RAIO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-  },
   pareado: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
   ponto: { width: 9, height: 9, borderRadius: RAIO.pilula, backgroundColor: CORES.statusOk },
   nome: { flex: 1, fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },

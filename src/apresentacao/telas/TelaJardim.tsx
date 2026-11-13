@@ -7,14 +7,13 @@ import { TEXTOS } from '@/textos';
 import { BotaoFlutuante } from '../componentes/BotaoFlutuante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CabecalhoDoJardim } from '../componentes/CabecalhoDoJardim';
+import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { SetaDoDropdown } from '../componentes/SetaDoDropdown';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { Estante } from '../estante/Estante';
 import { EstadoVazio } from './EstadoVazio';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, LARGURA_DO_MODAL, RAIO, TEXTO } from '../tema';
 
 export function TelaJardim() {
   const {
@@ -132,7 +131,7 @@ export function TelaJardim() {
 
   return (
     <FundoAconchegante style={{ paddingTop: margens.top }}>
-        <View style={estilos.cartaoDoJardim}>
+        <Cartao compacto estilo={estilos.margemDoCartao}>
           {/* Abre a lista de jardins direto: trocar de jardim fica a dois toques. */}
           <Pressable
             accessibilityRole="button"
@@ -148,14 +147,14 @@ export function TelaJardim() {
             </View>
             <SetaDoDropdown aberto={seletorAberto} />
           </Pressable>
-        </View>
+        </Cartao>
 
         <View style={estilos.cabecalhoJardim}>
           <CabecalhoDoJardim quantidade={lista.length} />
         </View>
 
         {container.pareamentoDoSensor || container.controleDoSensorDeDesenvolvimento ? (
-          <View style={estilos.cartaoDoSensor}>
+          <Cartao compacto estilo={estilos.margemDoCartao}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={sensorAberto ? TEXTOS.jardim.ocultarOpcoesDoSensor : TEXTOS.jardim.mostrarOpcoesDoSensor}
@@ -201,7 +200,7 @@ export function TelaJardim() {
                 {erroDoSensor ? <Text style={estilos.erroDoSensor} accessibilityRole="alert">{erroDoSensor}</Text> : null}
               </View>
             ) : null}
-          </View>
+          </Cartao>
         ) : null}
 
         {lista.length > 0 ? (
@@ -262,31 +261,14 @@ function jardimAtualTemSensorFisico(idSensor: string | null | undefined): boolea
 }
 
 const estilos = StyleSheet.create({
-  cartaoDoJardim: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    marginHorizontal: ESPACO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    borderRadius: RAIO.grande,
-    backgroundColor: CORES.superficie,
-    overflow: 'hidden',
-  },
-  cabecalhoJardim: { width: '100%', maxWidth: 560, alignSelf: 'center' },
-  detalheDoCartaoCompacto: { flex: 1, gap: 1 },
+  /**
+   * Os dois cartões de abrir e fechar ficam afastados da borda da tela, como o resto da estante. Sem a largura de
+   * 100% do Cartao: somada à margem, ela passava da tela e a margem sumia.
+   */
+  margemDoCartao: { width: 'auto', alignSelf: 'stretch', marginHorizontal: ESPACO.grande },
+  cabecalhoJardim: { width: '100%', maxWidth: LARGURA_DO_CONTEUDO, alignSelf: 'center' },
+  detalheDoCartaoCompacto: { flex: 1, gap: ESPACO.fino },
   nomeDoJardim: { fontFamily: FONTES.titulo, fontSize: 20, lineHeight: 24, color: CORES.texto },
-  cartaoDoSensor: {
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    marginHorizontal: ESPACO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    borderRadius: RAIO.grande,
-    backgroundColor: CORES.superficie,
-    overflow: 'hidden',
-  },
   cabecalhoDoCartao: {
     minHeight: ALVO_DE_TOQUE,
     flexDirection: 'row',
@@ -324,8 +306,8 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.superficie,
   },
   textoDoAvisoDaAtualizacao: { ...TEXTO.apoio, color: CORES.erro },
-  fundoDoModal: { flex: 1, justifyContent: 'center', padding: ESPACO.grande, backgroundColor: 'rgba(61, 51, 38, 0.48)' },
-  modal: { width: '100%', maxWidth: 460, maxHeight: '85%', alignSelf: 'center', padding: ESPACO.folgado,
+  fundoDoModal: { flex: 1, justifyContent: 'center', padding: ESPACO.grande, backgroundColor: CORES.veuDoModal },
+  modal: { width: '100%', maxWidth: LARGURA_DO_MODAL, maxHeight: '85%', alignSelf: 'center', padding: ESPACO.folgado,
     gap: ESPACO.medio, borderRadius: RAIO.grande, backgroundColor: CORES.superficie },
   listaDeJardins: { flexGrow: 0, maxHeight: 250 },
   opcaoDeJardim: { minHeight: ALVO_DE_TOQUE + 8, flexDirection: 'row', alignItems: 'center', marginBottom: ESPACO.pequeno,

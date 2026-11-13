@@ -8,7 +8,7 @@ import {
 } from '@/aplicacao/portas/PareamentoDoSensor';
 import { ehVariantePrincipal } from '@/apresentacao/componentes/BotaoPrincipal';
 import { DURACAO_DA_BUSCA_MS } from '@/apresentacao/telas/TelaParearSensor';
-import { ALVO_DE_TOQUE_MINIMO } from '@/apresentacao/tema/medidas';
+import { ALVO_DE_TOQUE_MINIMO } from '@/apresentacao/tema';
 import { TEXTOS } from '@/textos';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
