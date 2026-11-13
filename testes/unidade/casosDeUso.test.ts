@@ -30,8 +30,8 @@ test('ObterPlantaDoJardim devolve a planta com a espécie, ou null para id inexi
 
 test('PesquisarEspecies apara o termo e devolve tudo quando vazio', async () => {
   const { container } = criarContainerDeTeste();
-  expect((await container.pesquisarEspecies.executar('  tomate  ')).map((e) => e.id)).toEqual(['tomate']);
-  expect(await container.pesquisarEspecies.executar('')).toHaveLength(5);
+  expect((await container.pesquisarEspecies.executar({ termo: '  tomate  ' })).map((e) => e.id)).toEqual(['tomate']);
+  expect(await container.pesquisarEspecies.executar()).toHaveLength(5);
 });
 
 describe('status resumido de cada planta', () => {
