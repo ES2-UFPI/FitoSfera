@@ -26,13 +26,24 @@ export class CadastrarPlanta {
     private readonly relogio: Relogio,
   ) {}
 
-  async executar(pedido: { idEspecie: string; apelido: string; aparencia: Aparencia; idJardim?: string }): Promise<Planta> {
+  async executar(pedido: {
+    idEspecie: string;
+    apelido: string;
+    aparencia: Aparencia;
+    idJardim?: string;
+    plantadaEm?: Date | null;
+    colheitaIniciada?: boolean;
+    floracaoIniciadaEm?: Date | null;
+  }): Promise<Planta> {
     const especie = await this.especies.obterPorId(pedido.idEspecie);
     if (especie === null) throw new EspecieNaoEncontrada(pedido.idEspecie);
     const planta = Planta.criar({
       ...pedido,
       id: this.gerador.gerar(),
       cadastradaEm: this.relogio.agora(),
+      plantadaEm: especie.frutifera ? (pedido.plantadaEm === undefined ? this.relogio.agora() : pedido.plantadaEm) : null,
+      colheitaIniciada: especie.frutifera && pedido.colheitaIniciada === true,
+      floracaoIniciadaEm: especie.frutifera && pedido.colheitaIniciada ? pedido.floracaoIniciadaEm ?? null : null,
       faixasRecomendadas: copiarFaixas(especie.faixasIdeais),
       intervaloDeRegaEmDias: especie.intervaloDeRegaEmDias,
     });

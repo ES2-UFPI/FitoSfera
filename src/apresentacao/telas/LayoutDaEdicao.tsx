@@ -52,7 +52,13 @@ export function LayoutDaEdicao({ id }: { id: string }) {
       inicial={{
         especie: item.especie,
         aparencia: item.planta.aparencia,
-        edicao: { idPlanta: item.planta.id, apelido: item.planta.apelido },
+        edicao: {
+          idPlanta: item.planta.id,
+          apelido: item.planta.apelido,
+          plantadaEm: item.planta.plantadaEm,
+          colheitaIniciada: item.planta.colheitaIniciada,
+          floracaoIniciadaEm: item.planta.floracaoIniciadaEm,
+        },
       }}
     >
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: CORES.fundoTopo } }} />

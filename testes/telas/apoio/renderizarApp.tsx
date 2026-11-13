@@ -71,6 +71,7 @@ export function renderizarApp(
     falharAoLerPreferencias?: boolean;
     falharAoGravarPreferencias?: boolean;
     luz?: { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null };
+    historicoDeLeituras?: { idJardim?: string; leituras: readonly Leitura[] };
   } = {},
 ): {
   container: Container;
@@ -106,6 +107,7 @@ export function renderizarApp(
     falharAoLerPreferencias: opcoes.falharAoLerPreferencias,
     falharAoGravarPreferencias: opcoes.falharAoGravarPreferencias,
     luz: opcoes.luz,
+    historicoDeLeituras: opcoes.historicoDeLeituras,
   });
 
   function LayoutDeTeste() {

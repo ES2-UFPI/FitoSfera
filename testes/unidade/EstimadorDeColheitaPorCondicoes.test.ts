@@ -8,7 +8,7 @@ const MILIS_POR_MINUTO = 60_000;
 const agora = new Date(2026, 5, 15, 12, 0);
 const planta = Planta.criar({
   id: 'p1', idEspecie: 'tomate', apelido: 'Tomatinho', aparencia: APARENCIA_INICIAL,
-  cadastradaEm: new Date(2026, 4, 26, 12, 0),
+  plantadaEm: new Date(2026, 4, 26, 12, 0),
 });
 const especie: EspecieVegetal = {
   id: 'tomate', nomeComum: 'Tomate', nomeCientifico: 'Solanum lycopersicum', nomesAlternativos: [], foto: null,
@@ -22,6 +22,11 @@ const especie: EspecieVegetal = {
   },
   intervaloDeRegaEmDias: 3, nivelDeDificuldade: 'medio', cicloAteColheitaEmDias: { minimo: 70, maximo: 90 },
   frutifera: true, tempoMedioAteColheitaEmDias: 80,
+  estagiosDeDesenvolvimento: [
+    { nome: 'muda', duracaoEmDias: 30 },
+    { nome: 'floração', duracaoEmDias: 20 },
+    { nome: 'frutificação', duracaoEmDias: 30 },
+  ],
 };
 
 function leiturasACadaMeiaHora(
@@ -134,14 +139,14 @@ describe('EstimadorDeColheitaPorCondicoes', () => {
   });
 
   test('nunca retorna dias restantes negativos após a data estimada', () => {
-    const antiga = Planta.criar({ ...planta, cadastradaEm: new Date(2025, 0, 1) });
+    const antiga = Planta.criar({ ...planta, plantadaEm: new Date(2025, 0, 1) });
     expect(estimador.estimar(antiga, especie, [], agora)).toMatchObject({
       disponivel: true, cicloEstimadoEmDias: 80, diasRestantes: 0,
     });
   });
 
   test.each([
-    ['sem data de cadastro', Planta.criar({ ...planta, cadastradaEm: null }), especie],
+    ['sem data de plantio', Planta.criar({ ...planta, plantadaEm: null }), especie],
     ['sem ciclo médio', planta, { ...especie, tempoMedioAteColheitaEmDias: undefined }],
     ['ciclo médio inválido', planta, { ...especie, tempoMedioAteColheitaEmDias: Number.NaN }],
   ])('%s retorna estimativa indisponível', (_caso, plantaTeste, especieTeste) => {
@@ -151,6 +156,49 @@ describe('EstimadorDeColheitaPorCondicoes', () => {
   test('sem faixas ideais usa o ciclo médio sem ajuste ambiental', () => {
     expect(estimador.estimar(planta, { ...especie, faixasIdeais: null }, ideais(), agora)).toMatchObject({
       disponivel: true, cicloEstimadoEmDias: 80, ajustada: false, coberturaEmHoras: 0,
+    });
+  });
+
+  test('para uma planta produtiva estima a leva a partir do início da floração', () => {
+    const produtiva = Planta.criar({
+      ...planta,
+      colheitaIniciada: true,
+      floracaoIniciadaEm: new Date(2026, 5, 5, 12, 0),
+    });
+    expect(estimador.estimar(produtiva, especie, [], agora)).toMatchObject({
+      disponivel: true,
+      cicloEstimadoEmDias: 50,
+      diasRestantes: 40,
+      ajustada: false,
+    });
+  });
+
+  test('sem início de floração não inventa previsão para uma planta produtiva', () => {
+    const produtiva = Planta.criar({ ...planta, colheitaIniciada: true, floracaoIniciadaEm: null });
+    expect(estimador.estimar(produtiva, especie, [], agora)).toMatchObject({
+      disponivel: false, motivo: 'sem-data-de-floracao',
+    });
+  });
+
+  test('aplica o ajuste ambiental somente aos dias restantes da floração atual', () => {
+    const produtiva = Planta.criar({
+      ...planta,
+      colheitaIniciada: true,
+      floracaoIniciadaEm: new Date(2026, 5, 5, 12, 0),
+    });
+    const leituras = leiturasACadaMeiaHora(8, () => ({ umidadePercentual: 100, temperaturaCelsius: 40 }));
+    expect(estimador.estimar(produtiva, especie, leituras, agora)).toMatchObject({
+      disponivel: true,
+      cicloEstimadoEmDias: 62,
+      diasRestantes: 52,
+      ajustada: true,
+    });
+  });
+
+  test('sem estágio de floração não estima uma nova leva produtiva', () => {
+    const produtiva = Planta.criar({ ...planta, colheitaIniciada: true, floracaoIniciadaEm: agora });
+    expect(estimador.estimar(produtiva, { ...especie, estagiosDeDesenvolvimento: undefined }, [], agora)).toMatchObject({
+      disponivel: false, motivo: 'sem-tempo-medio',
     });
   });
 

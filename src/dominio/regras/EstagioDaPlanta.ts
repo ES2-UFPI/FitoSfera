@@ -1,22 +1,26 @@
 import { EspecieVegetal, EstagioDeDesenvolvimento } from '@/dominio/modelos/EspecieVegetal';
 import { Planta } from '@/dominio/modelos/Planta';
-import { diasNoJardim } from './TempoNoJardim';
+import { diasDesde } from './TempoNoJardim';
 
-/** Devolve o estágio atual conforme os dias desde o cadastro, ou null quando não há dados suficientes. */
+/** Estima a fase atual pelo plantio ou pelo início da floração produtiva, ou null quando faltam dados. */
 export function estagioDaPlanta(
   planta: Planta,
   especie: EspecieVegetal,
   agora: Date,
 ): EstagioDeDesenvolvimento | null {
-  if (Number.isNaN(agora.getTime()) || planta.cadastradaEm === null || Number.isNaN(planta.cadastradaEm.getTime())) {
+  if (Number.isNaN(agora.getTime())) return null;
+  const dataDeReferencia = planta.colheitaIniciada ? planta.floracaoIniciadaEm : planta.plantadaEm;
+  if (dataDeReferencia === null || Number.isNaN(dataDeReferencia.getTime())) {
     return null;
   }
-  const dias = diasNoJardim(planta.cadastradaEm, agora);
   const estagios = especie.estagiosDeDesenvolvimento;
-  if (dias === null || estagios === undefined || estagios.length === 0) return null;
+  if (estagios === undefined || estagios.length === 0) return null;
 
+  const indiceInicial = planta.colheitaIniciada ? estagios.findIndex((estagio) => /flor/i.test(estagio.nome)) : 0;
+  if (indiceInicial < 0) return null;
+  const dias = diasDesde(dataDeReferencia, agora);
   let fimDoEstagio = 0;
-  for (const estagio of estagios) {
+  for (const estagio of estagios.slice(indiceInicial)) {
     fimDoEstagio += estagio.duracaoEmDias;
     if (dias < fimDoEstagio) return estagio;
   }

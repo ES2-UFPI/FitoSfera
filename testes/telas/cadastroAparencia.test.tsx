@@ -50,6 +50,7 @@ test('fluxo completo salva a aparência escolhida e volta ao jardim com a planta
     apelido: 'Tomatinho',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
   });
+  expect(plantas.salvas[0].plantadaEm).toEqual(new Date(2026, 9, 17, 14, 0));
   expect(
     await screen.findByLabelText('Tomatinho. Sem dados. Toque para ver os detalhes.',{},{timeout: 3000}),
   ).toBeTruthy();
@@ -79,6 +80,38 @@ test('toque duplo em "Colocar na estante" salva uma planta só', async () => {
   fireEvent.press(botao);
   await screen.findByLabelText('Tomate. Sem dados. Toque para ver os detalhes.',{},{timeout: 3000});
   expect(plantas.salvas).toHaveLength(1);
+});
+
+test('uma frutífera pode informar uma data anterior de plantio', async () => {
+  const { plantas } = await irAtePasso3('Tomate');
+  fireEvent.press(screen.getByRole('radio', { name: 'Informar data aproximada do plantio' }));
+  fireEvent.changeText(screen.getByLabelText('Data aproximada do plantio'), '12/10/2026');
+  fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
+
+  await waitFor(() => expect(plantas.salvas).toHaveLength(1));
+  expect(plantas.salvas[0].plantadaEm).toEqual(new Date(2026, 9, 12));
+});
+
+test('não permite data de plantio inválida ou futura', async () => {
+  await irAtePasso3('Tomate');
+  fireEvent.press(screen.getByRole('radio', { name: 'Informar data aproximada do plantio' }));
+  fireEvent.changeText(screen.getByLabelText('Data aproximada do plantio'), '18/10/2026');
+
+  expect(screen.getByText('Informe uma data válida, que não seja no futuro.')).toBeTruthy();
+  expect(desabilitado('Colocar na estante')).toBe(true);
+});
+
+test('permite marcar produção iniciada e registrar o começo aproximado da floração', async () => {
+  const { plantas } = await irAtePasso3('Tomate');
+  fireEvent.press(screen.getByRole('checkbox', { name: 'Esta planta já está produzindo' }));
+  fireEvent.changeText(screen.getByLabelText('Quando começou a floração atual?'), '10/10/2026');
+  fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
+
+  await waitFor(() => expect(plantas.salvas).toHaveLength(1));
+  expect(plantas.salvas[0]).toMatchObject({
+    colheitaIniciada: true,
+    floracaoIniciadaEm: new Date(2026, 9, 10),
+  });
 });
 
 test('abrir o passo 2 sem espécie escolhida volta para a busca', async () => {

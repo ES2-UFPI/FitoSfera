@@ -45,6 +45,8 @@ import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
 import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
+import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
+import { ObterLeiturasRecentes } from '@/aplicacao/casos-de-uso/ObterLeiturasRecentes';
 import { EstimadorDeColheitaPorCondicoes } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from './especiesDeTeste';
@@ -384,6 +386,24 @@ export class RelogioParado implements Relogio {
   }
 }
 
+export class CacheDeLeiturasEmMemoria implements CacheDeLeituras {
+  private readonly dados = new Map<string, Leitura[]>();
+
+  async obter(idJardim: string): Promise<Leitura | null> {
+    return this.dados.get(idJardim)?.at(-1) ?? null;
+  }
+
+  async obterHistorico(idJardim: string): Promise<readonly Leitura[]> {
+    return this.dados.get(idJardim) ?? [];
+  }
+
+  async salvar(idJardim: string, leitura: Leitura): Promise<void> {
+    const anteriores = this.dados.get(idJardim) ?? [];
+    this.dados.set(idJardim, [...anteriores.filter((item) => item.medidaEm.getTime() !== leitura.medidaEm.getTime()), leitura]
+      .sort((a, b) => a.medidaEm.getTime() - b.medidaEm.getTime()));
+  }
+}
+
 export class GeradorSequencial implements GeradorDeIdentificador {
   private proximo = 1;
 
@@ -401,6 +421,9 @@ export function plantaDeTeste(
     aparencia: Aparencia;
     faixasRecomendadas: FaixasRecomendadas | null;
     cadastradaEm: Date | null;
+    plantadaEm: Date | null;
+    colheitaIniciada: boolean;
+    floracaoIniciadaEm: Date | null;
     intervaloDeRegaEmDias: number | null;
   }> = {},
 ): Planta {
@@ -436,6 +459,7 @@ export function criarContainerDeTeste(
     falharAoLerPreferencias?: boolean;
     falharAoGravarPreferencias?: boolean;
     luz?: { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null };
+    historicoDeLeituras?: { idJardim?: string; leituras: readonly Leitura[] };
   } = {},
 ): {
   container: Container;
@@ -457,6 +481,10 @@ export function criarContainerDeTeste(
   const especies = new RepositorioDeEspeciesLocal(opcoes.especies ?? ESPECIES_DE_TESTE);
   const leituras = opcoes.sensor ?? new SensorFixo(opcoes.leitura ?? null);
   const relogio = new RelogioParado(opcoes.agora);
+  const cacheDeLeituras = new CacheDeLeiturasEmMemoria();
+  for (const leitura of opcoes.historicoDeLeituras?.leituras ?? []) {
+    void cacheDeLeituras.salvar(opcoes.historicoDeLeituras?.idJardim ?? 'jardim-principal', leitura);
+  }
   const gerador = new GeradorSequencial();
   const regas = new RepositorioDeRegasEmMemoria(opcoes.falharAoRegistrarRega, opcoes.regas);
   const colheitas = new RepositorioDeColheitasEmMemoria(opcoes.colheitas, opcoes.falharAoRegistrarColheita);
@@ -491,6 +519,8 @@ export function criarContainerDeTeste(
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
     estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
+    relogio,
+    obterLeiturasRecentes: new ObterLeiturasRecentes(cacheDeLeituras),
     obterColheitas: new ObterColheitasDaPlanta(colheitas, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

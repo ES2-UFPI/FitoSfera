@@ -10,6 +10,12 @@ export interface RegistroDePlanta {
   aparencia: { forma: string; folhagem: string; destaque: string; vaso: string };
   /** Data e hora do cadastro em ISO 8601, ou null quando desconhecida. */
   cadastradaEm: string | null;
+  /** Data aproximada de plantio da muda em ISO 8601; null quando desconhecida. */
+  plantadaEm: string | null;
+  /** Se a primeira colheita já começou; ausente em registros antigos equivale a false. */
+  colheitaIniciada: boolean;
+  /** Início aproximado da floração produtiva atual em ISO 8601, ou null quando desconhecido. */
+  floracaoIniciadaEm: string | null;
   /** Faixas copiadas da espécie no cadastro (desde a versão 2), ou null quando a espécie não tinha faixa. */
   faixasRecomendadas: FaixasRecomendadas | null;
   /** Intervalo de rega copiado da espécie, em dias; null em registro gravado antes deste campo existir. */
@@ -24,6 +30,9 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
     apelido: planta.apelido,
     aparencia: { ...planta.aparencia },
     cadastradaEm: planta.cadastradaEm?.toISOString() ?? null,
+    plantadaEm: planta.plantadaEm?.toISOString() ?? null,
+    colheitaIniciada: planta.colheitaIniciada,
+    floracaoIniciadaEm: planta.floracaoIniciadaEm?.toISOString() ?? null,
     faixasRecomendadas: planta.faixasRecomendadas,
     intervaloDeRegaEmDias: planta.intervaloDeRegaEmDias,
   };
@@ -32,7 +41,7 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
 /** Devolve null para o que não dá para ler, em vez de derrubar a listagem inteira. */
 export function deRegistro(bruto: unknown): Planta | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas, intervaloDeRegaEmDias } =
+  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, plantadaEm, colheitaIniciada, floracaoIniciadaEm, faixasRecomendadas, intervaloDeRegaEmDias } =
     bruto as Record<string, unknown>;
   if (typeof id !== 'string' || typeof idEspecie !== 'string' || typeof apelido !== 'string') return null;
   try {
@@ -43,6 +52,9 @@ export function deRegistro(bruto: unknown): Planta | null {
       apelido,
       aparencia: normalizarAparencia(aparencia),
       cadastradaEm: lerData(cadastradaEm),
+      plantadaEm: lerData(plantadaEm),
+      colheitaIniciada: colheitaIniciada === true,
+      floracaoIniciadaEm: lerData(floracaoIniciadaEm),
       faixasRecomendadas: lerFaixas(faixasRecomendadas),
       intervaloDeRegaEmDias: lerIntervalo(intervaloDeRegaEmDias),
     });
