@@ -1,6 +1,6 @@
 import { NivelDeDificuldade } from '@/dominio/modelos/EspecieVegetal';
 import {
-  CriteriosParaMotivos,
+  CriteriosDeDificuldade,
   MotivoDaDificuldade,
   motivosDaDificuldade,
 } from '@/dominio/regras/ClassificadorDeDificuldade';
@@ -76,7 +76,7 @@ const SEM_MOTIVO_CONHECIDO = 'Exige cuidados que o catálogo ainda não detalha'
  */
 export function observacaoDaDificuldade(
   nivel: NivelDeDificuldade,
-  especie: CriteriosParaMotivos,
+  especie: CriteriosDeDificuldade,
 ): ObservacaoDaDificuldade | null {
   if (nivel === 'facil') return null;
   const motivos = motivosDaDificuldade(especie).map((motivo) => TEXTO_DO_MOTIVO[motivo]);

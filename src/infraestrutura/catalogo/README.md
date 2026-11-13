@@ -40,7 +40,7 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
 | `faixasIdeais.*.minimo` / `maximo` | sim | Números, com `minimo` **menor** que `maximo`. Umidade entre 0 e 100, temperatura entre -10 e 50, luminosidade entre 0 e 120000, luz diária entre 0 e 70. |
 | `faixasIdeais.*.fonte` | sim | De onde veio a faixa (instituição e publicação). |
 | `intervaloDeRegaEmDias` | sim | Inteiro positivo: de quantos em quantos dias regar em condições normais. |
-| `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. |
+| `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. **Não é o que o app mostra**: o nível é calculado pelo `ClassificadorDeDificuldade` a partir da rega, da `luzDiaria` e da ficha de manejo. Este campo fica como gabarito da calibração. |
 | `cicloAteColheitaEmDias` | sim | Dias do plantio da muda à primeira colheita das frutíferas (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. Os ciclos das demais espécies ainda são os valores anteriores do catálogo. |
 | `frutifera` | sim | `true` para espécies que dão frutos (tomate, morango, pimenta…). Só elas registram colheitas e mostram rendimento (US15). Ter ciclo até a colheita não basta: a alface se colhe e não é frutífera. |
 | `tempoMedioAteColheitaEmDias` | nas frutíferas | Inteiro positivo: estimativa desde o plantio da muda até a primeira colheita. |
@@ -125,8 +125,14 @@ O arquivo [`exigencias-de-manejo.json`](exigencias-de-manejo.json) guarda, por i
 manejo que o [`ClassificadorDeDificuldade`](../../dominio/regras/ClassificadorDeDificuldade.ts) soma à rega e à
 `luzDiaria` para decidir o nível de dificuldade (US12). A luz entra pelas categorias da tabela acima: "luz
 muito alta" vale 2 pontos, "luz alta" vale 1 e sombra não pesa, porque pouca luz é o que uma casa dá de graça. Ele é separado do catálogo porque nem toda espécie tem ficha
-pesquisada, e porque o nível passa a ser **calculado**: o campo `nivelDeDificuldade` do catálogo continua sendo
-o valor curado, usado como gabarito da calibração, não como resposta.
+pesquisada, e porque o nível é **calculado**: quem resolve é o
+[`RepositorioDeEspeciesLocal`](RepositorioDeEspeciesLocal.ts), que anexa a ficha à espécie e substitui o
+`nivelDeDificuldade` pelo resultado da política. O campo do JSON continua sendo o valor curado, usado como
+gabarito da calibração, e não a resposta.
+
+Hoje **32 das 33 espécies têm ficha**; falta só o boldo, e `idsSemFichaDeManejo` é quem lista a pendência.
+Espécie sem ficha pontua 0 no critério de manejo, e aí o total não passa de 4 — rega 2 mais luz 2 — contra o
+corte de 5: **espécie sem ficha nunca sai exigente**.
 
 ```json
 {

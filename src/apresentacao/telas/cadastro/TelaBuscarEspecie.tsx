@@ -88,8 +88,10 @@ export function TelaBuscarEspecie() {
         }
         renderItem={({ item }) => {
           const dificuldade = APRESENTACAO_DA_DIFICULDADE[item.nivelDeDificuldade];
-          // Ficha de manejo ainda não pesquisada, então a observação cita só o que o catálogo mede: rega e luz.
-          const observacao = observacaoDaDificuldade(item.nivelDeDificuldade, { ...item, exigencias: null });
+          const observacao = observacaoDaDificuldade(item.nivelDeDificuldade, {
+            ...item,
+            exigencias: item.exigencias ?? null,
+          });
           // "Nome. Estado.", como a etiqueta da estante: o nível é informação, não enfeite, e precisa ser falado.
           const falado = observacao?.falado ?? `${dificuldade.falado}.`;
           return (

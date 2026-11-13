@@ -1,19 +1,34 @@
 import { EspecieVegetal, NivelDeDificuldade } from '../modelos/EspecieVegetal';
 import { ExigenciasDeManejo } from '../modelos/ExigenciasDeManejo';
 
-/** O que a classificação olha. Só isto: nada de id, nome ou foto entra na conta. */
+/**
+ * O que a classificação olha. Só isto: nada de id, nome ou foto entra na conta.
+ *
+ * `exigencias` em null é espécie sem ficha de manejo pesquisada, e aí o critério de manejo pontua 0. Vale
+ * saber o que isso faz: sem ficha o total não passa de 4 pontos — rega 2 mais luz 2 — e o corte de exigente
+ * é 5, então **espécie sem ficha nunca é classificada como exigente**. A falta de dado empurra para baixo,
+ * e é por isso que preencher ficha é o que mais melhora a classificação.
+ */
 export type CriteriosDeDificuldade = Pick<EspecieVegetal, 'intervaloDeRegaEmDias' | 'faixasIdeais'> & {
-  readonly exigencias: ExigenciasDeManejo;
+  readonly exigencias: ExigenciasDeManejo | null;
 };
 
 /**
- * Os limites da rega foram calibrados contra os 33 níveis curados do catálogo: a busca varreu a grade de
- * limites e cortes e ficou com a combinação de maior acerto, 24 das 30 espécies com ficha de manejo apurada
- * (80%), contra 53% de quem classificasse tudo como fácil.
+ * De onde cada limite vem:
  *
- * Os da luz **não** vêm dessa calibração: eles são as bandas da tabela de DLI da Iowa State Extension, que é
- * a fonte das faixas de `luzDiaria` no catálogo. Por isso aquele 80% ficou desatualizado — ele foi medido
- * quando a luz era um limite em lux instantâneo. Recalibrar depende das fichas de manejo, que ainda faltam.
+ * - **Rega**: calibrados contra os níveis curados do catálogo, varrendo a grade de limites e cortes.
+ * - **Luz**: não vêm de calibração. São as bandas da tabela de DLI da Iowa State Extension, a mesma fonte
+ *   das faixas de `luzDiaria` no catálogo — "luz muito alta" vale 2 e "luz alta" vale 1.
+ *
+ * Com as 32 fichas de manejo preenchidas, a classificação **concorda com o gabarito curado em 24 das 32
+ * espécies com ficha (75%)**, contra 58% de quem classificasse tudo como fácil, e acerta a contagem de
+ * exigentes: 6, as mesmas 6 do catálogo menos a orquídea, mais o orégano.
+ *
+ * As divergências têm um padrão: ornamentais de sombra (antúrio, begônia, samambaia, orquídea) a conta
+ * rebaixa, porque pouca luz pontua 0 e a dificuldade delas vem de umidade do ar e substrato, que nenhum
+ * critério aqui mede; ervas de sol pleno (orégano, alecrim, capim-limão, boldo) ela sobe, porque DLI alto
+ * pontua 2. A orquídea é miss estrutural: com base 0 de rega e luz, nem os três fatos em `true` a tirariam
+ * de fácil.
  *
  * Mudar um número aqui muda a classificação de todo o catálogo. Recalibre com dados, não por intuição.
  */
@@ -52,15 +67,6 @@ export function classificarDificuldade(especie: CriteriosDeDificuldade): NivelDe
   return 'facil';
 }
 
-/**
- * O que a classificação consegue explicar. `exigencias` em null é ficha de manejo ainda não pesquisada: aí
- * sobram os motivos que o catálogo mede sozinho, rega e luz. Pontuar sem ficha seria errado — um fato em
- * branco baixaria a dificuldade —, mas explicar o que já se sabe não é.
- */
-export type CriteriosParaMotivos = Pick<EspecieVegetal, 'intervaloDeRegaEmDias' | 'faixasIdeais'> & {
-  readonly exigencias: ExigenciasDeManejo | null;
-};
-
 /** Tudo que a classificação sabe apontar como exigente. O texto de cada um fica na apresentação. */
 export const MOTIVOS_DA_DIFICULDADE = [
   'rega-frequente',
@@ -76,7 +82,7 @@ export type MotivoDaDificuldade = (typeof MOTIVOS_DA_DIFICULDADE)[number];
  * texto que a pessoa lê mora na apresentação, junto com o resto dos textos do app, e o domínio não decide
  * português. A ordem é a da leitura — primeiro o que o catálogo mede, depois o que a ficha de manejo diz.
  */
-export function motivosDaDificuldade(especie: CriteriosParaMotivos): readonly MotivoDaDificuldade[] {
+export function motivosDaDificuldade(especie: CriteriosDeDificuldade): readonly MotivoDaDificuldade[] {
   const motivos: MotivoDaDificuldade[] = [];
   if (especie.intervaloDeRegaEmDias <= LIMITES.regaExigenteEmDias) motivos.push('rega-frequente');
   if (especie.faixasIdeais !== null && pontosDaLuzDiaria(especie.faixasIdeais.luzDiaria.minimo) === 2)
@@ -110,6 +116,8 @@ function pontosDaLuzDiaria(dliMinimo: number): number {
 }
 
 function pontosDoManejo({ exigencias }: CriteriosDeDificuldade): number {
+  // Sem ficha não há fato nenhum a contar. Ver o comentário de `CriteriosDeDificuldade` para o efeito disso.
+  if (exigencias === null) return 0;
   return (
     Number(exigencias.exigeControleDePraga.presente) +
     Number(exigencias.morreComEncharcamento.presente) +
