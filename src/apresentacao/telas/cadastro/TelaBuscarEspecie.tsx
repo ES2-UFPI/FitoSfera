@@ -6,6 +6,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
+import { CRITERIOS_DO_MODO, ModoDaBusca, SeletorDaBusca } from '../../cadastro/SeletorDaBusca';
 import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../componentes/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { SeloDeDificuldade } from '../../componentes/SeloDeDificuldade';
@@ -24,27 +25,50 @@ export function TelaBuscarEspecie() {
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [termo, definirTermo] = useState('');
+  /** O termo que já valeu o debounce. Separado de `termo` para a troca de modo não esperar a digitação. */
+  const [termoAplicado, definirTermoAplicado] = useState('');
+  // A tela abre com as mais fáceis no topo: é o que ajuda quem está decidindo por onde começar.
+  const [modo, definirModo] = useState<ModoDaBusca>('mais-faceis-primeiro');
   const [resultados, definirResultados] = useState<readonly EspecieVegetal[] | null>(null);
 
+  // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
+  useEffect(() => {
+    if (termo.trim() === '') {
+      definirTermoAplicado('');
+      return;
+    }
+    const temporizador = setTimeout(() => definirTermoAplicado(termo), ATRASO_DA_BUSCA_MS);
+    return () => clearTimeout(temporizador);
+  }, [termo]);
+
+  // Trocar de opção responde na hora: o debounce é da digitação, não de toda mudança de estado.
   useEffect(() => {
     let atual = true;
-
-    const buscar = () => {
-      void container.pesquisarEspecies.executar(termo).then((lista) => {
-        // Só a busca do termo atual vale: respostas atrasadas e telas fechadas são ignoradas.
+    void container.pesquisarEspecies
+      .executar({ termo: termoAplicado, ...CRITERIOS_DO_MODO[modo] })
+      .then((lista) => {
+        // Só a busca atual vale: respostas atrasadas e telas fechadas são ignoradas.
         if (atual) definirResultados(lista);
       });
-    };
-
-    // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
-    const temporizador = termo.trim() === '' ? null : setTimeout(buscar, ATRASO_DA_BUSCA_MS);
-    if (temporizador === null) buscar();
 
     return () => {
       atual = false;
-      if (temporizador !== null) clearTimeout(temporizador);
     };
-  }, [container, termo]);
+  }, [container, termoAplicado, modo]);
+
+  /**
+   * Com o filtro ligado, a culpa da lista vazia é dele, e dizer "não encontramos essa planta" seria falso: a
+   * planta existe, o filtro é que a esconde. Sem filtro, só o termo buscado explica a lista vazia — o
+   * catálogo inteiro nunca vem vazio.
+   */
+  const vazio =
+    resultados === null || resultados.length > 0
+      ? null
+      : modo === 'faceis'
+        ? TEXTOS.cadastro.nenhumaFacil
+        : termoAplicado.trim() !== ''
+          ? TEXTOS.cadastro.plantaForaDoCatalogo
+          : null;
 
   function escolher(especie: EspecieVegetal) {
     escolherEspecie(especie);
@@ -75,6 +99,8 @@ export function TelaBuscarEspecie() {
         />
       </View>
 
+      <SeletorDaBusca modo={modo} aoEscolher={definirModo} />
+
       <FlatList
         data={resultados ?? []}
         keyExtractor={(especie) => especie.id}
@@ -82,9 +108,7 @@ export function TelaBuscarEspecie() {
         contentContainerStyle={[estilos.lista, { paddingBottom: margens.bottom + ESPACO.folgado }]}
         ItemSeparatorComponent={() => <View style={estilos.divisoria} />}
         ListEmptyComponent={
-          resultados !== null && termo.trim() !== '' ? (
-            <Text style={[TEXTO.corpo, estilos.semResultado]}>{TEXTOS.cadastro.plantaForaDoCatalogo}</Text>
-          ) : null
+          vazio === null ? null : <Text style={[TEXTO.corpo, estilos.semResultado]}>{vazio}</Text>
         }
         renderItem={({ item }) => {
           const dificuldade = APRESENTACAO_DA_DIFICULDADE[item.nivelDeDificuldade];

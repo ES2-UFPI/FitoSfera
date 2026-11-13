@@ -2,8 +2,9 @@
 
 O arquivo [`catalogo-plantas.json`](catalogo-plantas.json) é a lista de espécies que o app conhece. Ele vai
 embutido no bundle e é lido por [`RepositorioDeEspeciesLocal`](RepositorioDeEspeciesLocal.ts), sem acesso à
-rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas histórias, os lembretes de rega
-(US08), o nível de dificuldade (US12) e a previsão de colheita (US14).
+rede. Alimenta a busca do cadastro — inclusive o filtro e a ordenação por dificuldade (US12) —, as faixas
+ideais do painel, o nível de dificuldade de cada espécie (US12) e, nas próximas histórias, os lembretes de
+rega (US08) e a previsão de colheita (US14).
 
 ## Schema de uma espécie
 
