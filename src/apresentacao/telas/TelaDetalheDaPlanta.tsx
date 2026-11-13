@@ -4,8 +4,10 @@ import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
+import { estagioDaPlanta } from '@/dominio/regras/EstagioDaPlanta';
 import { TEXTOS } from '@/textos';
 import { CartaoDasColheitas, EstadoDasColheitas } from '../colheita/CartaoDasColheitas';
+import { BlocoDeColheita } from '../colheita/BlocoDeColheita';
 import { FormularioDeColheita } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
@@ -325,6 +327,17 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
           />
           <CartaoDaLuzDeHoje luz={luzDeHoje} />
           <CartaoDaDificuldade especie={item.especie} />
+          {item.especie?.frutifera ? (
+            <BlocoDeColheita
+              estimativa={container.estimadorDeColheita.estimar(
+                item.planta,
+                item.especie,
+                item.ultimaLeitura ? [item.ultimaLeitura] : [],
+                container.relogio.agora(),
+              )}
+              estagio={estagioDaPlanta(item.planta, item.especie, container.relogio.agora())}
+            />
+          ) : null}
           <CartaoDoHistorico
             estado={historico}
             rodape={

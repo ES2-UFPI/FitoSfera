@@ -491,6 +491,7 @@ export function criarContainerDeTeste(
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
     estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
+    relogio,
     obterColheitas: new ObterColheitasDaPlanta(colheitas, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),

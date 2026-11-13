@@ -21,6 +21,7 @@ import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDo
 import { ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
 import { EstimadorDeColheita } from '@/dominio/portas/EstimadorDeColheita';
+import { Relogio } from '@/dominio/portas/Relogio';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
@@ -37,6 +38,7 @@ export interface Container {
   readonly registrarColheita: RegistrarColheita;
   readonly compararRendimento: CompararRendimento;
   readonly estimadorDeColheita: EstimadorDeColheita;
+  readonly relogio: Relogio;
   readonly obterColheitas: ObterColheitasDaPlanta;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;

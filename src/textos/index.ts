@@ -170,6 +170,13 @@ export const TEXTOS = {
 
   detalhe: {
     status: (falado: string) => `Status: ${falado}.`,
+    expectativaDeColheita: 'Expectativa de colheita',
+    estimativaIndisponivel: 'Estimativa indisponível',
+    estimativaSemAjusteAmbiental: 'Estimativa baseada no ciclo médio da espécie; sem leituras suficientes para ajuste.',
+    estagio: (nome: string) => `Estágio: ${nome}`,
+    estagioIndisponivel: 'Estágio indisponível',
+    faltamDiasParaColheita: (dias: number) => `Faltam cerca de ${plural(dias, 'dia', 'dias')}`,
+    colheitaPrevistaParaHoje: 'A colheita pode começar hoje',
     cuidadosDaEspecie: 'Cuidados desta espécie',
     registrarRega: 'Registrar rega',
     registrandoRega: 'Registrando rega…',
