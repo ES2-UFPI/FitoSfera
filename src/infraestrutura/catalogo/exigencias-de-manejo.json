@@ -1,1 +1,225 @@
-{}
+{
+  "abobrinha": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cucurbita pepo" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cucurbita pepo" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cucurbita pepo" }
+  },
+  "alecrim": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Salvia rosmarinus" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Salvia rosmarinus" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Salvia rosmarinus" }
+  },
+  "alface": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Lactuca sativa" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Lactuca sativa" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Lactuca sativa" }
+  },
+  "anturio": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Anthurium andraeanum" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Anthurium andraeanum" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Anthurium andraeanum" }
+  },
+  "babosa": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Aloe vera" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Aloe vera" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Aloe vera" }
+  },
+  "begonia": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Begonia, Wax Types" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Begonia, Wax Types" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Begonia, Wax Types" }
+  },
+  "cacto": {
+    "exigeControleDePraga": { "presente": false, "fonte": "Clemson HGIC, Indoor Cacti" },
+    "morreComEncharcamento": { "presente": true, "fonte": "Clemson HGIC, Indoor Cacti" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "Clemson HGIC, Indoor Cacti" }
+  },
+  "camomila": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Matricaria chamomilla" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Matricaria chamomilla" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Matricaria chamomilla" }
+  },
+  "capim-limao": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cymbopogon citratus" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cymbopogon citratus" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Cymbopogon citratus" }
+  },
+  "cebolinha": {
+    "exigeControleDePraga": {
+      "presente": false,
+      "fonte": "University of Minnesota Extension, Growing scallions in home gardens"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "University of Minnesota Extension, Growing scallions in home gardens"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "University of Minnesota Extension, Growing scallions in home gardens"
+    }
+  },
+  "cenoura": {
+    "exigeControleDePraga": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Daucus carota subsp. sativus"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Daucus carota subsp. sativus"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Daucus carota subsp. sativus"
+    }
+  },
+  "coentro": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Coriandrum sativum" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Coriandrum sativum" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Coriandrum sativum" }
+  },
+  "costela-de-adao": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Monstera deliciosa" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Monstera deliciosa" },
+    "exigeManejoEstrutural": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Monstera deliciosa" }
+  },
+  "couve": {
+    "exigeControleDePraga": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Brassica oleracea, Kale Group"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Brassica oleracea, Kale Group"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Brassica oleracea, Kale Group"
+    }
+  },
+  "espada-de-sao-jorge": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Dracaena trifasciata" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Dracaena trifasciata" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Dracaena trifasciata" }
+  },
+  "geranio": {
+    "exigeControleDePraga": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Pelargonium x hortorum"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Pelargonium x hortorum"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "NC State Extension Plant Toolbox, Pelargonium x hortorum"
+    }
+  },
+  "hortela": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Mentha spicata" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Mentha spicata" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Mentha spicata" }
+  },
+  "jiboia": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Epipremnum aureum" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Epipremnum aureum" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Epipremnum aureum" }
+  },
+  "lavanda": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Lavandula angustifolia" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Lavandula angustifolia" },
+    "exigeManejoEstrutural": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Lavandula angustifolia" }
+  },
+  "limoeiro": {
+    "exigeControleDePraga": {
+      "presente": true,
+      "fonte": "Embrapa Tabuleiros Costeiros, Cultivo dos Citros (Circular Tecnica 26)"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "Embrapa Tabuleiros Costeiros, Cultivo dos Citros (Circular Tecnica 26)"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "Embrapa Tabuleiros Costeiros, Cultivo dos Citros (Circular Tecnica 26)"
+    }
+  },
+  "manjericao": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Ocimum basilicum" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Ocimum basilicum" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Ocimum basilicum" }
+  },
+  "morango": {
+    "exigeControleDePraga": {
+      "presente": false,
+      "fonte": "Embrapa Clima Temperado, Sistema de Producao do Morango"
+    },
+    "morreComEncharcamento": {
+      "presente": true,
+      "fonte": "Embrapa Clima Temperado, Sistema de Producao do Morango"
+    },
+    "exigeManejoEstrutural": {
+      "presente": false,
+      "fonte": "Embrapa Clima Temperado, Sistema de Producao do Morango"
+    }
+  },
+  "oregano": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Origanum vulgare" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Origanum vulgare" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Origanum vulgare" }
+  },
+  "orquidea": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Phalaenopsis" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Phalaenopsis" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Phalaenopsis" }
+  },
+  "pimenta": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Capsicum frutescens" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Capsicum frutescens" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Capsicum frutescens" }
+  },
+  "pimentao": {
+    "exigeControleDePraga": {
+      "presente": true,
+      "fonte": "Embrapa, Sistemas de Producao para a Cultura do Pimentao (Documentos 155)"
+    },
+    "morreComEncharcamento": {
+      "presente": false,
+      "fonte": "Embrapa, Sistemas de Producao para a Cultura do Pimentao (Documentos 155)"
+    },
+    "exigeManejoEstrutural": {
+      "presente": true,
+      "fonte": "Embrapa, Sistemas de Producao para a Cultura do Pimentao (Documentos 155)"
+    }
+  },
+  "rucula": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Eruca vesicaria" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Eruca vesicaria" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Eruca vesicaria" }
+  },
+  "salsinha": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Petroselinum crispum" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Petroselinum crispum" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Petroselinum crispum" }
+  },
+  "samambaia": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Nephrolepis exaltata" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Nephrolepis exaltata" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Nephrolepis exaltata" }
+  },
+  "suculenta": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Echeveria elegans" },
+    "morreComEncharcamento": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Echeveria elegans" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Echeveria elegans" }
+  },
+  "tomate": {
+    "exigeControleDePraga": { "presente": false, "fonte": "Embrapa, Producao Integrada de Tomate Tutorado" },
+    "morreComEncharcamento": { "presente": false, "fonte": "Embrapa, Producao Integrada de Tomate Tutorado" },
+    "exigeManejoEstrutural": { "presente": true, "fonte": "NC State Extension Plant Toolbox, Solanum lycopersicum" }
+  },
+  "zamioculca": {
+    "exigeControleDePraga": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Zamioculcas zamiifolia" },
+    "morreComEncharcamento": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Zamioculcas zamiifolia" },
+    "exigeManejoEstrutural": { "presente": false, "fonte": "NC State Extension Plant Toolbox, Zamioculcas zamiifolia" }
+  }
+}

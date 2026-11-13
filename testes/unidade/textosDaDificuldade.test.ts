@@ -1,6 +1,6 @@
 import { NIVEIS_DE_DIFICULDADE } from '@/dominio/modelos/EspecieVegetal';
 import { ExigenciasDeManejo } from '@/dominio/modelos/ExigenciasDeManejo';
-import { CriteriosParaMotivos, MOTIVOS_DA_DIFICULDADE } from '@/dominio/regras/ClassificadorDeDificuldade';
+import { CriteriosDeDificuldade, MOTIVOS_DA_DIFICULDADE } from '@/dominio/regras/ClassificadorDeDificuldade';
 import { CORES } from '@/apresentacao/tema/cores';
 import { especieDeTeste } from '../apoio/especiesDeTeste';
 import {
@@ -17,7 +17,7 @@ function criterios(dados: {
   rega: number;
   luzDiaria?: number;
   exigencias?: ExigenciasDeManejo | null;
-}): CriteriosParaMotivos {
+}): CriteriosDeDificuldade {
   return {
     intervaloDeRegaEmDias: dados.rega,
     faixasIdeais: {

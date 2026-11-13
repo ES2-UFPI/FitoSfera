@@ -25,6 +25,11 @@ describe('exigencias-de-manejo.json', () => {
     const desconhecidos = Object.keys(fichas).filter((id) => !IDS_DO_CATALOGO.includes(id));
     expect(desconhecidos).toEqual([]);
   });
+
+  test('cobre o catálogo menos o boldo, que ainda não foi pesquisado', () => {
+    // Fica como lembrete: quando a ficha do boldo entrar, este teste cobra a atualização da lista.
+    expect(idsSemFichaDeManejo(fichas, IDS_DO_CATALOGO)).toEqual(['boldo']);
+  });
 });
 
 describe('validarExigenciasDeManejo', () => {

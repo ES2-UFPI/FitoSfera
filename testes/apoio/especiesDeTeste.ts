@@ -32,6 +32,8 @@ export function especieDeTeste(
     nivelDeDificuldade: 'facil',
     cicloAteColheitaEmDias: null,
     frutifera: false,
+    // Sem ficha, e explicitamente: espécie de teste não herda a ficha de manejo do catálogo real pelo id.
+    exigencias: null,
     ...extra,
   };
 }

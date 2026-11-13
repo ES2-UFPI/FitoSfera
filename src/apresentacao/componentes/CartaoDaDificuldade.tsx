@@ -17,8 +17,10 @@ export function CartaoDaDificuldade({ especie }: { especie: EspecieVegetal | nul
   // Espécie que saiu do catálogo não tem nível para mostrar.
   if (especie === null) return null;
   const dificuldade = APRESENTACAO_DA_DIFICULDADE[especie.nivelDeDificuldade];
-  // Ficha de manejo ainda não pesquisada, então os motivos citam só o que o catálogo mede: rega e luz diária.
-  const observacao = observacaoDaDificuldade(especie.nivelDeDificuldade, { ...especie, exigencias: null });
+  const observacao = observacaoDaDificuldade(especie.nivelDeDificuldade, {
+    ...especie,
+    exigencias: especie.exigencias ?? null,
+  });
 
   return (
     <View

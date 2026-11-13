@@ -1,6 +1,7 @@
 export const NIVEIS_DE_DIFICULDADE = ['facil', 'medio', 'dificil'] as const;
 export type NivelDeDificuldade = (typeof NIVEIS_DE_DIFICULDADE)[number];
 
+import type { ExigenciasDeManejo } from './ExigenciasDeManejo';
 import type { FaixaRecomendada } from './FaixaRecomendada';
 
 /** Faixa ideal de uma grandeza do ambiente, com a referência de onde o valor veio. */
@@ -57,4 +58,9 @@ export interface EspecieVegetal {
   readonly tempoMedioAteColheitaEmDias?: number;
   /** shortcut: durações dos estágios são estimativas, recalibrar com dados por cultivar. */
   readonly estagiosDeDesenvolvimento?: readonly EstagioDeDesenvolvimento[];
+  /**
+   * Ficha de manejo da espécie, anexada pelo adaptador do catálogo a partir de `exigencias-de-manejo.json`.
+   * Ausente ou null quando ninguém pesquisou a ficha — o `catalogo-plantas.json` não traz este campo.
+   */
+  readonly exigencias?: ExigenciasDeManejo | null;
 }
