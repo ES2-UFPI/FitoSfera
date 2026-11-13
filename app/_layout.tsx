@@ -11,7 +11,7 @@ import { ProvedorDoAplicativo, useAplicativo } from '@/apresentacao/contextos/Co
 import { useAberturaPelaNotificacao } from '@/apresentacao/notificacoes/useAberturaPelaNotificacao';
 import { acompanharLeiturasComOAppAberto } from '@/composicao/verificacaoComOAppAberto';
 import { ligarVerificacaoEmSegundoPlano } from '@/composicao/verificacaoEmSegundoPlano';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 
 // O splash nativo (fundo creme) segura a tela até as fontes chegarem.
 void SplashScreen.preventAutoHideAsync();

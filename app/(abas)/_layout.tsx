@@ -1,9 +1,7 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconeAjustes, IconeJardim } from '@/apresentacao/componentes/IconesDasAbas';
-import { CORES } from '@/apresentacao/tema/cores';
-import { ALTURA_DA_BARRA_DE_ABAS } from '@/apresentacao/tema/medidas';
-import { FONTES } from '@/apresentacao/tema/tipografia';
+import { ALTURA_DA_BARRA_DE_ABAS, CORES, FONTES } from '@/apresentacao/tema';
 import { TEXTOS } from '@/textos';
 
 export default function LayoutDasAbas() {
