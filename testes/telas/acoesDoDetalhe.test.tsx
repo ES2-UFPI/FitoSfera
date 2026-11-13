@@ -1,5 +1,5 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
-import { ALVO_DE_TOQUE } from '@/apresentacao/tema/medidas';
+import { ALVO_DE_TOQUE } from '@/apresentacao/tema';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 

@@ -10,8 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ALTURA_DA_AREA_DOS_VASOS, LARGURA_DO_VASO } from '../tema/medidas';
+import { ALTURA_DA_AREA_DOS_VASOS, CORES, LARGURA_DO_VASO } from '../tema';
 
 const DIAMETRO_DO_BOTAO = 38;
 const PULSO_MS = 1800;

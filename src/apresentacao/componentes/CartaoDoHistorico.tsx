@@ -4,9 +4,8 @@ import { HistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlan
 import { SituacaoDaRega } from '@/dominio/regras/ProximaRega';
 import { TEXTOS } from '@/textos';
 import { formatarData } from '../formatarData';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { Cartao } from './Cartao';
 
 export type EstadoDoHistorico = HistoricoDaPlanta | undefined | 'falhou';
 
@@ -53,7 +52,7 @@ export function CartaoDoHistorico({
   rodape?: ReactNode;
 }) {
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.historico.titulo}
       </Text>
@@ -109,22 +108,12 @@ export function CartaoDoHistorico({
       ) : null}
 
       {estado !== undefined && estado !== 'falhou' ? rodape : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-    gap: ESPACO.medio,
-  },
-  linha: { gap: 2 },
+  linha: { gap: ESPACO.fino },
   valor: { fontFamily: FONTES.forte, fontSize: 16, color: CORES.texto },
   itemDaLista: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acaoRega },

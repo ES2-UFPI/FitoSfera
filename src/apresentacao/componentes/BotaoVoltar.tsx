@@ -2,8 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE_MINIMO } from '../tema/medidas';
+import { ALVO_DE_TOQUE_MINIMO, CORES } from '../tema';
 
 /** Círculo de papel kraft com a seta de voltar. */
 export function BotaoVoltar() {

@@ -8,13 +8,12 @@ import {
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { TEXTOS } from '@/textos';
 import { formatarData } from '../formatarData';
+import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from '../componentes/IconesDasCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 import { CartaoDosLembretes } from '../lembretes/CartaoDosLembretes';
 import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
 
@@ -210,7 +209,7 @@ function CartaoDoSensorDeDesenvolvimento({
   }
 
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <View style={estilos.cabecalho}>
         <View style={estilos.titulosDoCabecalho}>
           <Text style={TEXTO.subtitulo}>{TEXTOS.simulador.titulo(nomeDoJardim)}</Text>
@@ -313,7 +312,7 @@ function CartaoDoSensorDeDesenvolvimento({
       <Text style={estilos.descricao} accessibilityLiveRegion="polite">
         {descrever(configuracao)}
       </Text>
-    </View>
+    </Cartao>
   );
 }
 
@@ -425,20 +424,12 @@ function BotaoDeOpcao({
 const estilos = StyleSheet.create({
   conteudo: {
     width: '100%',
-    maxWidth: 560,
+    maxWidth: LARGURA_DO_CONTEUDO,
     alignSelf: 'center',
     flexGrow: 1,
     paddingHorizontal: ESPACO.grande,
     paddingBottom: ESPACO.folgado + ALVO_DE_TOQUE,
     gap: ESPACO.amplo,
-  },
-  cartao: {
-    padding: ESPACO.grande,
-    gap: ESPACO.grande,
-    borderRadius: RAIO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
   },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACO.medio },
   titulosDoCabecalho: { flex: 1, gap: ESPACO.pequeno },
@@ -523,10 +514,10 @@ const estilos = StyleSheet.create({
     borderRadius: RAIO.medio,
     backgroundColor: CORES.superficie,
   },
-  textosDoMenu: { flex: 1, gap: 2 },
+  textosDoMenu: { flex: 1, gap: ESPACO.fino },
   tituloDoMenu: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },
   detalheDoMenu: { ...TEXTO.apoio, fontSize: 11.5 },
-  valorDoMenu: { alignItems: 'flex-end', gap: 1 },
+  valorDoMenu: { alignItems: 'flex-end', gap: ESPACO.fino },
   textoDoValor: { fontFamily: FONTES.forte, fontSize: 12, color: CORES.acao },
   setaDoMenu: { fontFamily: FONTES.forte, fontSize: 16, lineHeight: 18, color: CORES.textoApoio },
   niveisDoMenu: {

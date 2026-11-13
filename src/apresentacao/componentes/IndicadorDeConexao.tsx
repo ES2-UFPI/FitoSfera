@@ -1,9 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
 import { formatarData } from '../formatarData';
 
@@ -92,7 +90,7 @@ export function IndicadorDeConexao({ conexao, agora = new Date() }: { conexao: C
 
 const estilos = StyleSheet.create({
   indicador: { flexDirection: 'row', alignItems: 'flex-start', gap: ESPACO.pequeno },
-  ponto: { width: 9, height: 9, marginTop: 5, borderRadius: RAIO.pilula },
+  ponto: { width: 9, height: 9, marginTop: ESPACO.minimo, borderRadius: RAIO.pilula },
   textos: { flex: 1 },
   texto: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.texto },
 });

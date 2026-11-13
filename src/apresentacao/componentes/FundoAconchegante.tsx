@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { CORES } from '../tema/cores';
+import { CORES } from '../tema';
 import { useIdDeSvg } from './useIdDeSvg';
 
 /** Fundo creme em degradê com duas faixas diagonais de luz, como sol entrando pela janela. */

@@ -17,6 +17,7 @@ import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/C
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
+import { SeloDeStatus } from '../componentes/SeloDeStatus';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
 import { IconeRegador } from '../componentes/IconeRegador';
 import {
@@ -27,11 +28,8 @@ import {
 import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
-import { APRESENTACAO_DO_STATUS } from '../estante/textosDoStatus';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, TEXTO } from '../tema';
 
 function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
   const faixas = item.planta.faixasRecomendadas;
@@ -327,13 +325,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
                 {item.planta.apelido}
               </Text>
               <Text style={estilos.especie}>{item.especie?.nomeComum ?? TEXTOS.comum.especieDesconhecida}</Text>
-              <View
-                style={estilos.status}
-                accessible
-                accessibilityLabel={TEXTOS.detalhe.status(APRESENTACAO_DO_STATUS[item.status].falado)}
-              >
-                <View style={[estilos.pontoDoStatus, { backgroundColor: APRESENTACAO_DO_STATUS[item.status].cor }]} />
-                <Text style={estilos.textoDoStatus}>{APRESENTACAO_DO_STATUS[item.status].falado}</Text>
+              <View style={estilos.status}>
+                <SeloDeStatus status={item.status} />
               </View>
             </View>
           </View>
@@ -457,7 +450,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
 
 const estilos = StyleSheet.create({
   topo: { paddingHorizontal: ESPACO.grande },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: ESPACO.folgado * 3, gap: 4 },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: ESPACO.folgado * 3, gap: ESPACO.minimo },
   conteudo: {
     flexGrow: 1,
     alignItems: 'center',
@@ -470,21 +463,9 @@ const estilos = StyleSheet.create({
   tabua: { alignSelf: 'stretch' },
   identificacao: { flex: 1, gap: ESPACO.minimo },
   especie: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
-  status: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: ESPACO.pequeno,
-    marginTop: ESPACO.minimo,
-    paddingVertical: ESPACO.minimo,
-    paddingHorizontal: ESPACO.medio,
-    borderRadius: RAIO.pilula,
-    backgroundColor: CORES.papel,
-  },
-  pontoDoStatus: { width: 8, height: 8, borderRadius: RAIO.pilula },
-  textoDoStatus: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.textoDoPapel },
+  status: { marginTop: ESPACO.minimo },
   acoes: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
-  atalhoDoRendimento: { alignSelf: 'stretch', maxWidth: 520, width: '100%' },
+  atalhoDoRendimento: { alignSelf: 'stretch', maxWidth: LARGURA_DO_CONTEUDO, width: '100%' },
   acao: { flexGrow: 1, flexBasis: 140 },
   confirmacao: { color: CORES.texto, textAlign: 'center' },
   erro: { color: CORES.erro, textAlign: 'center' },

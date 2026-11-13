@@ -1,7 +1,7 @@
 import { NIVEIS_DE_DIFICULDADE } from '@/dominio/modelos/EspecieVegetal';
 import { ExigenciasDeManejo } from '@/dominio/modelos/ExigenciasDeManejo';
 import { CriteriosDeDificuldade, MOTIVOS_DA_DIFICULDADE } from '@/dominio/regras/ClassificadorDeDificuldade';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 import { especieDeTeste } from '../apoio/especiesDeTeste';
 import {
   APRESENTACAO_DA_DIFICULDADE,

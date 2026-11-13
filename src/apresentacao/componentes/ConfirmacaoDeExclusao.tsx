@@ -1,8 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, LARGURA_DO_MODAL, RAIO, TEXTO } from '../tema';
 import { BotaoPrincipal } from './BotaoPrincipal';
 
 interface Props {
@@ -49,11 +47,11 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: ESPACO.folgado,
-    backgroundColor: 'rgba(61, 51, 38, 0.45)',
+    backgroundColor: CORES.veuDoModal,
   },
   cartao: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: LARGURA_DO_MODAL,
     padding: ESPACO.folgado,
     borderRadius: RAIO.grande,
     backgroundColor: CORES.superficie,

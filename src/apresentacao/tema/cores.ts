@@ -35,6 +35,8 @@ export const CORES = {
   superficie: '#FFFCF5',
   bordaSuave: '#EAD9BF',
   erro: '#A4472E',
+  /** O véu escuro atrás de um modal: o texto da paleta, quase transparente, para a tela de baixo sumir sem sumir. */
+  veuDoModal: 'rgba(61, 51, 38, 0.46)',
 
   statusOk: '#4D7A43',
   statusAtencao: '#B45309',

@@ -3,9 +3,8 @@ import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from '
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
 import { TEXTOS } from '@/textos';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { Cartao } from './Cartao';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from './IconesDasCondicoes';
 
 
@@ -185,7 +184,7 @@ function Indicadores({
 /** Painel puramente visual: recebe o estado pronto e não conhece sensores nem casos de uso. */
 export function PainelDeCondicoes({ estado, origem }: Props) {
   return (
-    <View style={estilos.painel}>
+    <Cartao>
       <View style={estilos.cabecalho}>
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
           {TEXTOS.condicoes.titulo}
@@ -251,21 +250,11 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
           <Text style={TEXTO.apoio}>{TEXTOS.condicoes.explicacaoDoLux}</Text>
         </>
       ) : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  painel: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-    gap: ESPACO.medio,
-  },
   cabecalho: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,7 +366,7 @@ const estilos = StyleSheet.create({
     fontSize: 10.5,
   },
   situacao: {
-    paddingVertical: 2,
+    paddingVertical: ESPACO.fino,
     paddingHorizontal: ESPACO.pequeno,
     borderRadius: RAIO.pilula,
   },

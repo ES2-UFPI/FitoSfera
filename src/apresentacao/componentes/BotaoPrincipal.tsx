@@ -1,8 +1,6 @@
 import { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, RAIO, TEXTO } from '../tema';
 
 interface Props {
   titulo: string;

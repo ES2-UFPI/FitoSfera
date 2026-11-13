@@ -1,7 +1,6 @@
 import { StyleSheet, Text } from 'react-native';
 import { NivelDeDificuldade } from '@/dominio/modelos/EspecieVegetal';
-import { CORES } from '../tema/cores';
-import { FONTES } from '../tema/tipografia';
+import { CORES, FONTES } from '../tema';
 import { APRESENTACAO_DA_DIFICULDADE } from './textosDaDificuldade';
 
 /**

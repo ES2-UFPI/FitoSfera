@@ -1,9 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { CriteriosDaBusca } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { TEXTOS } from '@/textos';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO } from '../tema';
 
 export type ModoDaBusca = 'todas' | 'faceis' | 'mais-faceis-primeiro';
 
@@ -75,7 +73,7 @@ const estilos = StyleSheet.create({
     minHeight: ALVO_DE_TOQUE,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: ESPACO.medio + 2,
+    paddingHorizontal: ESPACO.medio + ESPACO.fino,
     borderWidth: 1.5,
     borderColor: CORES.bordaSuave,
     borderRadius: RAIO.pilula,

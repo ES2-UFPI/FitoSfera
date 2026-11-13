@@ -6,10 +6,9 @@ import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { formatarData } from '../formatarData';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { escreverDia, lerDia, lerQuantidade } from './entradaDaColheita';
+import { Cartao } from '../componentes/Cartao';
 
 type Estado =
   | { readonly tipo: 'ocioso' }
@@ -82,7 +81,7 @@ export function FormularioDeColheita({
   const erroNaData = recusa === 'data-invalida' || recusa === 'data-no-futuro';
 
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.colheita.titulo}
       </Text>
@@ -172,21 +171,11 @@ export function FormularioDeColheita({
           {TEXTOS.colheita.falhaAoGravar}
         </Text>
       ) : null}
-    </View>
+    </Cartao>
   );
 }
 
 const estilos = StyleSheet.create({
-  cartao: {
-    width: '100%',
-    maxWidth: 520,
-    padding: ESPACO.grande,
-    borderRadius: RAIO.medio,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
-    gap: ESPACO.medio,
-  },
   campo: { gap: ESPACO.minimo },
   entrada: {
     minHeight: ALVO_DE_TOQUE,

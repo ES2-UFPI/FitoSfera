@@ -11,9 +11,7 @@ import { BotaoPrincipal } from '../../componentes/BotaoPrincipal';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
 import { CORES_DAS_FOLHAGENS, CORES_DOS_DESTAQUES, CORES_DOS_VASOS, FORMAS_VISUAIS } from '../../ilustracao/paletas';
-import { CORES } from '../../tema/cores';
-import { ESPACO } from '../../tema/medidas';
-import { TEXTO } from '../../tema/tipografia';
+import { CORES, ESPACO, TEXTO } from '../../tema';
 
 const OPCOES_DE_FOLHAGEM = FOLHAGENS.map((id) => {
   const { nome, folha, folhaClara } = CORES_DAS_FOLHAGENS[id];
@@ -101,7 +99,7 @@ const estilos = StyleSheet.create({
   conteudo: { paddingBottom: ESPACO.folgado },
   titulo: { paddingHorizontal: ESPACO.amplo, marginTop: ESPACO.medio },
   secoes: { gap: ESPACO.grande, marginTop: ESPACO.amplo },
-  secaoDeForma: { gap: 6 },
+  secaoDeForma: { gap: ESPACO.curto },
   cabecalhoDaForma: {
     flexDirection: 'row',
     justifyContent: 'space-between',

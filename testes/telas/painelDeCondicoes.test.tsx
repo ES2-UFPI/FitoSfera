@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import { PainelDeCondicoes } from '@/apresentacao/componentes/PainelDeCondicoes';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 
 const leitura = {
   umidadePercentual: 58,
