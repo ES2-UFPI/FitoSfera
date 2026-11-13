@@ -9,6 +9,7 @@ import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterColheitasDaPlanta } from '@/aplicacao/casos-de-uso/ObterColheitasDaPlanta';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
@@ -34,6 +35,7 @@ export interface Container {
   readonly registrarRega: RegistrarRega;
   readonly registrarColheita: RegistrarColheita;
   readonly compararRendimento: CompararRendimento;
+  readonly obterColheitas: ObterColheitasDaPlanta;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;
   readonly obterLuzDoDia: ObterLuzDoDia;

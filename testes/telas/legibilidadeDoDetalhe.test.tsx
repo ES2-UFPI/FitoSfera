@@ -33,7 +33,8 @@ test('o leitor de tela percorre planta, condições, luz de hoje, cuidados, rega
     // Os cuidados da espécie (#120) são informação de referência: vêm depois do que está acontecendo agora.
     'Cuidados desta espécie',
     'Rega e histórico',
-    // O tomate dá frutos: o registro de colheita (#130) vem depois da rega e antes das ações.
+    // O tomate dá frutos: o histórico de colheitas (#133) e o registro (#130) vêm depois da rega e antes das ações.
+    'Colheitas',
     'Registrar colheita',
   ]);
   expect(screen.getAllByRole('button').map((botao) => botao.props.accessibilityLabel)).toEqual([

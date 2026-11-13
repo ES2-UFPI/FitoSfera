@@ -11,6 +11,7 @@ import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterColheitasDaPlanta } from '@/aplicacao/casos-de-uso/ObterColheitasDaPlanta';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
 import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
@@ -83,6 +84,7 @@ export function criarContainer(): Container {
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
+    obterColheitas: new ObterColheitasDaPlanta(colheitas, relogio),
     obterHistorico: new ObterHistoricoDaPlanta(regas, relogio, especies),
     listarRegas: new ListarRegasDaPlanta(regas, relogio),
     obterLuzDoDia,

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { TEXTOS } from '@/textos';
+import { CartaoDasColheitas, EstadoDasColheitas } from '../colheita/CartaoDasColheitas';
 import { FormularioDeColheita } from '../colheita/FormularioDeColheita';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
@@ -63,6 +64,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
+  const [colheitas, definirColheitas] = useState<EstadoDasColheitas>(undefined);
   const [luzDeHoje, definirLuzDeHoje] = useState<LuzDoDia | undefined>(undefined);
   const [tiqueDaLuz, definirTiqueDaLuz] = useState(0);
   const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
@@ -121,6 +123,32 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       atual = false;
     };
   }, [container, plantaCarregada?.id]);
+
+  function carregarColheitas(idPlanta: string): Promise<void> {
+    return container.obterColheitas.executar(idPlanta).then(definirColheitas, (falha) => {
+      console.warn('Não deu para ler as colheitas.', falha);
+      definirColheitas('falhou');
+    });
+  }
+
+  // Só as frutíferas têm colheitas: as outras plantas nem leem o armazenamento delas.
+  const frutiferaCarregada = item && item !== 'falhou' && item.especie?.frutifera ? item.planta.id : null;
+  useEffect(() => {
+    if (frutiferaCarregada === null) return;
+    let atual = true;
+    container.obterColheitas.executar(frutiferaCarregada).then(
+      (lidas) => {
+        if (atual) definirColheitas(lidas);
+      },
+      (falha) => {
+        console.warn('Não deu para ler as colheitas.', falha);
+        if (atual) definirColheitas('falhou');
+      },
+    );
+    return () => {
+      atual = false;
+    };
+  }, [container, frutiferaCarregada]);
 
   // Sem leitura nova, o tempo passando também muda a luz de hoje: o sensor calado deixa o dia incompleto.
   useEffect(() => {
@@ -344,7 +372,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
           </CartaoDoHistorico>
           {item.especie?.frutifera ? (
             <>
-              <FormularioDeColheita idPlanta={item.planta.id} />
+              <CartaoDasColheitas estado={colheitas} />
+              <FormularioDeColheita idPlanta={item.planta.id} aoRegistrar={() => void carregarColheitas(item.planta.id)} />
               <View style={estilos.atalhoDoRendimento}>
                 <BotaoPrincipal
                   titulo={TEXTOS.rendimento.compararComOutras}

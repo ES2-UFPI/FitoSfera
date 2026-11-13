@@ -30,8 +30,17 @@ export function descreverQuantidade({ quantidade, unidade }: Pick<RegistroDeColh
     : TEXTOS.colheita.emGramas(String(quantidade).replace('.', ','));
 }
 
-/** Registro de uma colheita na tela da planta: quantidade, como foi medida e o dia, que já vem com hoje. */
-export function FormularioDeColheita({ idPlanta }: { idPlanta: string }) {
+/**
+ * Registro de uma colheita na tela da planta: quantidade, como foi medida e o dia, que já vem com hoje.
+ * `aoRegistrar` avisa a tela, para o histórico de colheitas se atualizar na hora.
+ */
+export function FormularioDeColheita({
+  idPlanta,
+  aoRegistrar,
+}: {
+  idPlanta: string;
+  aoRegistrar?: (registro: RegistroDeColheita) => void;
+}) {
   const { container } = useAplicativo();
   const registrar = container.registrarColheita;
   const [quantidade, definirQuantidade] = useState('');
@@ -53,6 +62,7 @@ export function FormularioDeColheita({ idPlanta }: { idPlanta: string }) {
         dia: lerDia(dia),
       });
       definirEstado({ tipo: 'registrada', registro });
+      aoRegistrar?.(registro);
       definirQuantidade('');
       definirDia(escreverDia(registrar.hoje()));
     } catch (falha) {
