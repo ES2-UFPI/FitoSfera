@@ -29,6 +29,16 @@ export function proximoHorarioPermitido(janela: JanelaDeLembretes, instante: Dat
   return amanha;
 }
 
+/**
+ * O horário movido por uma quantidade de minutos, dando a volta na meia-noite: 23:45 mais 30 minutos é 00:15,
+ * e 00:15 menos 30 é 23:45. É o que a tela de ajustes usa para andar com os limites da janela.
+ */
+export function deslocarHorario(horario: HorarioDoDia, minutos: number): HorarioDoDia {
+  // O resto em JavaScript guarda o sinal, então um deslocamento negativo precisa da volta a mais.
+  const total = ((emMinutos(horario) + minutos) % MINUTOS_DO_DIA + MINUTOS_DO_DIA) % MINUTOS_DO_DIA;
+  return { hora: Math.floor(total / 60), minuto: total % 60 };
+}
+
 function emMinutos({ hora, minuto }: HorarioDoDia): number {
   return (hora * 60 + minuto) % MINUTOS_DO_DIA;
 }

@@ -1,8 +1,9 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { TEXTOS } from '@/textos';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
 import { EstadoVisual, SEM_DADOS } from '../ilustracao/estadoVisual';
-import { ALTURA_DA_AREA_DOS_VASOS, ALTURA_DA_TABUA, LARGURA_DO_VASO } from '../tema/medidas';
+import { ALTURA_DA_AREA_DOS_VASOS, ALTURA_DA_TABUA, ESPACO, LARGURA_DO_VASO } from '../tema';
 import { EtiquetaDePapel, Inclinacao } from './EtiquetaDePapel';
 import { APRESENTACAO_DO_STATUS } from './textosDoStatus';
 
@@ -27,7 +28,7 @@ export function VasoNaEstante({ item, fase, inclinacao, aoTocar, estado = SEM_DA
     <Pressable
       onPress={aoTocar}
       accessibilityRole="button"
-      accessibilityLabel={`${apelido}. ${status.falado}. Toque para ver os detalhes.`}
+      accessibilityLabel={TEXTOS.jardim.vasoNaEstante(apelido, status.falado)}
       style={({ pressed }) => [estilos.lugar, pressed && estilos.pressionado]}
     >
       <View style={estilos.areaDoVaso}>
@@ -40,7 +41,7 @@ export function VasoNaEstante({ item, fase, inclinacao, aoTocar, estado = SEM_DA
 }
 
 const estilos = StyleSheet.create({
-  lugar: { flex: 1, alignItems: 'center', paddingHorizontal: 4 },
+  lugar: { flex: 1, alignItems: 'center', paddingHorizontal: ESPACO.minimo },
   pressionado: { opacity: 0.8 },
   areaDoVaso: { height: ALTURA_DA_AREA_DOS_VASOS, justifyContent: 'flex-end' },
   tabua: { height: ALTURA_DA_TABUA },

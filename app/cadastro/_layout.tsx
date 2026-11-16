@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 import { ProvedorDoRascunho } from '@/apresentacao/contextos/RascunhoDoCadastro';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 
 export default function LayoutDoCadastro() {
   return (

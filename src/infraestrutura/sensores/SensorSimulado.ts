@@ -6,8 +6,12 @@ import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaCone
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { CancelarObservacao, SensorDeAmbiente } from '@/dominio/portas/SensorDeAmbiente';
 import { Relogio } from '@/dominio/portas/Relogio';
+import { ehNoite, NASCER_DO_SOL, POR_DO_SOL } from '@/dominio/regras/PeriodoDoDia';
 
-const UM_DIA_MS = 24 * 3_600_000;
+/** A hora mais quente de um dia comum, no começo da tarde; a mais fria fica 12 horas depois, de madrugada. */
+const HORA_MAIS_QUENTE = 14;
+/** A luz perto de uma janela ao meio-dia: o máximo que o modo automático alcança. */
+const LUZ_DO_MEIO_DIA = 23000;
 
 /**
  * Sensor de desenvolvimento: gera leituras de um ambiente de casa que variam ao longo do dia, sem hardware.
@@ -23,6 +27,7 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
   private readonly observadores = new Set<(leitura: Leitura) => void>();
   private readonly observadoresDaConexao = new Set<(conexao: ConexaoDoSensor) => void>();
   private ultimaComunicacao: Date | null = null;
+  private deslocamentoDoRelogioMs = 0;
 
   constructor(
     private readonly relogio: Relogio,
@@ -35,6 +40,10 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
 
   /** O simulado mede na hora: não há o que esperar. */
   async aguardarLeitura(): Promise<Leitura | null> {
+    return this.medir();
+  }
+
+  async atualizarLeitura(): Promise<Leitura | null> {
     return this.medir();
   }
 
@@ -75,6 +84,26 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     if (mudouAConexao) this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
   }
 
+  obterHorarioSimulado(): Date {
+    return new Date(this.relogio.agora().getTime() + this.deslocamentoDoRelogioMs);
+  }
+
+  ajustarHorarioSimulado(deltaMs: number): Date {
+    this.deslocamentoDoRelogioMs += deltaMs;
+    const leitura = this.medir();
+    if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
+    this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
+    return this.obterHorarioSimulado();
+  }
+
+  redefinirHorarioSimulado(): Date {
+    this.deslocamentoDoRelogioMs = 0;
+    const leitura = this.medir();
+    if (leitura !== null) this.observadores.forEach((observador) => observador(leitura));
+    this.observadoresDaConexao.forEach((observador) => observador(this.conexao()));
+    return this.obterHorarioSimulado();
+  }
+
   private conexao(): ConexaoDoSensor {
     return {
       estado: this.configuracao.desconectado ? 'desconectado' : 'conectado',
@@ -82,15 +111,20 @@ export class SensorSimulado implements SensorDeAmbiente, ControleDoSensorDeDesen
     };
   }
 
-  /** Uma onda por dia: mais luz e calor perto do meio-dia, mais umidade de madrugada. */
+  /**
+   * Um dia de casa, pelo horário local: luz só entre o nascer e o pôr do sol, com o máximo ao meio-dia; calor no
+   * começo da tarde e umidade de madrugada, quando faz mais frio.
+   */
   private medir(): Leitura | null {
-    const agora = this.relogio.agora();
+    const agora = this.obterHorarioSimulado();
     if (this.configuracao.desconectado) return null;
     this.ultimaComunicacao = agora;
-    const onda = Math.sin((2 * Math.PI * (agora.getTime() % UM_DIA_MS)) / UM_DIA_MS);
-    const umidadeAutomatica = Math.round(60 - 10 * onda);
-    const temperaturaAutomatica = Math.round((24 + 4 * onda) * 10) / 10;
-    const luminosidadeAutomatica = Math.round(Math.max(0, 12000 + 11000 * onda));
+    const horas = agora.getHours() + agora.getMinutes() / 60;
+    const calor = Math.cos((2 * Math.PI * (horas - HORA_MAIS_QUENTE)) / 24);
+    const umidadeAutomatica = Math.round(60 - 10 * calor);
+    const temperaturaAutomatica = Math.round((24 + 4 * calor) * 10) / 10;
+    const sol = ehNoite(agora) ? 0 : Math.sin((Math.PI * (horas - NASCER_DO_SOL)) / (POR_DO_SOL - NASCER_DO_SOL));
+    const luminosidadeAutomatica = Math.round(LUZ_DO_MEIO_DIA * sol);
     return {
       umidadePercentual:
         this.configuracao.umidade === 'baixo'

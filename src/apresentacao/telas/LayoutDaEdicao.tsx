@@ -2,13 +2,12 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { TEXTOS } from '@/textos';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { ProvedorDoRascunho } from '../contextos/RascunhoDoCadastro';
-import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
-import { TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, TEXTO } from '../tema';
 
 /** Abre os passos de aparência e apelido do cadastro já preenchidos com a planta. */
 export function LayoutDaEdicao({ id }: { id: string }) {
@@ -39,7 +38,7 @@ export function LayoutDaEdicao({ id }: { id: string }) {
         <BotaoVoltar />
         <View style={estilos.centro}>
           <Text style={TEXTO.subtitulo}>
-            {item === null ? 'Planta não encontrada' : 'Não deu para abrir esta planta agora.'}
+            {item === null ? TEXTOS.comum.plantaNaoEncontrada : TEXTOS.comum.naoDeuParaAbrirAPlanta}
           </Text>
         </View>
       </FundoAconchegante>
@@ -51,7 +50,13 @@ export function LayoutDaEdicao({ id }: { id: string }) {
       inicial={{
         especie: item.especie,
         aparencia: item.planta.aparencia,
-        edicao: { idPlanta: item.planta.id, apelido: item.planta.apelido },
+        edicao: {
+          idPlanta: item.planta.id,
+          apelido: item.planta.apelido,
+          plantadaEm: item.planta.plantadaEm,
+          colheitaIniciada: item.planta.colheitaIniciada,
+          floracaoIniciadaEm: item.planta.floracaoIniciadaEm,
+        },
       }}
     >
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: CORES.fundoTopo } }} />

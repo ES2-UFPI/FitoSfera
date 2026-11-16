@@ -2,14 +2,15 @@ import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useIdDeSvg } from '../componentes/useIdDeSvg';
-import { CORES } from '../tema/cores';
 import {
   ALTURA_DA_AREA_DOS_VASOS,
   ALTURA_DA_BORDA_DA_MADEIRA,
   ALTURA_DA_MADEIRA,
   ALTURA_DA_PRATELEIRA,
   ALTURA_DA_TABUA,
-} from '../tema/medidas';
+  CORES,
+  RAIO,
+} from '../tema';
 
 /** Uma tábua de madeira com três lugares. Os vasos pousam na tábua e as etiquetas pendem dela. */
 export function Prateleira({ children }: { children: ReactNode }) {
@@ -45,7 +46,7 @@ const estilos = StyleSheet.create({
   tabuaDaPrateleira: { position: 'absolute', top: ALTURA_DA_AREA_DOS_VASOS, left: 0, right: 0 },
   tabua: {
     height: ALTURA_DA_TABUA,
-    borderRadius: 4,
+    borderRadius: RAIO.fino,
     overflow: 'hidden',
     shadowColor: CORES.sombraDaMadeira,
     shadowOpacity: 0.45,

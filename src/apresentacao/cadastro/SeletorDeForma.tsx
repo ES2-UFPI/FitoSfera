@@ -1,10 +1,9 @@
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { Aparencia, FORMAS, IdForma } from '@/dominio/modelos/Aparencia';
+import { TEXTOS } from '@/textos';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
 import { FORMAS_VISUAIS } from '../ilustracao/paletas';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO } from '../tema';
 
 /** As oito formas lado a lado, cada uma já desenhada nas cores que a pessoa escolheu. */
 export function SeletorDeForma({
@@ -24,7 +23,7 @@ export function SeletorDeForma({
             key={forma}
             onPress={() => aoEscolher(forma)}
             accessibilityRole="button"
-            accessibilityLabel={`Forma: ${nome}`}
+            accessibilityLabel={TEXTOS.cadastro.forma(nome)}
             accessibilityState={{ selected: selecionada }}
             style={[estilos.cartao, selecionada && estilos.selecionado]}
           >
@@ -40,13 +39,13 @@ export function SeletorDeForma({
 }
 
 const estilos = StyleSheet.create({
-  linha: { gap: 6, paddingHorizontal: ESPACO.amplo },
+  linha: { gap: ESPACO.curto, paddingHorizontal: ESPACO.amplo },
   cartao: {
     width: 62,
     alignItems: 'center',
-    paddingTop: 6,
-    paddingBottom: 5,
-    gap: 2,
+    paddingTop: ESPACO.curto,
+    paddingBottom: ESPACO.minimo,
+    gap: ESPACO.fino,
     borderRadius: RAIO.medio,
     borderWidth: 2,
     borderColor: 'transparent',

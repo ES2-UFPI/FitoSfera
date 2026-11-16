@@ -1,9 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { Vaso } from '../ilustracao/Vaso';
-import { CORES } from '../tema/cores';
-import { ESPACO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE_MINIMO, CORES, ESPACO, FONTES, TEXTO } from '../tema';
 
 export type FormatoDaAmostra = 'folha' | 'redonda' | 'vaso';
 
@@ -41,9 +40,8 @@ export function AmostrasDeCor<T extends string>({ rotulo, formato, opcoes, selec
               key={opcao.id}
               onPress={() => aoEscolher(opcao.id)}
               accessibilityRole="button"
-              accessibilityLabel={`${rotulo}: ${opcao.nome}`}
+              accessibilityLabel={TEXTOS.cadastro.opcao(rotulo, opcao.nome)}
               accessibilityState={{ selected: marcada }}
-              hitSlop={4}
               style={[estilos.alvo, marcada && estilos.marcada]}
             >
               <Amostra formato={formato} cores={opcao.cores} />
@@ -73,14 +71,14 @@ function Amostra({ formato, cores }: { formato: FormatoDaAmostra; cores: readonl
 }
 
 const estilos = StyleSheet.create({
-  secao: { paddingHorizontal: ESPACO.amplo, gap: 6 },
+  secao: { paddingHorizontal: ESPACO.amplo, gap: ESPACO.curto },
   cabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   nomeEscolhido: { fontFamily: FONTES.texto, fontSize: 11.5, color: CORES.textoApoio },
-  amostras: { flexDirection: 'row', flexWrap: 'wrap', gap: 2 },
+  amostras: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.fino },
   alvo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: ALVO_DE_TOQUE_MINIMO,
+    height: ALVO_DE_TOQUE_MINIMO,
+    borderRadius: ALVO_DE_TOQUE_MINIMO / 2,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,

@@ -22,6 +22,7 @@ const SENSOR: SensorPareado = { id: 'AA:BB:CC:DD:9C:10', nome: 'FitoSfera' };
 class ConexaoFalsa implements ConexaoBle {
   valorLido: string | null = NORMAL;
   pedidos = 0;
+  confirmacoes: number[] = [];
   desconectada = false;
   responderAoPedido: string | null = null;
   private aoReceber: ((valor: string | null) => void) | null = null;
@@ -39,6 +40,9 @@ class ConexaoFalsa implements ConexaoBle {
   async pedirLeitura() {
     this.pedidos++;
     if (this.responderAoPedido) this.notificar(this.responderAoPedido);
+  }
+  async confirmarPacote(sequencia: number) {
+    this.confirmacoes.push(sequencia);
   }
   aoCair(aviso: () => void) {
     this.aviso = aviso;
@@ -168,6 +172,69 @@ describe('reconexão ao sensor conhecido', () => {
     cliente.ultima.notificar(SEM_LUZ);
     expect(aoReceber).toHaveBeenLastCalledWith(expect.objectContaining({ luminosidadeLux: null }));
     expect(aoReceber).toHaveBeenCalledTimes(2);
+  });
+
+  test('confirma pacote novo válido e ignora sua notificação duplicada', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoReceber = jest.fn();
+    sensor.observarLeituras(aoReceber);
+    await jest.advanceTimersByTimeAsync(0);
+    const chamadasAntes = aoReceber.mock.calls.length;
+
+    cliente.ultima.notificar('KjQSBhIPAEEBAADSCagW6AMAAA==');
+    cliente.ultima.notificar('KjQSBhIPAEEBAADSCagW6AMAAA==');
+
+    expect(aoReceber).toHaveBeenCalledTimes(chamadasAntes + 1);
+    expect(cliente.ultima.confirmacoes).toEqual([42, 42]);
+    expect(await sensor.lerLeituraAtual()).toMatchObject({
+      temperaturaCelsius: 25.14,
+      umidadePercentual: 58,
+      luminosidadeLux: 1000,
+    });
+  });
+
+  test('a leitura do pacote novo leva o contador de luz e converte os segundos sem confirmação em data e hora', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    const aoReceber = jest.fn();
+    sensor.observarLeituras(aoReceber);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.ultima.notificar('KjQSBhIPAEEBAADSCagW6AMAAA==');
+
+    expect(aoReceber).toHaveBeenLastCalledWith(expect.objectContaining({
+      medidaEm: instante,
+      contadorDeLuz: {
+        idReinicio: 0x1234,
+        luzAcumuladaLuxMinutos: 987654,
+        segundosSemConfirmacao: 321,
+        ultimaComunicacaoEm: new Date(instante.getTime() - 321_000),
+      },
+    }));
+  });
+
+  test('a leitura do pacote de 8 bytes não traz contador de luz', async () => {
+    const { sensor } = montar(SENSOR);
+    await sensor.lerLeituraAtual();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(await sensor.lerLeituraAtual()).not.toHaveProperty('contadorDeLuz');
+  });
+
+  test('confirma pacote válido sem temperatura e umidade sem publicar leitura incompleta', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    cliente.proximaConexao = () => {
+      const conexao = new ConexaoFalsa();
+      conexao.valorLido = null;
+      return conexao;
+    };
+    const aoReceber = jest.fn();
+    sensor.observarLeituras(aoReceber);
+    await jest.advanceTimersByTimeAsync(0);
+
+    cliente.ultima.notificar('KjQSBhIPAEEBAAAAgP///////w==');
+
+    expect(cliente.ultima.confirmacoes).toEqual([42]);
+    expect(aoReceber).not.toHaveBeenCalled();
+    expect(await sensor.lerLeituraAtual()).toBeNull();
   });
 
   test('quando a ligação cai, fica desconectado e tenta de novo depois da espera', async () => {
@@ -576,6 +643,18 @@ describe('aguardarLeitura, usada pela verificação de avisos', () => {
     expect(cliente.ultima.pedidos).toBe(pedidos);
   });
 
+  test('a atualização manual pede uma medição nova mesmo com leitura recente guardada', async () => {
+    const { cliente, sensor } = montar(SENSOR);
+    await sensor.aguardarLeitura();
+    const pedidos = cliente.ultima.pedidos;
+    cliente.ultima.responderAoPedido = SEM_LUZ;
+
+    const nova = await sensor.atualizarLeitura();
+
+    expect(cliente.ultima.pedidos).toBe(pedidos + 1);
+    expect(nova).toEqual(expect.objectContaining({ luminosidadeLux: null }));
+  });
+
   test('com a leitura guardada já antiga, pede uma nova ao sensor conectado', async () => {
     let agora = instante;
     const cliente = new ClienteFalso();
@@ -584,7 +663,7 @@ describe('aguardarLeitura, usada pela verificação de avisos', () => {
     const pedidos = cliente.ultima.pedidos;
     cliente.ultima.responderAoPedido = SEM_LUZ;
 
-    agora = new Date(instante.getTime() + 10 * 60_000);
+    agora = new Date(instante.getTime() + 10 * 60_000 + 1);
     const nova = await sensor.aguardarLeitura();
 
     expect(cliente.ultima.pedidos).toBe(pedidos + 1);

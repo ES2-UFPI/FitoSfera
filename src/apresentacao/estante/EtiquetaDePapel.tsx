@@ -1,8 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { StatusDaPlanta } from '@/dominio/regras/StatusDaPlanta';
-import { CORES } from '../tema/cores';
-import { FONTES } from '../tema/tipografia';
-import { APRESENTACAO_DO_STATUS } from './textosDoStatus';
+import { CORES, ESPACO, FONTES, RAIO } from '../tema';
+import { SeloDeStatus } from '../componentes/SeloDeStatus';
 
 export type Inclinacao = 'esquerda' | 'direita';
 
@@ -25,8 +24,7 @@ export function EtiquetaDePapel({
         </Text>
         {status ? (
           <View style={estilos.status}>
-            <View style={[estilos.ponto, { backgroundColor: APRESENTACAO_DO_STATUS[status].cor }]} />
-            <Text style={estilos.textoDoStatus}>{APRESENTACAO_DO_STATUS[status].curto}</Text>
+            <SeloDeStatus status={status} forma="miudo" />
           </View>
         ) : null}
       </View>
@@ -40,13 +38,13 @@ const estilos = StyleSheet.create({
   papel: {
     maxWidth: '100%',
     backgroundColor: CORES.papel,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderBottomLeftRadius: 7,
-    borderBottomRightRadius: 7,
-    paddingHorizontal: 7,
-    paddingTop: 3,
-    paddingBottom: 4,
+    borderTopLeftRadius: RAIO.fino,
+    borderTopRightRadius: RAIO.fino,
+    borderBottomLeftRadius: RAIO.pequeno,
+    borderBottomRightRadius: RAIO.pequeno,
+    paddingHorizontal: ESPACO.curto,
+    paddingTop: ESPACO.fino,
+    paddingBottom: ESPACO.minimo,
     shadowColor: CORES.sombraDaMadeira,
     shadowOpacity: 0.18,
     shadowRadius: 3,
@@ -54,7 +52,5 @@ const estilos = StyleSheet.create({
     elevation: 1,
   },
   texto: { fontFamily: FONTES.forte, fontSize: 10.5, color: CORES.textoDoPapel },
-  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 1 },
-  ponto: { width: 7, height: 7, borderRadius: 3.5 },
-  textoDoStatus: { fontFamily: FONTES.texto, fontSize: 9.5, color: CORES.textoDoPapel },
+  status: { marginTop: ESPACO.fino },
 });

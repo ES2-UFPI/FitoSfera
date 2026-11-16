@@ -20,6 +20,12 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
     return (await this.listar()).find((planta) => planta.id === id) ?? null;
   }
 
+  async existe(id: string): Promise<boolean> {
+    const leitura = await this.ler();
+    if (leitura.tipo === 'ilegivel') throw new Error('Não foi possível verificar se a planta ainda existe.');
+    return leitura.tipo === 'lista' && leitura.registros.some((registro) => idDoRegistro(registro) === id);
+  }
+
   /**
    * Acrescenta ao array bruto, sem passar pela leitura: registros que o app não entende continuam
    * gravados como estavam. Conteúdo que nem é uma lista ganha uma cópia antes de ser sobrescrito.
@@ -43,7 +49,8 @@ export class RepositorioDePlantasAsyncStorage implements RepositorioDePlantas {
   /** Tira só o registro do id; registros que o app não entende continuam gravados. Conteúdo ilegível fica como está. */
   async remover(id: string): Promise<void> {
     const leitura = await this.ler();
-    if (leitura.tipo !== 'lista') return;
+    if (leitura.tipo === 'ilegivel') throw new Error('Não foi possível remover a planta do armazenamento.');
+    if (leitura.tipo === 'vazia') return;
     const restantes = leitura.registros.filter((registro) => idDoRegistro(registro) !== id);
     if (restantes.length !== leitura.registros.length)
       await this.armazenamento.setItem(CHAVES.plantas, JSON.stringify(restantes));

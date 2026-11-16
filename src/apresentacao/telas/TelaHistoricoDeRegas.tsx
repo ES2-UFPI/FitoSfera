@@ -3,14 +3,17 @@ import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_HISTORICO_DE_REGAS, RegaDoHistorico } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
+import { TEXTOS } from '@/textos';
+import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
-import { descreverQuandoRegou, formatarDataEHora } from '../componentes/CartaoDoHistorico';
+import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
+import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
+import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 
 type Estado =
   | { tipo: 'carregando' }
@@ -20,8 +23,8 @@ type Estado =
 
 /** Quantas regas a lista está mostrando, avisando quando o limite cortou as mais antigas. */
 export function resumirQuantidade(quantidade: number): string {
-  if (quantidade >= LIMITE_DO_HISTORICO_DE_REGAS) return `As ${LIMITE_DO_HISTORICO_DE_REGAS} regas mais recentes`;
-  return quantidade === 1 ? '1 rega registrada' : `${quantidade} regas registradas`;
+  if (quantidade >= LIMITE_DO_HISTORICO_DE_REGAS) return TEXTOS.historico.regasMaisRecentes(LIMITE_DO_HISTORICO_DE_REGAS);
+  return TEXTOS.historico.regasRegistradas(quantidade);
 }
 
 /** As regas anteriores de uma planta, da mais recente para a mais antiga. Aberta pelo detalhe. */
@@ -29,6 +32,9 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
   const { container, idJardimSelecionado } = useAplicativo();
   const margens = useSafeAreaInsets();
   const [estado, definirEstado] = useState<Estado>({ tipo: 'carregando' });
+  const [paraApagar, definirParaApagar] = useState<RegaDoHistorico | null>(null);
+  const [apagando, definirApagando] = useState(false);
+  const [erroAoApagar, definirErroAoApagar] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,6 +60,31 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
     }, [container, id, idJardimSelecionado]),
   );
 
+  function pedirParaApagar(rega: RegaDoHistorico) {
+    definirErroAoApagar(false);
+    definirParaApagar(rega);
+  }
+
+  async function apagar() {
+    if (paraApagar === null || apagando) return;
+    definirApagando(true);
+    try {
+      await container.apagarRegistros.apagarRega(id, paraApagar.rega.id);
+      const regas = await container.listarRegas.executar(id);
+      definirEstado((anterior) => (anterior.tipo === 'pronto' ? { ...anterior, regas } : anterior));
+      definirParaApagar(null);
+    } catch (falha) {
+      console.warn('Não deu para apagar a rega.', falha);
+      definirErroAoApagar(true);
+    } finally {
+      definirApagando(false);
+    }
+  }
+
+  const quandoParaApagar = paraApagar
+    ? formatarData(paraApagar.rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida
+    : '';
+
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <View style={estilos.topo}>
@@ -65,18 +96,18 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
       >
         <View style={estilos.cabecalho}>
           <Text style={TEXTO.titulo} accessibilityRole="header">
-            Histórico de regas
+            {TEXTOS.historico.tituloDaTela}
           </Text>
           {estado.tipo === 'pronto' ? <Text style={estilos.apelido}>{estado.apelido}</Text> : null}
         </View>
 
-        {estado.tipo === 'carregando' ? <Text style={TEXTO.corpo}>Buscando as regas da planta…</Text> : null}
+        {estado.tipo === 'carregando' ? <Text style={TEXTO.corpo}>{TEXTOS.historico.buscandoRegas}</Text> : null}
 
-        {estado.tipo === 'sem-planta' ? <Text style={TEXTO.subtitulo}>Planta não encontrada</Text> : null}
+        {estado.tipo === 'sem-planta' ? <Text style={TEXTO.subtitulo}>{TEXTOS.comum.plantaNaoEncontrada}</Text> : null}
 
         {estado.tipo === 'falhou' ? (
           <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-            Não deu para ler o histórico agora.
+            {TEXTOS.historico.falha}
           </Text>
         ) : null}
 
@@ -85,21 +116,36 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
         {estado.tipo === 'pronto' && estado.regas.length > 0 ? (
           <View style={estilos.lista}>
             <Text style={TEXTO.rotulo}>{resumirQuantidade(estado.regas.length).toUpperCase()}</Text>
-            {estado.regas.map(({ rega, diasAtras }) => (
-              <View
-                key={rega.id}
-                style={estilos.item}
-                accessible
-                accessibilityLabel={`${formatarDataEHora(rega.regadaEm)}, ${descreverQuandoRegou(diasAtras)}.`}
-              >
-                <View style={estilos.marcador} />
-                <Text style={estilos.quando}>{formatarDataEHora(rega.regadaEm)}</Text>
-                <Text style={TEXTO.apoio}>{descreverQuandoRegou(diasAtras)}</Text>
-              </View>
-            ))}
+            {estado.regas.map((item) => {
+              const { rega, diasAtras } = item;
+              const quando = formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
+              return (
+                <View key={rega.id} style={estilos.item}>
+                  {/* A descrição é um elemento só para o leitor de tela; o botão fica fora dela para ser alcançável. */}
+                  <View style={estilos.descricao} accessible accessibilityLabel={`${quando}, ${descreverQuandoRegou(diasAtras)}.`}>
+                    <View style={estilos.marcador} />
+                    <Text style={estilos.quando}>{quando}</Text>
+                    <Text style={TEXTO.apoio}>{descreverQuandoRegou(diasAtras)}</Text>
+                  </View>
+                  <BotaoDeApagar rotulo={TEXTOS.apagarRegistro.rotuloDaRega(quando)} aoTocar={() => pedirParaApagar(item)} />
+                </View>
+              );
+            })}
           </View>
         ) : null}
       </ScrollView>
+      <DialogoDeConfirmacao
+        titulo={TEXTOS.apagarRegistro.tituloDaRega(quandoParaApagar)}
+        explicacao={TEXTOS.apagarRegistro.explicacaoDaRega}
+        tituloDoBotao={TEXTOS.apagarRegistro.confirmarRega}
+        tituloEmAndamento={TEXTOS.apagarRegistro.apagando}
+        mensagemDeErro={TEXTOS.apagarRegistro.falha}
+        visivel={paraApagar !== null}
+        emAndamento={apagando}
+        erro={erroAoApagar}
+        aoConfirmar={() => void apagar()}
+        aoCancelar={() => definirParaApagar(null)}
+      />
     </FundoAconchegante>
   );
 }
@@ -107,17 +153,12 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
 /** A planta nunca foi regada: nada de lista vazia, e sim o convite para registrar a primeira rega. */
 function SemRegas() {
   return (
-    <View style={estilos.vazio}>
-      <View style={estilos.regador} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-        <IconeRegador cor={CORES.acaoRega} tamanho={44} />
-      </View>
-      <Text style={TEXTO.subtitulo} accessibilityRole="header">
-        Nenhuma rega registrada
-      </Text>
-      <Text style={[TEXTO.corpo, estilos.texto]}>
-        Toque em “Registrar rega” no detalhe da planta e cada rega passa a aparecer aqui.
-      </Text>
-    </View>
+    <MensagemDeVazio
+      forma="tela"
+      titulo={TEXTOS.historico.semRegasTitulo}
+      texto={TEXTOS.historico.semRegasTexto}
+      icone={<IconeRegador cor={CORES.acaoRega} tamanho={44} />}
+    />
   );
 }
 
@@ -127,7 +168,7 @@ const estilos = StyleSheet.create({
   cabecalho: { gap: ESPACO.minimo },
   apelido: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.textoApoio },
   lista: {
-    maxWidth: 520,
+    maxWidth: LARGURA_DO_CONTEUDO,
     padding: ESPACO.grande,
     borderRadius: RAIO.medio,
     borderWidth: 1,
@@ -135,11 +176,9 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.superficie,
     gap: ESPACO.medio,
   },
-  item: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACO.pequeno },
+  item: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  descricao: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACO.pequeno },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acaoRega },
   quando: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },
-  vazio: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: ESPACO.pequeno, paddingBottom: ESPACO.folgado * 2 },
-  regador: { marginBottom: ESPACO.pequeno },
-  texto: { textAlign: 'center', maxWidth: 300 },
   erro: { color: CORES.erro },
 });

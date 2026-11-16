@@ -1,18 +1,17 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES } from '../tema/tipografia';
+import { TEXTOS } from '@/textos';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO } from '../tema';
 
 export function BotaoFlutuante({ aoTocar }: { aoTocar: () => void }) {
   return (
     <Pressable
       onPress={aoTocar}
       accessibilityRole="button"
-      accessibilityLabel="Nova planta"
+      accessibilityLabel={TEXTOS.jardim.novaPlanta}
       style={({ pressed }) => [estilos.botao, pressed && estilos.pressionado]}
     >
       <Text style={estilos.mais}>+</Text>
-      <Text style={estilos.texto}>Nova planta</Text>
+      <Text style={estilos.texto}>{TEXTOS.jardim.novaPlanta}</Text>
     </Pressable>
   );
 }
@@ -25,7 +24,7 @@ const estilos = StyleSheet.create({
     minHeight: ALVO_DE_TOQUE,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: ESPACO.curto,
     paddingHorizontal: ESPACO.amplo,
     borderRadius: RAIO.pilula,
     backgroundColor: CORES.acao,

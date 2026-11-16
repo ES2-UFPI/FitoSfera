@@ -27,4 +27,16 @@ export class SensoresSimuladosDosJardins implements ControleDoSensorDeDesenvolvi
   definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento, idJardim = 'jardim-principal'): void {
     this.obterSensor(idJardim).definirConfiguracao(configuracao);
   }
+
+  obterHorarioSimulado(idJardim = 'jardim-principal'): Date {
+    return this.obterSensor(idJardim).obterHorarioSimulado();
+  }
+
+  ajustarHorarioSimulado(deltaMs: number, idJardim = 'jardim-principal'): Date {
+    return this.obterSensor(idJardim).ajustarHorarioSimulado(deltaMs);
+  }
+
+  redefinirHorarioSimulado(idJardim = 'jardim-principal'): Date {
+    return this.obterSensor(idJardim).redefinirHorarioSimulado();
+  }
 }

@@ -13,7 +13,16 @@ export class PlantaNaoEncontrada extends Error {
 export class EditarPlanta {
   constructor(private readonly plantas: RepositorioDePlantas) {}
 
-  async executar(id: string, alteracoes: { apelido: string; aparencia: Aparencia }): Promise<Planta> {
+  async executar(
+    id: string,
+    alteracoes: {
+      apelido: string;
+      aparencia: Aparencia;
+      plantadaEm?: Date | null;
+      colheitaIniciada?: boolean;
+      floracaoIniciadaEm?: Date | null;
+    },
+  ): Promise<Planta> {
     const atual = await this.plantas.obterPorId(id);
     if (atual === null) throw new PlantaNaoEncontrada(id);
     const editada = atual.editar(alteracoes);

@@ -1,21 +1,32 @@
 import { Jardim } from '@/dominio/modelos/Jardim';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
+import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
+import { TEXTOS } from '@/textos';
 
 export class SensorJaEmUso extends Error {
   constructor() {
-    super('Este sensor já está associado a outro jardim.');
+    super(TEXTOS.jardins.sensorEmOutroJardim);
     this.name = 'SensorJaEmUso';
   }
 }
 
 export class GerenciarJardins {
   constructor(private readonly jardins: RepositorioDeJardins, private readonly gerador: GeradorDeIdentificador,
-    private readonly sensores?: { listarPareados(): Promise<readonly SensorPareado[]> }) {}
+    private readonly sensores?: { listarPareados(): Promise<readonly SensorPareado[]> },
+    private readonly plantas?: Pick<RepositorioDePlantas, 'listar'>) {}
 
   listar(): Promise<readonly Jardim[]> {
     return this.jardins.listar();
+  }
+
+  /** Quantas plantas cada jardim tem, pelo id do jardim. Jardim sem planta não aparece no mapa. */
+  async contarPlantas(): Promise<ReadonlyMap<string, number>> {
+    const contagem = new Map<string, number>();
+    for (const planta of (await this.plantas?.listar()) ?? [])
+      contagem.set(planta.idJardim, (contagem.get(planta.idJardim) ?? 0) + 1);
+    return contagem;
   }
 
   obterSelecionado(): Promise<string> {
@@ -24,7 +35,7 @@ export class GerenciarJardins {
 
   async criar(nome: string): Promise<Jardim> {
     const limpo = nome.trim();
-    if (!limpo) throw new Error('Informe o nome do jardim.');
+    if (!limpo) throw new Error(TEXTOS.jardins.informeONome);
     const jardim: Jardim = { id: this.gerador.gerar(), nome: limpo, idSensor: null };
     await this.jardins.salvar(jardim);
     return jardim;
@@ -36,23 +47,23 @@ export class GerenciarJardins {
 
   async associar(idJardim: string, idSensor: string): Promise<void> {
     if (!idSensor || (this.sensores && !(await this.sensores.listarPareados()).some((item) => item.id === idSensor)))
-      throw new Error('Sensor não pareado.');
+      throw new Error(TEXTOS.jardins.sensorNaoPareado);
     const jardins = await this.jardins.listar();
     const jardim = jardins.find((item) => item.id === idJardim);
-    if (!jardim) throw new Error('Jardim não encontrado.');
+    if (!jardim) throw new Error(TEXTOS.jardins.jardimNaoEncontrado);
     if (jardins.some((item) => item.id !== idJardim && item.idSensor === idSensor)) throw new SensorJaEmUso();
     await this.jardins.salvar({ ...jardim, idSensor });
   }
 
   async associarSensorSimulado(idJardim: string): Promise<void> {
     const jardim = (await this.jardins.listar()).find((item) => item.id === idJardim);
-    if (!jardim) throw new Error('Jardim não encontrado.');
+    if (!jardim) throw new Error(TEXTOS.jardins.jardimNaoEncontrado);
     await this.jardins.salvar({ ...jardim, idSensor: `simulado:${idJardim}` });
   }
 
   async desassociar(idJardim: string): Promise<void> {
     const jardim = (await this.jardins.listar()).find((item) => item.id === idJardim);
-    if (!jardim) throw new Error('Jardim não encontrado.');
+    if (!jardim) throw new Error(TEXTOS.jardins.jardimNaoEncontrado);
     await this.jardins.salvar({ ...jardim, idSensor: null });
   }
 }

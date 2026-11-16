@@ -6,7 +6,7 @@ import { ArmazenamentoComMigracao } from '@/infraestrutura/persistencia/Armazena
 import { MigradorDoArmazenamento } from '@/infraestrutura/persistencia/MigradorDoArmazenamento';
 import { RepositorioDePlantasAsyncStorage } from '@/infraestrutura/persistencia/RepositorioDePlantasAsyncStorage';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
-import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { EspecieVegetal, FaixasIdeais } from '@/dominio/modelos/EspecieVegetal';
 import { ArmazenamentoEmMemoria } from '../apoio/ArmazenamentoEmMemoria';
 import { ESPECIES_DE_TESTE, FAIXAS_DE_TESTE } from '../apoio/especiesDeTeste';
 import { SensorFixo, GeradorSequencial, RelogioParado, RepositorioDePlantasEmMemoria } from '../apoio/fakes';
@@ -31,6 +31,8 @@ test('cadastra a espécie escolhida no jardim, com identificador e data de cadas
 
   expect(planta).toMatchObject({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomatinho' });
   expect(planta.cadastradaEm).toEqual(agora);
+  expect(planta.plantadaEm).toEqual(agora);
+  expect(planta.colheitaIniciada).toBe(false);
   expect(await plantas.listar()).toEqual([planta]);
 });
 
@@ -44,6 +46,21 @@ test('cadastrar a mesma espécie duas vezes cria duas plantas distintas', async 
     ['p1', 'tomate'],
     ['p2', 'tomate'],
   ]);
+});
+
+test('usa a data de plantio aproximada informada e permite marcar colheita já iniciada', async () => {
+  const { cadastrar } = montar();
+  const plantadaEm = new Date(2026, 7, 1);
+  const planta = await cadastrar.executar({ ...pedido(), plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: agora });
+  expect(planta.plantadaEm).toEqual(plantadaEm);
+  expect(planta.colheitaIniciada).toBe(true);
+  expect(planta.floracaoIniciadaEm).toEqual(agora);
+});
+
+test('não atribui data de plantio de colheita a espécie não frutífera', async () => {
+  const { cadastrar } = montar();
+  const planta = await cadastrar.executar({ ...pedido(), idEspecie: 'jiboia' });
+  expect(planta.plantadaEm).toBeNull();
 });
 
 test('cadastro em outro jardim mantém a associação após reabrir o armazenamento', async () => {
@@ -114,6 +131,7 @@ describe('faixas recomendadas', () => {
     const tomateRevisado: EspecieVegetal = {
       ...tomateDoCatalogo,
       faixasIdeais: {
+        ...(tomateDoCatalogo.faixasIdeais as FaixasIdeais),
         umidadeDoAr: { minimo: 60, maximo: 80, fonte },
         temperatura: { minimo: 22, maximo: 30, fonte },
         luminosidade: { minimo: 30000, maximo: 90000, fonte },

@@ -14,6 +14,9 @@ interface ValorDoAplicativo {
   criarJardim(nome: string): Promise<void>;
   recarregarJardins(): Promise<void>;
   recarregarJardim(): Promise<void>;
+  /** A edição avisa que salvou; o detalhe da planta consome o aviso uma vez, ao voltar a aparecer. */
+  avisarEdicaoSalva(idPlanta: string): void;
+  consumirEdicaoSalva(idPlanta: string): boolean;
 }
 
 const ContextoDoAplicativo = createContext<ValorDoAplicativo | null>(null);
@@ -31,6 +34,15 @@ export function ProvedorDoAplicativo({
   const [jardins, definirJardins] = useState<readonly Jardim[]>([JARDIM_PRINCIPAL]);
   const [idJardimSelecionado, definirSelecionado] = useState(JARDIM_PRINCIPAL.id);
   const selecaoAtual = useRef(JARDIM_PRINCIPAL.id);
+  const recuperacaoDeExclusoes = useRef<Promise<void>>(Promise.resolve());
+  // Ref e não estado: o aviso não muda nada na tela por si só, só é lido pelo detalhe ao ganhar foco.
+  const edicaoSalva = useRef<string | null>(null);
+  const avisarEdicaoSalva = useCallback((idPlanta: string) => { edicaoSalva.current = idPlanta; }, []);
+  const consumirEdicaoSalva = useCallback((idPlanta: string) => {
+    if (edicaoSalva.current !== idPlanta) return false;
+    edicaoSalva.current = null;
+    return true;
+  }, []);
 
   const recarregarJardins = useCallback(async () => {
     const [lista, selecionado] = await Promise.all([
@@ -63,6 +75,7 @@ export function ProvedorDoAplicativo({
   // primeira leitura). Sem isso, a abertura esperaria pelo jardim para sempre.
   const recarregarJardim = useCallback(async () => {
     try {
+      await recuperacaoDeExclusoes.current;
       const carregadas = await container.listarJardim.executar(idJardimSelecionado);
       if (selecaoAtual.current === idJardimSelecionado) definirPlantas(carregadas);
     } catch (falha) {
@@ -70,6 +83,12 @@ export function ProvedorDoAplicativo({
       if (selecaoAtual.current === idJardimSelecionado) definirPlantas((anteriores) => anteriores ?? []);
     }
   }, [container, idJardimSelecionado]);
+
+  useEffect(() => {
+    recuperacaoDeExclusoes.current = container.excluirPlanta.recuperarPendentes().catch((falha) => {
+      console.warn('Não foi possível concluir a limpeza de uma exclusão pendente.', falha);
+    });
+  }, [container]);
 
   useEffect(() => {
     void recarregarJardins().catch((falha) => console.warn('Não deu para ler os jardins.', falha));
@@ -81,8 +100,9 @@ export function ProvedorDoAplicativo({
 
   const valor = useMemo(() => ({
     container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim,
-    recarregarJardins, recarregarJardim,
-  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim, recarregarJardins, recarregarJardim]);
+    recarregarJardins, recarregarJardim, avisarEdicaoSalva, consumirEdicaoSalva,
+  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim, recarregarJardins, recarregarJardim,
+    avisarEdicaoSalva, consumirEdicaoSalva]);
   return <ContextoDoAplicativo.Provider value={valor}>{children}</ContextoDoAplicativo.Provider>;
 }
 

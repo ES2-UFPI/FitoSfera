@@ -15,6 +15,8 @@ const notificacoesFalsas = {
   requestPermissionsAsync: jest.fn(),
   setNotificationChannelAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(),
+  getAllScheduledNotificationsAsync: jest.fn(),
+  cancelScheduledNotificationAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
   getLastNotificationResponse: jest.fn(),
   clearLastNotificationResponse: jest.fn(),
@@ -118,6 +120,30 @@ describe('NotificadorExpo', () => {
 
     const [tratamento] = notificacoesFalsas.setNotificationHandler.mock.calls[0];
     expect(await tratamento.handleNotification()).toMatchObject({ shouldShowBanner: true });
+  });
+
+  test('cancela somente os avisos pendentes da planta excluída', async () => {
+    notificacoesFalsas.getAllScheduledNotificationsAsync.mockResolvedValue([
+      { identifier: 'n1', content: { data: { idPlanta: 'p1' } } },
+      { identifier: 'n2', content: { data: { idPlanta: 'p2' } } },
+      { identifier: 'n3', content: { data: { idPlanta: 'p1' } } },
+    ]);
+
+    await new NotificadorExpo().cancelarDaPlanta('p1');
+
+    expect(notificacoesFalsas.cancelScheduledNotificationAsync).toHaveBeenCalledTimes(2);
+    expect(notificacoesFalsas.cancelScheduledNotificationAsync).toHaveBeenCalledWith('n1');
+    expect(notificacoesFalsas.cancelScheduledNotificationAsync).toHaveBeenCalledWith('n3');
+  });
+
+  test('sem aviso pendente da planta, não tenta cancelar nada', async () => {
+    notificacoesFalsas.getAllScheduledNotificationsAsync.mockResolvedValue([
+      { identifier: 'n2', content: { data: { idPlanta: 'p2' } } },
+    ]);
+
+    await expect(new NotificadorExpo().cancelarDaPlanta('p1')).resolves.toBeUndefined();
+
+    expect(notificacoesFalsas.cancelScheduledNotificationAsync).not.toHaveBeenCalled();
   });
 
   test('falha ao consultar a permissão não derruba a verificação', async () => {

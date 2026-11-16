@@ -1,10 +1,15 @@
 import { Platform } from 'react-native';
 import {
   definirTarefaDeVerificacao,
+  INTERVALO_EM_MINUTOS,
   registrarVerificacaoPeriodica,
 } from '@/infraestrutura/notificacoes/VerificacaoPeriodica';
-import { Container } from './Container';
 import { criarContainer } from './criarContainer';
+
+interface ContainerDeVerificacao {
+  readonly atualizarLeituras: { executar(): Promise<unknown> };
+  readonly avaliarLeitura: { executar(): Promise<unknown> };
+}
 
 /**
  * Define a tarefa de segundo plano já na carga do módulo, e não dentro de um efeito de tela: quando o
@@ -13,7 +18,9 @@ import { criarContainer } from './criarContainer';
  * do roteador, porque sem tela as rotas (e o `app/_layout.tsx`) não carregam.
  */
 definirTarefaDeVerificacao(Platform.OS, async () => {
-  await criarContainer().avaliarLeitura.executar();
+  const container = criarContainer();
+  await container.atualizarLeituras.executar();
+  await container.avaliarLeitura.executar();
 });
 
 /**
@@ -21,8 +28,11 @@ definirTarefaDeVerificacao(Platform.OS, async () => {
  * permissão de notificação — e deixa o sistema repetindo a verificação em segundo plano.
  */
 export async function ligarVerificacaoEmSegundoPlano(
-  container: Pick<Container, 'avaliarLeitura'>,
+  container: ContainerDeVerificacao,
+  intervaloEmMinutos = INTERVALO_EM_MINUTOS,
 ): Promise<void> {
+  // Agenda antes da execução imediata: uma falha de rede na abertura não pode impedir as próximas tentativas.
+  await registrarVerificacaoPeriodica(intervaloEmMinutos);
+  await container.atualizarLeituras.executar();
   await container.avaliarLeitura.executar();
-  await registrarVerificacaoPeriodica();
 }

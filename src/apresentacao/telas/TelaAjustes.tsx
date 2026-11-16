@@ -6,15 +6,16 @@ import {
   ControleDoSensorDeDesenvolvimento,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
+import { TEXTOS } from '@/textos';
+import { formatarData } from '../formatarData';
+import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { IconeLuz, IconeTemperatura, IconeUmidade } from '../componentes/IconesDasCondicoes';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
+import { CartaoDosLembretes } from '../lembretes/CartaoDosLembretes';
 import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
-import { TelaEmBreve } from './TelaEmBreve';
 
 type Grandeza = 'umidade' | 'temperatura' | 'luminosidade';
 type IconeDaGrandeza = ComponentType<{
@@ -44,21 +45,33 @@ const GRUPOS: readonly {
   Icone: IconeDaGrandeza;
   cor: ColorValue;
 }[] = [
-  { grandeza: 'umidade', titulo: 'Umidade', detalhe: 'Umidade relativa do ar', Icone: IconeUmidade, cor: CORES.acaoRega },
+  {
+    grandeza: 'umidade',
+    titulo: TEXTOS.simulador.umidade,
+    detalhe: TEXTOS.simulador.detalheDaUmidade,
+    Icone: IconeUmidade,
+    cor: CORES.acaoRega,
+  },
   {
     grandeza: 'temperatura',
-    titulo: 'Temperatura',
-    detalhe: 'Temperatura do ambiente',
+    titulo: TEXTOS.simulador.temperatura,
+    detalhe: TEXTOS.simulador.detalheDaTemperatura,
     Icone: IconeTemperatura,
     cor: CORES.erro,
   },
-  { grandeza: 'luminosidade', titulo: 'Luz', detalhe: 'Luminosidade do ambiente', Icone: IconeLuz, cor: CORES.statusAtencao },
+  {
+    grandeza: 'luminosidade',
+    titulo: TEXTOS.simulador.luz,
+    detalhe: TEXTOS.simulador.detalheDaLuz,
+    Icone: IconeLuz,
+    cor: CORES.statusAtencao,
+  },
 ];
 
 const NIVEIS: readonly { nivel: NivelDoSensorDeDesenvolvimento; titulo: string }[] = [
-  { nivel: 'automatico', titulo: 'Automático' },
-  { nivel: 'baixo', titulo: 'Baixo' },
-  { nivel: 'alto', titulo: 'Alto' },
+  { nivel: 'automatico', titulo: TEXTOS.simulador.automatico },
+  { nivel: 'baixo', titulo: TEXTOS.simulador.baixo },
+  { nivel: 'alto', titulo: TEXTOS.simulador.alto },
 ];
 
 function configuracoesIguais(
@@ -74,14 +87,18 @@ function configuracoesIguais(
 }
 
 function nomeDoNivel(nivel: NivelDoSensorDeDesenvolvimento): string {
-  return nivel === 'automatico' ? 'Automático' : nivel === 'baixo' ? 'Baixo' : 'Alto';
+  return nivel === 'automatico' ? TEXTOS.simulador.automatico : nivel === 'baixo' ? TEXTOS.simulador.baixo : TEXTOS.simulador.alto;
 }
 
 function descrever(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): string {
-  if (configuracao.desconectado) return 'Sensor desativado: nenhuma leitura simulada será enviada.';
+  if (configuracao.desconectado) return TEXTOS.simulador.desconectado;
   const nome = (nivel: NivelDoSensorDeDesenvolvimento) =>
-    nivel === 'automatico' ? 'automática' : nivel === 'baixo' ? 'baixa' : 'alta';
-  return `Combinação atual: umidade ${nome(configuracao.umidade)}, temperatura ${nome(configuracao.temperatura)} e luz ${nome(configuracao.luminosidade)}.`;
+    nivel === 'automatico' ? TEXTOS.simulador.automatica : nivel === 'baixo' ? TEXTOS.simulador.baixa : TEXTOS.simulador.alta;
+  return TEXTOS.simulador.combinacao(
+    nome(configuracao.umidade),
+    nome(configuracao.temperatura),
+    nome(configuracao.luminosidade),
+  );
 }
 
 function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolvimento): boolean {
@@ -96,6 +113,9 @@ export function TelaAjustes() {
   const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
+  // Uma ação principal por tela: sem sensor pareado, parear é o mais urgente; senão, o horário dos lembretes.
+  const [temPareado, definirTemPareado] = useState(true);
+  const faltaParear = pareamento !== null && !temPareado;
   const margens = useSafeAreaInsets();
   const jardimAtual = jardins.find((jardim) => jardim.id === idJardimSelecionado);
   const simuladorAssociado = jardimAtual?.idSensor === 'simulado' || jardimAtual?.idSensor === `simulado:${idJardimSelecionado}`;
@@ -107,10 +127,6 @@ export function TelaAjustes() {
     await recarregarJardim();
   }
 
-  if (controle === null && pareamento === null) {
-    return <TelaEmBreve titulo="Ajustes" descricao="Aqui você vai escolher o horário dos lembretes e o sensor." />;
-  }
-
   return (
     <FundoAconchegante>
       <ScrollView
@@ -118,17 +134,19 @@ export function TelaAjustes() {
         contentInsetAdjustmentBehavior="automatic"
       >
         <Text style={TEXTO.titulo} accessibilityRole="header">
-          Ajustes
+          {TEXTOS.ajustes.titulo}
         </Text>
-        {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} /> : null}
+        <CartaoDosLembretes emDestaque={!faltaParear} />
+        {pareamento ? <CartaoDoSensorPareado pareamento={pareamento} aoSaberSeTemPareado={definirTemPareado} /> : null}
         {controle ? (
           <CartaoDoSensorDeDesenvolvimento
             key={idJardimSelecionado}
             controle={controle}
             idJardim={idJardimSelecionado}
-            nomeDoJardim={jardimAtual?.nome ?? 'Jardim principal'}
+            nomeDoJardim={jardimAtual?.nome ?? TEXTOS.comum.jardimPrincipal}
             simuladorAssociado={simuladorAssociado}
             aoAlternarAssociacao={alternarAssociacaoSimulada}
+            aoAtualizarLeituras={recarregarJardim}
           />
         ) : null}
       </ScrollView>
@@ -142,12 +160,14 @@ function CartaoDoSensorDeDesenvolvimento({
   nomeDoJardim,
   simuladorAssociado,
   aoAlternarAssociacao,
+  aoAtualizarLeituras,
 }: {
   controle: ControleDoSensorDeDesenvolvimento;
   idJardim: string;
   nomeDoJardim: string;
   simuladorAssociado: boolean;
   aoAlternarAssociacao(): Promise<void>;
+  aoAtualizarLeituras(): Promise<void>;
 }) {
   const { container } = useAplicativo();
   const [configuracao, definirConfiguracao] = useState<ConfiguracaoDoSensorDeDesenvolvimento>(() =>
@@ -155,6 +175,7 @@ function CartaoDoSensorDeDesenvolvimento({
   );
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
   const [falhaAoAssociar, definirFalhaAoAssociar] = useState(false);
+  const [horarioSimulado, definirHorarioSimulado] = useState(() => controle.obterHorarioSimulado(idJardim));
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -177,16 +198,26 @@ function CartaoDoSensorDeDesenvolvimento({
     definirMenuAberto(null);
   }
 
+  function ajustarHorario(deltaMs: number) {
+    definirHorarioSimulado(controleAtivo.ajustarHorarioSimulado(deltaMs, idJardim));
+    void aoAtualizarLeituras();
+  }
+
+  function voltarAoHorarioAtual() {
+    definirHorarioSimulado(controleAtivo.redefinirHorarioSimulado(idJardim));
+    void aoAtualizarLeituras();
+  }
+
   return (
-    <View style={estilos.cartao}>
+    <Cartao>
       <View style={estilos.cabecalho}>
         <View style={estilos.titulosDoCabecalho}>
-          <Text style={TEXTO.subtitulo}>Sensor simulado · {nomeDoJardim}</Text>
-          <Text style={estilos.selo}>DADOS SIMULADOS</Text>
+          <Text style={TEXTO.subtitulo}>{TEXTOS.simulador.titulo(nomeDoJardim)}</Text>
+          <Text style={estilos.selo}>{TEXTOS.simulador.selo}</Text>
         </View>
         <Switch
-          accessibilityLabel="Sensor simulado"
-          accessibilityHint="Ativa ou interrompe as leituras simuladas"
+          accessibilityLabel={TEXTOS.simulador.interruptor}
+          accessibilityHint={TEXTOS.simulador.dicaDoInterruptor}
           accessibilityRole="switch"
           value={sensorLigado}
           onValueChange={alternarSensor}
@@ -197,11 +228,11 @@ function CartaoDoSensorDeDesenvolvimento({
 
       <View style={estilos.vinculoDoJardim}>
         <View style={estilos.titulosDoCabecalho}>
-          <Text style={estilos.tituloDaExplicacao}>Jardim monitorado</Text>
-          <Text style={TEXTO.apoio}>{simuladorAssociado ? `Simulador associado a ${nomeDoJardim}` : `Nenhum simulador associado a ${nomeDoJardim}`}</Text>
+          <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.jardimMonitorado}</Text>
+          <Text style={TEXTO.apoio}>{simuladorAssociado ? TEXTOS.simulador.associadoA(nomeDoJardim) : TEXTOS.simulador.naoAssociadoA(nomeDoJardim)}</Text>
         </View>
         <BotaoPrincipal
-          titulo={simuladorAssociado ? 'Desassociar simulador' : 'Associar simulador a este jardim'}
+          titulo={simuladorAssociado ? TEXTOS.simulador.pararDeUsar : TEXTOS.simulador.usarNesteJardim}
           variante="secundaria"
           largo
           aoTocar={() => {
@@ -210,47 +241,60 @@ function CartaoDoSensorDeDesenvolvimento({
           }}
         />
         {falhaAoAssociar ? (
-          <Text style={estilos.erroDoVinculo} accessibilityRole="alert">Não foi possível alterar a associação. Tente novamente.</Text>
+          <Text style={estilos.erroDoVinculo} accessibilityRole="alert">{TEXTOS.simulador.falhaAoTrocar}</Text>
         ) : null}
       </View>
 
       <View style={estilos.estadoDoSensor}>
         <View style={[estilos.indicadorDoSensor, sensorLigado && estilos.indicadorDoSensorAtivo]} />
-        <Text style={estilos.textoDoEstado}>{sensorLigado ? 'Sensor simulado ativo' : 'Sensor simulado desativado'}</Text>
+        <Text style={estilos.textoDoEstado}>{sensorLigado ? TEXTOS.simulador.ativo : TEXTOS.simulador.desligado}</Text>
       </View>
 
-      <Text style={TEXTO.corpo}>Use um atalho ou combine as condições para testar o aplicativo sem hardware.</Text>
+      <Text style={TEXTO.corpo}>{TEXTOS.simulador.explicacao}</Text>
+      <View style={estilos.relogioSimulado}>
+        <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.relogio}</Text>
+        <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
+          {formatarData(horarioSimulado, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}
+        </Text>
+        <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDoRelogio}</Text>
+        <View style={estilos.opcoesDeTempo}>
+          <BotaoDeOpcao titulo={TEXTOS.simulador.menosUmaHora} aoTocar={() => ajustarHorario(-3_600_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.maisUmaHora} aoTocar={() => ajustarHorario(3_600_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.menosUmDia} aoTocar={() => ajustarHorario(-86_400_000)} />
+          <BotaoDeOpcao titulo={TEXTOS.simulador.maisUmDia} aoTocar={() => ajustarHorario(86_400_000)} />
+        </View>
+        <BotaoPrincipal titulo={TEXTOS.simulador.voltarAoHorarioAtual} variante="secundaria" aoTocar={voltarAoHorarioAtual} />
+      </View>
       <View style={estilos.explicacaoDoAutomatico}>
-        <Text style={estilos.tituloDaExplicacao}>O que significa automático?</Text>
+        <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.oQueEAutomatico}</Text>
         <Text style={TEXTO.apoio}>
-          A condição varia sozinha ao longo do dia seguindo um ciclo ambiental simulado. Você pode deixar uma
-          grandeza automática e forçar apenas as outras.
+          {TEXTOS.simulador.explicacaoDoAutomatico}
         </Text>
       </View>
 
-      <Text style={TEXTO.rotulo}>ATALHOS</Text>
+      <Text style={TEXTO.rotulo}>{TEXTOS.simulador.rotuloDosAtalhos}</Text>
       <View style={estilos.opcoes}>
         <BotaoDeOpcao
-          titulo="Tudo automático"
+          titulo={TEXTOS.simulador.tudoAutomatico}
           selecionado={configuracoesIguais(configuracao, AUTOMATICO)}
           desabilitado={!sensorLigado}
           aoTocar={() => aplicar(AUTOMATICO)}
         />
         <BotaoDeOpcao
-          titulo="Quente, seco e ensolarado"
+          titulo={TEXTOS.simulador.quenteSecoEnsolarado}
           selecionado={configuracoesIguais(configuracao, QUENTE_SECO_ENSOLARADO)}
           desabilitado={!sensorLigado}
           aoTocar={() => aplicar(QUENTE_SECO_ENSOLARADO)}
         />
         <BotaoDeOpcao
-          titulo="Customizado"
+          titulo={TEXTOS.simulador.personalizado}
           selecionado={configuracaoPersonalizada(configuracao)}
           desabilitado={!configuracaoPersonalizada(configuracao)}
           aoTocar={() => {}}
         />
       </View>
 
-      <Text style={TEXTO.rotulo}>COMBINAÇÃO PERSONALIZADA</Text>
+      <Text style={TEXTO.rotulo}>{TEXTOS.simulador.rotuloDaCombinacao}</Text>
       <View style={estilos.menus}>
         {GRUPOS.map((grupo) => (
           <MenuDaGrandeza
@@ -268,7 +312,7 @@ function CartaoDoSensorDeDesenvolvimento({
       <Text style={estilos.descricao} accessibilityLiveRegion="polite">
         {descrever(configuracao)}
       </Text>
-    </View>
+    </Cartao>
   );
 }
 
@@ -299,8 +343,8 @@ function MenuDaGrandeza({
     <View style={[estilos.menu, desabilitado && estilos.menuDesabilitado]}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Configurar ${titulo.toLocaleLowerCase('pt-BR')}`}
-        accessibilityHint={`${nomeDoNivel(nivel)} selecionado`}
+        accessibilityLabel={TEXTOS.simulador.configurar(titulo.toLocaleLowerCase('pt-BR'))}
+        accessibilityHint={TEXTOS.simulador.selecionado(nomeDoNivel(nivel))}
         accessibilityState={{ expanded: aberto, disabled: desabilitado }}
         disabled={desabilitado}
         onPress={aoAlternar}
@@ -327,7 +371,7 @@ function MenuDaGrandeza({
               <Pressable
                 key={opcao.nivel}
                 accessibilityRole="button"
-                accessibilityLabel={`${titulo}: ${opcao.titulo}`}
+                accessibilityLabel={TEXTOS.simulador.nivelDaMedida(titulo, opcao.titulo)}
                 accessibilityState={{ selected: selecionada }}
                 onPress={() => aoSelecionar(opcao.nivel)}
                 style={({ pressed }) => [
@@ -350,12 +394,12 @@ function MenuDaGrandeza({
 
 function BotaoDeOpcao({
   titulo,
-  selecionado,
+  selecionado = false,
   desabilitado = false,
   aoTocar,
 }: {
   titulo: string;
-  selecionado: boolean;
+  selecionado?: boolean;
   desabilitado?: boolean;
   aoTocar(): void;
 }) {
@@ -380,20 +424,12 @@ function BotaoDeOpcao({
 const estilos = StyleSheet.create({
   conteudo: {
     width: '100%',
-    maxWidth: 560,
+    maxWidth: LARGURA_DO_CONTEUDO,
     alignSelf: 'center',
     flexGrow: 1,
     paddingHorizontal: ESPACO.grande,
     paddingBottom: ESPACO.folgado + ALVO_DE_TOQUE,
     gap: ESPACO.amplo,
-  },
-  cartao: {
-    padding: ESPACO.grande,
-    gap: ESPACO.grande,
-    borderRadius: RAIO.grande,
-    borderWidth: 1,
-    borderColor: CORES.bordaSuave,
-    backgroundColor: CORES.superficie,
   },
   cabecalho: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: ESPACO.medio },
   titulosDoCabecalho: { flex: 1, gap: ESPACO.pequeno },
@@ -427,6 +463,16 @@ const estilos = StyleSheet.create({
     borderRadius: RAIO.medio,
     backgroundColor: CORES.fundoTopo,
   },
+  relogioSimulado: {
+    padding: ESPACO.medio,
+    gap: ESPACO.pequeno,
+    borderRadius: RAIO.medio,
+    borderWidth: 1,
+    borderColor: CORES.bordaSuave,
+    backgroundColor: CORES.superficie,
+  },
+  horarioSimulado: { fontFamily: FONTES.titulo, fontSize: 22, color: CORES.acao },
+  opcoesDeTempo: { flexDirection: 'row', flexWrap: 'wrap', gap: ESPACO.pequeno },
   tituloDaExplicacao: { fontFamily: FONTES.forte, fontSize: 13, color: CORES.texto },
   opcoes: { gap: ESPACO.pequeno },
   opcao: {
@@ -468,10 +514,10 @@ const estilos = StyleSheet.create({
     borderRadius: RAIO.medio,
     backgroundColor: CORES.superficie,
   },
-  textosDoMenu: { flex: 1, gap: 2 },
+  textosDoMenu: { flex: 1, gap: ESPACO.fino },
   tituloDoMenu: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },
   detalheDoMenu: { ...TEXTO.apoio, fontSize: 11.5 },
-  valorDoMenu: { alignItems: 'flex-end', gap: 1 },
+  valorDoMenu: { alignItems: 'flex-end', gap: ESPACO.fino },
   textoDoValor: { fontFamily: FONTES.forte, fontSize: 12, color: CORES.acao },
   setaDoMenu: { fontFamily: FONTES.forte, fontSize: 16, lineHeight: 18, color: CORES.textoApoio },
   niveisDoMenu: {

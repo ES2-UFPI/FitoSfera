@@ -9,15 +9,22 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Ellipse, G, Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { Prateleira } from '../estante/Prateleira';
 import { VasoFantasma } from '../estante/VasoFantasma';
-import { CORES } from '../tema/cores';
-import { ALTURA_DA_AREA_DOS_VASOS, ESPACO, LARGURA_DO_VASO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import {
+  ALTURA_DA_AREA_DOS_VASOS,
+  CORES,
+  ESPACO,
+  FONTES,
+  LARGURA_DA_LEITURA,
+  LARGURA_DO_VASO,
+  RAIO,
+  TEXTO,
+} from '../tema';
 
 const GrupoAnimado = Animated.createAnimatedComponent(G);
-const PASSOS = ['busque', 'monte', 'batize'];
 
 /** O jardim antes da primeira planta: vasos fantasma mostrando o que pode nascer ali. */
 export function EstadoVazio({ aoComecar }: { aoComecar: () => void }) {
@@ -26,21 +33,21 @@ export function EstadoVazio({ aoComecar }: { aoComecar: () => void }) {
       <View style={estilos.estante}>
         <Prateleira>
           <ContornoDePlanta tipo="erva" />
-          <VasoFantasma aoTocar={aoComecar} rotulo="Cadastrar a primeira planta" />
+          <VasoFantasma aoTocar={aoComecar} rotulo={TEXTOS.jardim.cadastrarPrimeiraPlanta} />
           <ContornoDePlanta tipo="flor" />
         </Prateleira>
       </View>
 
       <View style={estilos.convite}>
         <Text style={TEXTO.subtitulo} accessibilityRole="header">
-          Monte sua primeira planta
+          {TEXTOS.jardim.vazioTitulo}
         </Text>
         <Text style={[TEXTO.corpo, estilos.texto]}>
-          Busque pelo nome, escolha a forma e as cores, e dê um apelido carinhoso.
+          {TEXTOS.jardim.vazioTexto}
         </Text>
-        <BotaoPrincipal titulo="＋ Começar" aoTocar={aoComecar} />
+        <BotaoPrincipal titulo={TEXTOS.jardim.comecar} aoTocar={aoComecar} />
         <View style={estilos.passos}>
-          {PASSOS.map((passo, indice) => (
+          {TEXTOS.jardim.passosDoVazio.map((passo, indice) => (
             <View key={passo} style={estilos.passo}>
               <View style={estilos.numero}>
                 <Text style={estilos.textoDoNumero}>{indice + 1}</Text>
@@ -104,13 +111,13 @@ const estilos = StyleSheet.create({
   estante: { marginTop: ESPACO.grande, paddingHorizontal: ESPACO.medio },
   lugar: { flex: 1, height: ALTURA_DA_AREA_DOS_VASOS, alignItems: 'center' },
   convite: { alignItems: 'center', paddingHorizontal: ESPACO.folgado, gap: ESPACO.medio },
-  texto: { textAlign: 'center', maxWidth: 300 },
+  texto: { textAlign: 'center', maxWidth: LARGURA_DA_LEITURA },
   passos: { flexDirection: 'row', gap: ESPACO.medio, marginTop: ESPACO.minimo },
-  passo: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.minimo + 1 },
+  passo: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.minimo },
   numero: {
     width: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: RAIO.pilula,
     backgroundColor: CORES.bolinhaDePasso,
     alignItems: 'center',
     justifyContent: 'center',

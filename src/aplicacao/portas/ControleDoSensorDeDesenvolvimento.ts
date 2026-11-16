@@ -12,4 +12,7 @@ export interface ConfiguracaoDoSensorDeDesenvolvimento {
 export interface ControleDoSensorDeDesenvolvimento {
   obterConfiguracao(idJardim?: string): ConfiguracaoDoSensorDeDesenvolvimento;
   definirConfiguracao(configuracao: ConfiguracaoDoSensorDeDesenvolvimento, idJardim?: string): void;
+  obterHorarioSimulado(idJardim?: string): Date;
+  ajustarHorarioSimulado(deltaMs: number, idJardim?: string): Date;
+  redefinirHorarioSimulado(idJardim?: string): Date;
 }

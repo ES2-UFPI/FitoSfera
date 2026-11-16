@@ -1,3 +1,4 @@
+import { TEXTOS } from '@/textos';
 import { Aparencia } from './Aparencia';
 import { FaixasRecomendadas } from './FaixaRecomendada';
 
@@ -6,7 +7,7 @@ export const ID_JARDIM_PRINCIPAL = 'jardim-principal';
 
 export class ApelidoInvalido extends Error {
   constructor() {
-    super(`O apelido precisa ter entre 1 e ${LIMITE_DO_APELIDO} caracteres.`);
+    super(TEXTOS.cadastro.apelidoInvalido(LIMITE_DO_APELIDO));
     this.name = 'ApelidoInvalido';
   }
 }
@@ -21,6 +22,12 @@ export class Planta {
     readonly aparencia: Aparencia,
     /** Null para plantas gravadas antes de o app registrar a data de cadastro. */
     readonly cadastradaEm: Date | null,
+    /** Data de plantio da muda; null quando a idade é desconhecida ou a planta não é frutífera. */
+    readonly plantadaEm: Date | null,
+    /** Indica que a planta já entrou em produção. */
+    readonly colheitaIniciada: boolean,
+    /** Início aproximado da floração que representa a leva produtiva atual. */
+    readonly floracaoIniciadaEm: Date | null,
     /** Copiadas da espécie no cadastro; null quando a espécie não tinha faixa. */
     readonly faixasRecomendadas: FaixasRecomendadas | null,
     /** Copiado da espécie no cadastro; null em planta gravada antes de o app guardar o intervalo. */
@@ -34,6 +41,9 @@ export class Planta {
     apelido: string;
     aparencia: Aparencia;
     cadastradaEm?: Date | null;
+    plantadaEm?: Date | null;
+    colheitaIniciada?: boolean;
+    floracaoIniciadaEm?: Date | null;
     faixasRecomendadas?: FaixasRecomendadas | null;
     intervaloDeRegaEmDias?: number | null;
   }): Planta {
@@ -48,6 +58,9 @@ export class Planta {
       apelido,
       dados.aparencia,
       dados.cadastradaEm ?? null,
+      dados.plantadaEm ?? null,
+      dados.colheitaIniciada ?? false,
+      dados.floracaoIniciadaEm ?? null,
       dados.faixasRecomendadas ?? null,
       dados.intervaloDeRegaEmDias ?? null,
     );
@@ -56,5 +69,11 @@ export class Planta {
   /** Espécie, data de cadastro, faixas e intervalo de rega não mudam na edição. */
   editar(alteracoes: { apelido: string; aparencia: Aparencia }): Planta {
     return Planta.criar({ ...this, ...alteracoes });
+  }
+
+  /** A planta já deu colheita. A floração da leva atual fica sem data até a pessoa informar. */
+  marcarComoProduzindo(): Planta {
+    if (this.colheitaIniciada) return this;
+    return Planta.criar({ ...this, colheitaIniciada: true, floracaoIniciadaEm: null });
   }
 }

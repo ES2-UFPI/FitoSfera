@@ -85,6 +85,10 @@ export class ClienteBlePlx implements ClienteBle {
       async pedirLeitura() {
         await gerente.writeCharacteristicWithResponseForDevice(id, servico, comando, CONTRATO_DO_SENSOR.pedidoDeLeitura);
       },
+      async confirmarPacote(sequencia) {
+        const valor = btoa(String.fromCharCode(CONTRATO_DO_SENSOR.comandoDeConfirmacao, sequencia));
+        await gerente.writeCharacteristicWithoutResponseForDevice(id, servico, comando, valor);
+      },
       aoCair(aviso) {
         const assinatura = gerente.onDeviceDisconnected(id, () => aviso());
         return () => assinatura.remove();

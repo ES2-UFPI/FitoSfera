@@ -9,10 +9,12 @@ import {
   SensorEncontrado,
 } from '@/aplicacao/portas/PareamentoDoSensor';
 import { Leitura } from '@/dominio/modelos/Leitura';
+import { TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
+import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
 import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import {
@@ -22,9 +24,7 @@ import {
   ordenarPorSinal,
   resumirLeitura,
 } from '../sensor/textosDoSensor';
-import { CORES } from '../tema/cores';
-import { ALVO_DE_TOQUE, ESPACO, RAIO } from '../tema/medidas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { TelaEmBreve } from './TelaEmBreve';
 
 export const DURACAO_DA_BUSCA_MS = 15_000;
@@ -33,9 +33,9 @@ export const DURACAO_DA_BUSCA_MS = 15_000;
 const ATALHO_DAS_CONFIGURACOES: Partial<
   Record<MotivoDaFalhaDoPareamento, { titulo: string; abrir: () => Promise<void> }>
 > = {
-  'permissao-negada': { titulo: 'Abrir configurações', abrir: () => Linking.openSettings() },
+  'permissao-negada': { titulo: TEXTOS.pareamento.abrirConfiguracoes, abrir: () => Linking.openSettings() },
   'bluetooth-desligado': {
-    titulo: 'Abrir configurações do Bluetooth',
+    titulo: TEXTOS.pareamento.abrirConfiguracoesDoBluetooth,
     abrir: () =>
       Platform.OS === 'android' ? Linking.sendIntent('android.settings.BLUETOOTH_SETTINGS') : Linking.openSettings(),
   },
@@ -54,8 +54,8 @@ export function TelaParearSensor() {
   if (pareamento === null) {
     return (
       <TelaEmBreve
-        titulo="Parear sensor"
-        descricao="O Bluetooth só funciona no app instalado pelo development build, não no Expo Go nem na web."
+        titulo={TEXTOS.pareamento.titulo}
+        descricao={TEXTOS.pareamento.semBluetoothNestaVersao}
       />
     );
   }
@@ -135,14 +135,14 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
         scrollIndicatorInsets={{ bottom: margens.bottom }}
       >
         <Text style={TEXTO.titulo} accessibilityRole="header">
-          Parear sensor
+          {TEXTOS.pareamento.titulo}
         </Text>
-        <Text style={TEXTO.corpo}>Ligue o sensor FitoSfera e deixe-o perto do celular.</Text>
+        <Text style={TEXTO.corpo}>{TEXTOS.pareamento.explicacao}</Text>
         <IndicadorDeConexao conexao={conexao} />
 
         {etapa.tipo === 'permissao' ? (
           <Text style={TEXTO.corpo} accessibilityLiveRegion="polite">
-            Pedindo permissão para usar o Bluetooth…
+            {TEXTOS.pareamento.pedindoPermissao}
           </Text>
         ) : null}
 
@@ -151,28 +151,39 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
             {etapa.buscando ? (
               <View style={estilos.linha} accessible accessibilityLiveRegion="polite">
                 <ActivityIndicator color={CORES.acao} />
-                <Text style={TEXTO.corpo}>Procurando sensores por perto…</Text>
+                <Text style={TEXTO.corpo}>{TEXTOS.pareamento.procurando}</Text>
               </View>
             ) : null}
+            {encontrados.size > 0 ? <Text style={TEXTO.apoio}>{TEXTOS.pareamento.comoDiferenciar}</Text> : null}
             {ordenarPorSinal(encontrados.values()).map((sensor) => (
               <Pressable
                 key={sensor.id}
                 accessibilityRole="button"
-                accessibilityLabel={`${sensor.nome}, final ${finalDoEndereco(sensor.id)}, ${descreverSinal(sensor.intensidadeDoSinal)}`}
+                accessibilityLabel={TEXTOS.pareamento.sensorNaLista(
+                  sensor.nome,
+                  finalDoEndereco(sensor.id),
+                  descreverSinal(sensor.intensidadeDoSinal),
+                )}
                 onPress={() => void escolher(sensor)}
                 style={({ pressed }) => [estilos.sensor, pressed && estilos.pressionado]}
               >
                 <Text style={estilos.nome}>
-                  {sensor.nome} · final {finalDoEndereco(sensor.id)}
+                  {TEXTOS.pareamento.finalDoSensor(sensor.nome, finalDoEndereco(sensor.id))}
                 </Text>
                 <Text style={TEXTO.apoio}>{descreverSinal(sensor.intensidadeDoSinal)}</Text>
               </Pressable>
             ))}
             {!etapa.buscando && encontrados.size === 0 ? (
-              <Text style={TEXTO.corpo}>Nenhum sensor encontrado. Confira se ele está ligado e perto do celular.</Text>
+              <MensagemDeVazio titulo={TEXTOS.pareamento.nenhumEncontrado} />
             ) : null}
             {!etapa.buscando ? (
-              <BotaoPrincipal titulo="Procurar de novo" variante="secundaria" aoTocar={procurar} largo />
+              // Achou sensores: escolher um deles é o principal. Não achou nenhum: procurar de novo passa a ser.
+              <BotaoPrincipal
+                titulo={TEXTOS.pareamento.procurarDeNovo}
+                variante={encontrados.size === 0 ? 'padrao' : 'secundaria'}
+                aoTocar={procurar}
+                largo
+              />
             ) : null}
           </View>
         ) : null}
@@ -181,17 +192,17 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
           <View style={estilos.linha} accessible accessibilityLiveRegion="polite">
             <ActivityIndicator color={CORES.acao} />
             <Text style={[TEXTO.corpo, estilos.flexivel]}>
-              Conectando a {etapa.sensor.nome} · final {finalDoEndereco(etapa.sensor.id)}… Pode levar até 20 segundos.
+              {TEXTOS.pareamento.conectando(etapa.sensor.nome, finalDoEndereco(etapa.sensor.id))}
             </Text>
           </View>
         ) : null}
 
         {etapa.tipo === 'pareado' ? (
           <View style={estilos.secao} accessibilityLiveRegion="polite">
-            <Text style={TEXTO.subtitulo}>✓ Sensor pareado</Text>
-            <Text style={TEXTO.corpo}>Primeira leitura: {resumirLeitura(etapa.leitura)}.</Text>
-            <Text style={TEXTO.apoio}>Escolha o jardim que este sensor monitora na tela do jardim.</Text>
-            <BotaoPrincipal titulo="Concluir" aoTocar={() => navegador.back()} largo />
+            <Text style={TEXTO.subtitulo}>{TEXTOS.pareamento.pareado}</Text>
+            <Text style={TEXTO.corpo}>{TEXTOS.pareamento.primeiraLeitura(resumirLeitura(etapa.leitura))}</Text>
+            <Text style={TEXTO.apoio}>{TEXTOS.pareamento.escolhaOJardim}</Text>
+            <BotaoPrincipal titulo={TEXTOS.comum.concluir} aoTocar={() => navegador.back()} largo />
           </View>
         ) : null}
 
@@ -211,7 +222,7 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
                 largo
               />
             ) : null}
-            <BotaoPrincipal titulo="Tentar de novo" aoTocar={() => void comecar()} largo />
+            <BotaoPrincipal titulo={TEXTOS.comum.tentarDeNovo} aoTocar={() => void comecar()} largo />
           </View>
         ) : null}
       </ScrollView>
@@ -233,7 +244,7 @@ const estilos = StyleSheet.create({
     borderWidth: 1,
     borderColor: CORES.bordaSuave,
     backgroundColor: CORES.superficie,
-    gap: 2,
+    gap: ESPACO.fino,
   },
   pressionado: { opacity: 0.78 },
   nome: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },

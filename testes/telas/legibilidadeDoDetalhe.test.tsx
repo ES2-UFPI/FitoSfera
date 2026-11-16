@@ -21,19 +21,29 @@ const leituraIdeal = {
   medidaEm: new Date(2026, 9, 17, 13, 55),
 };
 
-test('o leitor de tela percorre planta, condições, rega e histórico e, por fim, as ações', async () => {
+test('o leitor de tela percorre planta, condições, luz de hoje, cuidados, rega e histórico, colheita e, por fim, as ações', async () => {
   renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora, leitura: leituraIdeal });
   await screen.findByRole('header', { name: 'Rega e histórico' });
+  await screen.findByRole('header', { name: 'Luz de hoje' });
 
   expect(screen.getAllByRole('header').map((cabecalho) => cabecalho.props.children)).toEqual([
     'Tomatinho',
     'Condições agora',
+    'Luz de hoje',
+    // Os cuidados da espécie (#120) são informação de referência: vêm depois do que está acontecendo agora.
+    'Cuidados desta espécie',
+    'Expectativa de colheita',
     'Rega e histórico',
+    // O tomate dá frutos: o histórico de colheitas (#133) e o registro (#130) vêm depois da rega e antes das ações.
+    'Colheitas',
+    'Registrar colheita',
   ]);
   expect(screen.getAllByRole('button').map((botao) => botao.props.accessibilityLabel)).toEqual([
     'Voltar',
     'Registrar rega',
     'Ver todas as regas',
+    'Registrar colheita',
+    'Comparar com outras plantas',
     'Editar',
     'Excluir',
   ]);

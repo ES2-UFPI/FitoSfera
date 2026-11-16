@@ -41,6 +41,14 @@ export class NotificadorExpo implements Notificador {
     });
   }
 
+  async cancelarDaPlanta(idPlanta: string): Promise<void> {
+    const Notificacoes = await this.carregar();
+    const pendentes = await Notificacoes.getAllScheduledNotificationsAsync();
+    await Promise.all(pendentes
+      .filter((notificacao) => idDaPlanta(notificacao.content.data) === idPlanta)
+      .map((notificacao) => Notificacoes.cancelScheduledNotificationAsync(notificacao.identifier)));
+  }
+
   /** O Android exige um canal para mostrar notificação; criar de novo o mesmo canal não tem efeito. */
   private async garantirCanal(Notificacoes: ModuloDeNotificacoes): Promise<void> {
     if (this.canalCriado) return;
@@ -67,4 +75,10 @@ export class NotificadorExpo implements Notificador {
     });
     return this.modulo;
   }
+}
+
+function idDaPlanta(dados: unknown): string | null {
+  if (typeof dados !== 'object' || dados === null) return null;
+  const id = (dados as Record<string, unknown>).idPlanta;
+  return typeof id === 'string' ? id : null;
 }

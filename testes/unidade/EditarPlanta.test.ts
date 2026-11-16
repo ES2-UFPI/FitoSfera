@@ -26,3 +26,12 @@ test('planta que saiu do jardim não é recriada', async () => {
   );
   expect(plantas.salvas).toHaveLength(0);
 });
+
+test('edita a data aproximada de plantio e o estado de colheita', async () => {
+  const { container, plantas } = criarContainerDeTeste({ plantas: [plantaDeTeste()] });
+  const plantadaEm = new Date(2026, 8, 1);
+  await container.editarPlanta.executar('p1', {
+    apelido: 'Tomatinho', aparencia, plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm,
+  });
+  expect(await plantas.obterPorId('p1')).toMatchObject({ plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm });
+});

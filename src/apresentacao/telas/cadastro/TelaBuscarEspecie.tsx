@@ -4,44 +4,74 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { TEXTOS } from '@/textos';
 import { CabecalhoDoCadastro } from '../../cadastro/CabecalhoDoCadastro';
+import { CRITERIOS_DO_MODO, ModoDaBusca, SeletorDaBusca } from '../../cadastro/SeletorDaBusca';
+import { APRESENTACAO_DA_DIFICULDADE, observacaoDaDificuldade } from '../../componentes/textosDaDificuldade';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
+import { SeloDeDificuldade } from '../../componentes/SeloDeDificuldade';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
-import { CORES } from '../../tema/cores';
-import { ESPACO, RAIO } from '../../tema/medidas';
-import { FONTES, TEXTO } from '../../tema/tipografia';
+import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 
 export const ATRASO_DA_BUSCA_MS = 300;
 
 /** Passo 1 do cadastro: achar a espécie no catálogo pelo nome. */
+const LISTA_VAZIA_DO_FILTRO: Record<Exclude<ModoDaBusca, 'todas'>, string> = {
+  faceis: TEXTOS.cadastro.nenhumaFacil,
+  medias: TEXTOS.cadastro.nenhumaMedia,
+  exigentes: TEXTOS.cadastro.nenhumaExigente,
+};
+
 export function TelaBuscarEspecie() {
   const { container } = useAplicativo();
   const { escolherEspecie } = useRascunho();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [termo, definirTermo] = useState('');
+  /** O termo que já valeu o debounce. Separado de `termo` para a troca de modo não esperar a digitação. */
+  const [termoAplicado, definirTermoAplicado] = useState('');
+  const [modo, definirModo] = useState<ModoDaBusca>('todas');
   const [resultados, definirResultados] = useState<readonly EspecieVegetal[] | null>(null);
 
+  // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
+  useEffect(() => {
+    if (termo.trim() === '') {
+      definirTermoAplicado('');
+      return;
+    }
+    const temporizador = setTimeout(() => definirTermoAplicado(termo), ATRASO_DA_BUSCA_MS);
+    return () => clearTimeout(temporizador);
+  }, [termo]);
+
+  // Trocar de opção responde na hora: o debounce é da digitação, não de toda mudança de estado.
   useEffect(() => {
     let atual = true;
-
-    const buscar = () => {
-      void container.pesquisarEspecies.executar(termo).then((lista) => {
-        // Só a busca do termo atual vale: respostas atrasadas e telas fechadas são ignoradas.
+    void container.pesquisarEspecies
+      .executar({ termo: termoAplicado, ...CRITERIOS_DO_MODO[modo] })
+      .then((lista) => {
+        // Só a busca atual vale: respostas atrasadas e telas fechadas são ignoradas.
         if (atual) definirResultados(lista);
       });
-    };
-
-    // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
-    const temporizador = termo.trim() === '' ? null : setTimeout(buscar, ATRASO_DA_BUSCA_MS);
-    if (temporizador === null) buscar();
 
     return () => {
       atual = false;
-      if (temporizador !== null) clearTimeout(temporizador);
     };
-  }, [container, termo]);
+  }, [container, termoAplicado, modo]);
+
+  /**
+   * Com o filtro ligado, a culpa da lista vazia é dele, e dizer "não encontramos essa planta" seria falso: a
+   * planta existe, o filtro é que a esconde. Sem filtro, só o termo buscado explica a lista vazia — o
+   * catálogo inteiro nunca vem vazio.
+   */
+  const vazio =
+    resultados === null || resultados.length > 0
+      ? null
+      : modo !== 'todas'
+        ? LISTA_VAZIA_DO_FILTRO[modo]
+        : termoAplicado.trim() !== ''
+          ? TEXTOS.cadastro.plantaForaDoCatalogo
+          : null;
 
   function escolher(especie: EspecieVegetal) {
     escolherEspecie(especie);
@@ -52,7 +82,7 @@ export function TelaBuscarEspecie() {
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
       <CabecalhoDoCadastro passoAtual={1} />
       <Text style={[TEXTO.subtitulo, estilos.titulo]} accessibilityRole="header">
-        Qual planta você quer cadastrar?
+        {TEXTOS.cadastro.qualPlanta}
       </Text>
 
       <View style={estilos.campo}>
@@ -63,7 +93,7 @@ export function TelaBuscarEspecie() {
         <TextInput
           value={termo}
           onChangeText={definirTermo}
-          placeholder="Nome da planta"
+          placeholder={TEXTOS.cadastro.nomeDaPlanta}
           placeholderTextColor={CORES.abaInativa}
           autoFocus
           autoCorrect={false}
@@ -72,6 +102,8 @@ export function TelaBuscarEspecie() {
         />
       </View>
 
+      <SeletorDaBusca modo={modo} aoEscolher={definirModo} />
+
       <FlatList
         data={resultados ?? []}
         keyExtractor={(especie) => especie.id}
@@ -79,36 +111,58 @@ export function TelaBuscarEspecie() {
         contentContainerStyle={[estilos.lista, { paddingBottom: margens.bottom + ESPACO.folgado }]}
         ItemSeparatorComponent={() => <View style={estilos.divisoria} />}
         ListEmptyComponent={
-          resultados !== null && termo.trim() !== '' ? (
-            <Text style={[TEXTO.corpo, estilos.semResultado]}>Não encontramos essa planta no catálogo.</Text>
-          ) : null
+          vazio === null ? null : <Text style={[TEXTO.corpo, estilos.semResultado]}>{vazio}</Text>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            testID="resultado-especie"
-            onPress={() => escolher(item)}
-            accessibilityRole="button"
-            accessibilityLabel={item.nomeComum}
-            style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
-          >
-            <View style={estilos.nomes}>
-              <Text testID="nome-comum" style={estilos.nomeComum}>
-                {item.nomeComum}
-              </Text>
-              <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
-            </View>
-            <Svg width={14} height={14} viewBox="0 0 14 14">
-              <Path
-                d="M5 2 L10 7 L5 12"
-                stroke={CORES.rotulo}
-                strokeWidth={2}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const dificuldade = APRESENTACAO_DA_DIFICULDADE[item.nivelDeDificuldade];
+          const observacao = observacaoDaDificuldade(item.nivelDeDificuldade, {
+            ...item,
+            exigencias: item.exigencias ?? null,
+          });
+          // "Nome. Estado.", como a etiqueta da estante: o nível é informação, não enfeite, e precisa ser falado.
+          const falado = observacao?.falado ?? `${dificuldade.falado}.`;
+          return (
+            <Pressable
+              testID="resultado-especie"
+              onPress={() => escolher(item)}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.nomeComum}. ${falado}`}
+              style={({ pressed }) => [estilos.resultado, pressed && estilos.pressionado]}
+            >
+              <View style={estilos.nomes}>
+                <View style={estilos.linhaDoNome}>
+                  <Text testID="nome-comum" style={estilos.nomeComum}>
+                    {item.nomeComum}
+                  </Text>
+                  <SeloDeDificuldade nivel={item.nivelDeDificuldade} />
+                </View>
+                <Text style={estilos.nomeCientifico}>{item.nomeCientifico}</Text>
+                {observacao !== null && (
+                  <View testID="observacao-dificuldade" style={estilos.motivos}>
+                    {observacao.itens.map((motivo) => (
+                      <View key={motivo} style={estilos.motivo}>
+                        <Text style={estilos.marcador}>•</Text>
+                        <Text testID="motivo-da-dificuldade" style={estilos.textoDoMotivo}>
+                          {motivo}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+              <Svg width={14} height={14} viewBox="0 0 14 14">
+                <Path
+                  d="M5 2 L10 7 L5 12"
+                  stroke={CORES.rotulo}
+                  strokeWidth={2}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            </Pressable>
+          );
+        }}
       />
     </FundoAconchegante>
   );
@@ -122,7 +176,7 @@ const estilos = StyleSheet.create({
     gap: ESPACO.pequeno,
     marginHorizontal: ESPACO.amplo,
     marginTop: ESPACO.grande,
-    paddingHorizontal: ESPACO.medio + 2,
+    paddingHorizontal: ESPACO.medio + ESPACO.fino,
     minHeight: 50,
     borderRadius: RAIO.medio,
     borderWidth: 1.5,
@@ -132,10 +186,16 @@ const estilos = StyleSheet.create({
   entrada: { flex: 1, fontFamily: FONTES.texto, fontSize: 15, color: CORES.texto, paddingVertical: ESPACO.medio },
   lista: { paddingHorizontal: ESPACO.amplo, paddingTop: ESPACO.medio },
   divisoria: { height: 1, backgroundColor: CORES.bordaSuave },
-  resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.pequeno },
+  resultado: { flexDirection: 'row', alignItems: 'center', minHeight: 58, paddingVertical: ESPACO.medio },
   pressionado: { opacity: 0.6 },
-  nomes: { flex: 1, gap: 1 },
-  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto },
+  nomes: { flex: 1, gap: ESPACO.fino },
+  linhaDoNome: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  nomeComum: { fontFamily: FONTES.forte, fontSize: 15.5, color: CORES.texto, flexShrink: 1 },
+  motivos: { marginTop: ESPACO.minimo },
+  motivo: { flexDirection: 'row', gap: ESPACO.curto },
+  marcador: { fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
+  /** O `flex: 1` deixa a linha que quebra alinhada com o texto, e não embaixo do marcador. */
+  textoDoMotivo: { flex: 1, fontFamily: FONTES.texto, fontSize: 12, lineHeight: 16, color: CORES.textoApoio },
   nomeCientifico: { fontFamily: FONTES.italico, fontSize: 12.5, color: CORES.textoApoio },
   semResultado: { textAlign: 'center', marginTop: ESPACO.folgado },
 });

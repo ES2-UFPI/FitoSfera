@@ -17,6 +17,8 @@ export interface SensorDeAmbiente {
    * como a verificação de avisos, que roda na abertura do app e em segundo plano, antes de haver leitura guardada.
    */
   aguardarLeitura(): Promise<Leitura | null>;
+  /** Pede uma medição nova, sem reutilizar a leitura guardada. */
+  atualizarLeitura(): Promise<Leitura | null>;
   /** Avisa cada leitura nova até a observação ser cancelada. */
   observarLeituras(aoReceber: (leitura: Leitura) => void): CancelarObservacao;
   consultarEstadoDaConexao(): Promise<EstadoDaConexao>;

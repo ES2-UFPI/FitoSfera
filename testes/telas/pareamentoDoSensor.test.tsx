@@ -203,9 +203,9 @@ describe('tela de pareamento', () => {
     }
   });
 
-  test('sem Bluetooth no app (Expo Go), explica que precisa do development build', async () => {
+  test('sem Bluetooth nesta versão do app, explica o que instalar', async () => {
     renderizarApp({ url: '/sensor' });
-    expect(await screen.findByText(/development build/)).toBeTruthy();
+    expect(await screen.findByText(/Instale o FitoSfera completo/)).toBeTruthy();
   });
 });
 
@@ -227,8 +227,25 @@ describe('sensor nos ajustes', () => {
     expect(screen.getByRole('button', { name: 'Trocar sensor' })).toBeTruthy();
 
     fireEvent.press(screen.getByRole('button', { name: 'Esquecer sensor' }));
+    // Pergunta antes: esquecer tira as leituras dos jardins que usam o sensor.
+    expect(await screen.findByRole('header', { name: 'Esquecer FitoSfera · 9C10?' })).toBeTruthy();
+    expect(pareamento.pareado).not.toBeNull();
+    fireEvent.press(screen.getByRole('button', { name: 'Sim, esquecer' }));
 
     expect(await screen.findByText(/Nenhum sensor pareado/)).toBeTruthy();
     expect(pareamento.pareado).toBeNull();
+  });
+
+  test('cancelar a confirmação mantém o sensor pareado', async () => {
+    const pareamento = new PareamentoFalso();
+    pareamento.pareado = { id: 'AA:BB:CC:DD:9C:10', nome: 'FitoSfera' };
+    renderizarApp({ url: '/ajustes', pareamentoDoSensor: pareamento });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Esquecer sensor' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Cancelar' }));
+
+    await waitFor(() => expect(screen.queryByRole('header', { name: /^Esquecer FitoSfera/ })).toBeNull());
+    expect(pareamento.pareado).not.toBeNull();
+    expect(screen.getByLabelText('Pareado com FitoSfera, final 9C10.')).toBeTruthy();
   });
 });

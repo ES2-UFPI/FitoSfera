@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Line, Path } from 'react-native-svg';
+import { TEXTOS } from '@/textos';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { CORES_DA_LOGO } from '../ilustracao/paletas';
-import { FONTES, TEXTO } from '../tema/tipografia';
+import { ESPACO, FONTES, TEXTO } from '../tema';
 import {
   BASE,
   BOTAO,
@@ -307,7 +308,7 @@ function Gota({ tempo }: { tempo: number }) {
 function Nome({ progresso }: { progresso: number }) {
   return (
     <Text style={[estilos.nome, { opacity: progresso, transform: [{ translateY: 10 * (1 - progresso) }] }]}>
-      FitoSfera
+      {TEXTOS.comum.nomeDoApp}
     </Text>
   );
 }
@@ -317,5 +318,5 @@ const estilos = StyleSheet.create({
   logo: { width: TAMANHO_DA_LOGO, height: TAMANHO_DA_LOGO },
   camada: { position: 'absolute' },
   origemNaBase: { transformOrigin: '50% 100%' },
-  nome: { ...TEXTO.titulo, fontFamily: FONTES.titulo, fontSize: 36, lineHeight: 44, marginTop: 28 },
+  nome: { ...TEXTO.titulo, fontFamily: FONTES.titulo, fontSize: 36, lineHeight: 44, marginTop: ESPACO.folgado + ESPACO.minimo },
 });

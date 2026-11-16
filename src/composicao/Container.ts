@@ -1,19 +1,29 @@
 import { AcompanharConexaoDoSensor } from '@/aplicacao/casos-de-uso/AcompanharConexaoDoSensor';
+import { AjustarPreferencias } from '@/aplicacao/casos-de-uso/AjustarPreferencias';
+import { AtualizarLeituras } from '@/aplicacao/casos-de-uso/AtualizarLeituras';
 import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
+import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { ObterPlantaDoJardim } from '@/aplicacao/casos-de-uso/ObterPlantaDoJardim';
+import { ObterColheitasDaPlanta } from '@/aplicacao/casos-de-uso/ObterColheitasDaPlanta';
 import { ObterHistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
 import { ObterLeituraAtual } from '@/aplicacao/casos-de-uso/ObterLeituraAtual';
+import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
+import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
 import { PareamentoDoSensor } from '@/aplicacao/portas/PareamentoDoSensor';
+import { EstimadorDeColheita } from '@/dominio/portas/EstimadorDeColheita';
+import { Relogio } from '@/dominio/portas/Relogio';
+import { ObterLeiturasRecentes } from '@/aplicacao/casos-de-uso/ObterLeiturasRecentes';
 
 /** Os casos de uso que a interface pode chamar. */
 export interface Container {
@@ -27,10 +37,20 @@ export interface Container {
   readonly editarPlanta: EditarPlanta;
   readonly excluirPlanta: ExcluirPlanta;
   readonly registrarRega: RegistrarRega;
+  readonly registrarColheita: RegistrarColheita;
+  readonly apagarRegistros: ApagarRegistros;
+  readonly compararRendimento: CompararRendimento;
+  readonly estimadorDeColheita: EstimadorDeColheita;
+  readonly relogio: Relogio;
+  readonly obterLeiturasRecentes: ObterLeiturasRecentes;
+  readonly obterColheitas: ObterColheitasDaPlanta;
   readonly obterHistorico: ObterHistoricoDaPlanta;
   readonly listarRegas: ListarRegasDaPlanta;
+  readonly obterLuzDoDia: ObterLuzDoDia;
   readonly controleDoSensorDeDesenvolvimento: ControleDoSensorDeDesenvolvimento | null;
   readonly toquesNaNotificacao: ToquesNaNotificacao;
   readonly pareamentoDoSensor: PareamentoDoSensor | null;
   readonly avaliarLeitura: AvaliarLeitura;
+  readonly ajustarPreferencias: AjustarPreferencias;
+  readonly atualizarLeituras: AtualizarLeituras;
 }

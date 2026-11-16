@@ -9,17 +9,23 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 
 | Chave | Conteúdo | Quem usa |
 | --- | --- | --- |
-| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"2"`). | `MigradorDoArmazenamento` |
-| `fitosfera:v2:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
-| `fitosfera:v2:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v2:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:versao-do-schema` | Número inteiro, em texto, da versão em que os dados estão (`"4"`). | `MigradorDoArmazenamento` |
+| `fitosfera:v4:plantas` | Array JSON de `RegistroDePlanta`, na ordem de cadastro. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v4:plantas:ilegivel` | Cópia do conteúdo de `fitosfera:v4:plantas` que não era um array JSON, guardada antes de ser sobrescrito. | `RepositorioDePlantasAsyncStorage` |
+| `fitosfera:v4:leituras-recentes:<idJardim>` | Até 24h de leituras ambientais recentes do jardim, em ordem cronológica, limitado a 2.000 entradas. | `CacheDeLeiturasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>` | Array JSON de `{ id, regadaEm }` de uma planta, da rega mais recente para a mais antiga, com no máximo 50. | `RepositorioDeRegasAsyncStorage` |
 | `fitosfera:v2:regas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de regas da planta que não era um array JSON. | `RepositorioDeRegasAsyncStorage` |
-| `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>" }` com o desvio já avisado de cada planta, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v4:colheitas:<idPlanta>` | Array JSON de `{ id, quantidade, unidade, colhidaEm }` de uma planta, da colheita mais recente para a mais antiga, sem limite. | `RepositorioDeColheitasAsyncStorage` |
+| `fitosfera:v4:colheitas:<idPlanta>:ilegivel` | Cópia do conteúdo da chave de colheitas da planta que não era um array JSON. | `RepositorioDeColheitasAsyncStorage` |
+| `fitosfera:v2:avisos` | Objeto JSON `{ "<idPlanta>": "<assinatura do desvio>", "<idPlanta>:luz": "AAAA-MM-DD" }` com o desvio já avisado de cada planta e o dia do último aviso de falta de luz, para a notificação não se repetir. | `RepositorioDeAvisosAsyncStorage` |
+| `fitosfera:v4:desvios-em-aberto` | Objeto JSON `{ "<idPlanta>": { "<grandeza>:<sentido>": "<data ISO>" } }` com desde quando cada desvio ainda não avisado vem aparecendo, para medir o tempo mínimo. | `RegistroDeDesviosEmAbertoAsyncStorage` |
 | `fitosfera:v2:jardins` | Jardins (`id`, `nome`, `idSensor`) e ID do jardim selecionado. Ausente em instalações antigas, que usam o Jardim principal. | `RepositorioDeJardinsAsyncStorage` |
 | `fitosfera:v2:sensores-pareados` | Lista de sensores Bluetooth (`id`, `nome`), independentes da associação aos jardins. | `RepositorioDeSensoresPareadosAsyncStorage` |
 | `fitosfera:v2:sensor-pareado` | Formato antigo de sensor único, lido apenas enquanto a lista nova não foi gravada. | Compatibilidade com instalações anteriores |
 | `fitosfera:v2:sensor-pareado` | Objeto JSON `{ "id": "<endereço BLE>", "nome": "FitoSfera" }` do sensor escolhido na tela de pareamento, para reconectar quando o app abre. Conteúdo ilegível conta como nenhum sensor. | `RepositorioDoSensorPareadoAsyncStorage` |
 | `fitosfera:v2:preferencias` | Preferências de notificação: `{ "janelaDeLembretes": { "inicio": { "hora", "minuto" }, "fim": { … } } }`. Ausente ou ilegível vale como a janela padrão. | `RepositorioDePreferenciasAsyncStorage` |
+| `fitosfera:v3:luz:<idJardim>` | Objeto JSON `{ marca, periodos }`: o último contador de luz contabilizado (`idReinicio`, `luzAcumuladaLuxMinutos`, `medidaEm`) e os períodos de luz recebida (`luxMinutos`, `inicio`, `fim`, `incompleta`), com no máximo 500. Conteúdo ilegível recomeça a contagem, sem cópia `:ilegivel`. | `RegistroDeLuzRecebidaAsyncStorage` |
+| `fitosfera:v3:exclusoes-pendentes` | Array de IDs de plantas cuja exclusão iniciou, mas ainda pode precisar apagar regas e colheitas. A recuperação roda na abertura. | `RegistroDeExclusoesPendentesAsyncStorage` |
 
 ### Janela de lembretes (`fitosfera:v2:preferencias`)
 
@@ -27,9 +33,11 @@ Todas as chaves ficam em [`chaves.ts`](chaves.ts); nenhum outro arquivo escreve 
 { "janelaDeLembretes": { "inicio": { "hora": 8, "minuto": 0 }, "fim": { "hora": 21, "minuto": 0 } } }
 ```
 
-A faixa de horas em que o app pode notificar (#28). `fim` antes de `inicio` descreve uma janela que atravessa a
-meia-noite; `inicio` igual a `fim` libera o dia inteiro. Hora precisa ser um inteiro de 0 a 23 e minuto de 0 a
-59: qualquer outra coisa é lida como ausente e vale a janela padrão (8h às 21h), definida em
+A faixa de horas em que o app pode notificar (#28). Quem escolhe é a tela **Ajustes → Mudar o horário dos
+lembretes** (#54), que grava a cada ajuste pelo caso de uso `AjustarPreferencias`. `fim` antes de `inicio`
+descreve uma janela que atravessa a meia-noite; `inicio` igual a `fim` libera o dia inteiro. Hora precisa ser
+um inteiro de 0 a 23 e minuto de 0 a 59: qualquer outra coisa é lida como ausente e vale a janela padrão
+(8h às 21h), definida em
 [`JanelaDeLembretes`](../../dominio/modelos/JanelaDeLembretes.ts). Como em `avisos`, conteúdo ilegível não gera
 cópia `:ilegivel` — o único dado aqui é a própria preferência, e o pior que acontece é ela voltar ao padrão.
 
@@ -40,6 +48,7 @@ de segurança:
 | --- | --- |
 | 0 | `@fitosfera/plantas`, `@fitosfera/plantas:ilegivel` |
 | 1 | `fitosfera:v1:plantas`, `fitosfera:v1:plantas:ilegivel` |
+| 2 e 3 | `fitosfera:v2:plantas`, `fitosfera:v2:plantas:ilegivel` |
 
 ### Formato de uma planta (`RegistroDePlanta`)
 
@@ -51,10 +60,16 @@ de segurança:
   "apelido": "Tomatinho",
   "aparencia": { "forma": "frutifera", "folhagem": "verde-folha", "destaque": "vermelho", "vaso": "terracota" },
   "cadastradaEm": "2026-10-17T14:00:00.000Z",
+  "plantadaEm": "2026-09-17T14:00:00.000Z",
+  "colheitaIniciada": false,
+  "floracaoIniciadaEm": null,
   "faixasRecomendadas": {
     "umidadeDoAr": { "minimo": 50, "maximo": 70 },
     "temperatura": { "minimo": 20, "maximo": 28 },
-    "luminosidade": { "minimo": 25000, "maximo": 80000 }
+    "luminosidade": { "minimo": 25000, "maximo": 80000 },
+    "luzDiaria": { "minimo": 18, "maximo": 30 },
+    "umidadeDoArNoturna": { "minimo": 50, "maximo": 80 },
+    "temperaturaNoturna": { "minimo": 15, "maximo": 23 }
   },
   "intervaloDeRegaEmDias": 3
 }
@@ -68,11 +83,22 @@ dados existentes sem exigir uma nova versão do schema.
 uma data ilegível, continuam válidos e são lidos com data desconhecida (`null`); por isso o campo novo não
 exigiu uma nova versão do schema.
 
+`plantadaEm` é a data aproximada de plantio da muda, independente da data de cadastro. A expectativa de colheita e
+o estágio usam essa data. Registros anteriores a esse campo continuam válidos com idade desconhecida (`null`), sem
+inferir que uma planta adulta recém-cadastrada acabou de ser plantada. `colheitaIniciada` indica que a planta já
+está produzindo; ausente em registros antigos equivale a `false`. `floracaoIniciadaEm` guarda a referência informada
+para estimar a leva produtiva atual, independente dos registros de colheita. Ausente em registros antigos é `null`.
+Esses campos opcionais não exigem nova versão do schema e são gravados na próxima atualização do registro.
+
 `faixasRecomendadas` é uma cópia das faixas da espécie, feita no cadastro (umidade do ar em %, temperatura em
 °C e luminosidade em lux, sem a fonte). O status da planta é calculado com essa cópia, então revisar o catálogo
 depois não muda plantas já cadastradas. Fica `null` quando a espécie não tinha faixa: o cadastro acontece
 normalmente e a planta aparece como "sem dados". Faixas malformadas também são lidas como `null`, sem perder a
 planta.
+
+Desde a versão 4, a cópia também leva a meta de luz diária (`luzDiaria`, em DLI, mol/m²/dia) e as faixas da noite
+(`umidadeDoArNoturna` e `temperaturaNoturna`). Essas três são opcionais na leitura: uma que estiver malformada só
+fica de fora, sem tirar as faixas do dia, e quem precisar dela recorre à espécie no catálogo.
 
 `intervaloDeRegaEmDias` é uma cópia do intervalo de rega da espécie, feita no cadastro (#31), e é dele que sai
 a data da próxima rega. Como `idJardim`, o campo novo **não exigiu uma nova versão do schema**: registro gravado
@@ -108,6 +134,27 @@ sobrarem regas de uma planta que não existe.
 
 As chaves de regas são novas na versão 2 e não precisaram de migração: não havia regas gravadas antes.
 
+## Colheitas: chave própria por planta, sem poda
+
+**Decisão (#129):** as colheitas (`RegistroDeColheita`, em `dominio/modelos/`) seguem o desenho das regas, pelos
+mesmos motivos: cada planta tem a sua chave, `fitosfera:v4:colheitas:<idPlanta>`, e a abertura do app não lê
+colheitas.
+
+```json
+[{ "id": "c7", "quantidade": 250, "unidade": "gramas", "colhidaEm": "2026-11-11T14:30:00.000Z" }]
+```
+
+- **Unidade:** `unidades` (frutos contados) ou `gramas` (pesados), de `UNIDADES_DE_COLHEITA`. O rendimento (#132)
+  só soma registros da mesma unidade.
+- **Sem retenção:** diferente das regas, nenhuma colheita é descartada. O histórico (#133) lista todas, e o
+  rendimento (#132) e a comparação entre plantas (#131) somam qualquer período.
+- **Mesmo id:** gravar de novo um registro com o mesmo `id` substitui o anterior, em vez de duplicar a colheita.
+- **Exclusão da planta:** o `ExcluirPlanta` apaga as colheitas (a chave e a cópia `:ilegivel`) junto com as regas,
+  depois de remover a planta. Se o app fechar no meio, a planta continua em `fitosfera:v3:exclusoes-pendentes` e
+  a recuperação da abertura seguinte termina a limpeza.
+
+As chaves de colheitas são novas na versão 4 e não precisaram de migração: não havia colheitas gravadas antes.
+
 ## Versão do schema e migração
 
 - A versão atual é `VERSAO_ATUAL_DO_ARMAZENAMENTO`, em `chaves.ts`.
@@ -121,6 +168,8 @@ As chaves de regas são novas na versão 2 e não precisaram de migração: não
 | --- | --- |
 | 0 → 1 | Move as plantas de `@fitosfera/plantas` para `fitosfera:v1:plantas`, com os registros intactos. |
 | 1 → 2 | Move as plantas para `fitosfera:v2:plantas` e dá a cada uma, se ainda não tiver, uma cópia das faixas que a espécie tem no catálogo naquele momento (`null` se a espécie saiu do catálogo). |
+| 2 → 3 | Nenhuma conversão: a versão só acrescentou chaves novas, como a última leitura e a luz recebida de cada jardim. |
+| 3 → 4 | Move as plantas para `fitosfera:v4:plantas` e acrescenta às faixas de cada uma as que faltam (`luzDiaria`, `umidadeDoArNoturna` e `temperaturaNoturna`), copiadas da espécie no catálogo. As faixas que a planta já tinha não mudam; planta sem faixas ou de espécie fora do catálogo passa intacta. |
 
 ### Como mudar o formato
 
@@ -144,8 +193,12 @@ O app abre mesmo com dados ruins:
   próximas gravações o preservam como estava.
 - **Regas:** uma chave de regas ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação. Uma rega
   sem id ou com data ilegível fica de fora e desaparece na próxima poda.
+- **Colheitas:** como as regas, uma chave ilegível lista vazio e é copiada para `:ilegivel` na próxima gravação.
+  Uma colheita sem id, com quantidade que não é positiva, unidade desconhecida ou data ilegível fica de fora e
+  desaparece na próxima gravação da planta.
 - **Avisos:** um mapa de avisos ilegível é lido como "nenhum desvio avisado" e sobrescrito na próxima
   gravação, sem cópia `:ilegivel`: ali não há dado da pessoa para preservar, e o pior que acontece é um aviso
-  se repetir uma vez.
+  se repetir uma vez. O mesmo vale para os desvios em aberto: ilegível é lido como vazio, e o pior que acontece é
+  um desvio esperar o tempo mínimo de novo.
 - **Falha na migração:** o aviso vai para o console, o app segue com o que já estiver no formato atual e a
   migração é tentada de novo na próxima abertura, porque a versão gravada não avançou.

@@ -1,6 +1,6 @@
 import { ColorValue, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { CORES } from '../tema/cores';
+import { CORES } from '../tema';
 
 /**
  * A seta de um cartão que abre e fecha: aponta para baixo fechado e para cima aberto. É desenhada em SVG, e não

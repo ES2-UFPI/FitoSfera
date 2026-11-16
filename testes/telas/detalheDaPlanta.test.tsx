@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { RefreshControl } from 'react-native';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
+import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
+import { especieDeTeste } from '../apoio/especiesDeTeste';
 import { plantaDeTeste, SensorFixo } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -13,7 +15,7 @@ test('tocar no vaso abre o detalhe e informa quando ainda não há leitura', asy
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
   expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
   expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });
 
 test('espécie fora do catálogo mostra "Espécie desconhecida"', async () => {
@@ -40,11 +42,11 @@ test('uma leitura real mostra o horário medido e substitui os dados de demonstr
   });
 
   expect(await screen.findByText('Última leitura às 13:55')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
   expect(screen.getByLabelText('Umidade: 61 por cento. Faixa ideal: 40 a 70 por cento. Dentro do ideal.')).toBeTruthy();
 });
 
-test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valores antigos', async () => {
+test('leitura mais antiga que 30 minutos mantém os valores armazenados com aviso de desatualização', async () => {
   renderizarApp({
     plantas: [plantaDeTeste()],
     url: '/planta/p1',
@@ -59,9 +61,9 @@ test('leitura mais antiga que 30 minutos aparece como desatualizada, sem os valo
 
   expect(await screen.findByText('Última leitura às 13:29')).toBeTruthy();
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
-  expect(screen.queryByText('58')).toBeNull();
+  expect(screen.getByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
+  expect(screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 40 a 70 por cento.')).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
 });
 
 test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
@@ -84,7 +86,7 @@ test('o painel atualiza quando o sensor publica uma nova leitura', async () => {
   expect(screen.getByLabelText(/^Luz: 850 lux\./)).toBeTruthy();
 });
 
-test('puxar para atualizar consulta o sensor e oculta os valores antigos marcados como desatualizados na falha', async () => {
+test('puxar para atualizar mantém os últimos valores e os marca como desatualizados se falhar', async () => {
   const sensor = new SensorFixo({
     umidadePercentual: 61,
     temperaturaCelsius: 25,
@@ -103,12 +105,11 @@ test('puxar para atualizar consulta o sensor e oculta os valores antigos marcado
   const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   fireEvent(screen.UNSAFE_getByType(RefreshControl), 'refresh');
 
-  expect(await screen.findByText('Leitura desatualizada')).toBeTruthy();
-  expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('61')).toBeNull();
-  expect(screen.queryByText('25')).toBeNull();
-  expect(screen.queryByText('9000')).toBeNull();
-  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
+  expect(await screen.findByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
+  expect(screen.getByText('61')).toBeTruthy();
+  expect(screen.getByText('25')).toBeTruthy();
+  expect(screen.getByText('9000')).toBeTruthy();
+  expect(screen.getByLabelText(/^Umidade: 61 por cento\./)).toBeTruthy();
   aviso.mockRestore();
 });
 
@@ -220,7 +221,7 @@ describe('histórico da planta', () => {
         agora,
       });
 
-      expect(await screen.findByLabelText('Próxima rega: sem intervalo conhecido.')).toBeTruthy();
+      expect(await screen.findByLabelText('Próxima rega: sem previsão para esta espécie.')).toBeTruthy();
     });
   });
 
@@ -268,5 +269,89 @@ describe('histórico da planta', () => {
     });
 
     expect(await screen.findByLabelText('Última rega: 20/10/2026 às 07:00, hoje.')).toBeTruthy();
+  });
+});
+
+
+describe('os cuidados da espécie no detalhe', () => {
+  const fonte = 'Fonte de teste';
+  /**
+   * O tomate como está no catálogo: rega diária (2 pontos), DLI de 18 a 30, que é "luz muito alta"
+   * (2 pontos), e poda ou tutor na ficha de manejo (1 ponto). Total 5, o corte de exigente. O nível não é
+   * declarado aqui — ele sai da conta.
+   */
+  const tomateExigente: EspecieVegetal = (() => {
+    const base = especieDeTeste({
+      id: 'tomate',
+      nomeComum: 'Tomate',
+      nomeCientifico: 'Solanum lycopersicum',
+      nomesAlternativos: [],
+    });
+    return {
+      ...base,
+      intervaloDeRegaEmDias: 1,
+      faixasIdeais: { ...base.faixasIdeais!, luzDiaria: { minimo: 18, maximo: 30, fonte } },
+      exigencias: {
+        exigeControleDePraga: { presente: false, fonte },
+        morreComEncharcamento: { presente: false, fonte },
+        exigeManejoEstrutural: { presente: true, fonte },
+      },
+    };
+  })();
+
+  const motivosNaTela = () =>
+    screen.queryAllByTestId('motivo-da-dificuldade').map((linha) => linha.props.children);
+
+  test('lista o que pesou numa espécie difícil', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
+    expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
+    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('exigente');
+    expect(motivosNaTela()).toEqual([
+      'Necessita de rega frequente',
+      'Necessita de sol pleno',
+      'Necessita de poda ou tutor',
+    ]);
+  });
+
+  test('numa espécie fácil diz que ela é tranquila, sem lista de motivos', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+    expect(await screen.findByRole('header', { name: 'Cuidados desta espécie' })).toBeTruthy();
+    expect(screen.getByTestId('selo-dificuldade').props.children).toBe('fácil');
+    expect(screen.getByText('Fácil de cuidar')).toBeTruthy();
+    expect(motivosNaTela()).toEqual([]);
+  });
+
+  test('o leitor de tela ouve os motivos em uma frase só', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
+    expect(
+      await screen.findByLabelText(
+        'Exigente: Necessita de rega frequente. Necessita de sol pleno. Necessita de poda ou tutor.',
+      ),
+    ).toBeTruthy();
+  });
+
+  test('toda espécie mostra rega, sol e temperatura; a fácil também', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+    expect(await screen.findByText('Regar a cada 3 dias')).toBeTruthy();
+    expect(screen.getByText('Sol parcial: 3 a 6 horas de sol direto por dia')).toBeTruthy();
+    expect(screen.getByText('Prefere entre 18 e 28 °C')).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        'Regar a cada 3 dias. Sol parcial: 3 a 6 horas de sol direto por dia. Prefere entre 18 e 28 graus Celsius.',
+      ),
+    ).toBeTruthy();
+  });
+
+  test('numa espécie exigente, os cuidados vêm antes do porquê da dificuldade', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
+    expect(await screen.findByText('Regar todo dia')).toBeTruthy();
+    expect(screen.getByText('Sol pleno: 6 horas ou mais de sol direto por dia')).toBeTruthy();
+    expect(screen.getByText('POR QUE É EXIGENTE')).toBeTruthy();
+  });
+
+  test('espécie fora do catálogo não mostra o cartão', async () => {
+    renderizarApp({ plantas: [plantaDeTeste({ idEspecie: 'sumiu' })], url: '/planta/p1' });
+    expect(await screen.findByText('Espécie desconhecida')).toBeTruthy();
+    expect(screen.queryByTestId('cartao-dificuldade')).toBeNull();
   });
 });

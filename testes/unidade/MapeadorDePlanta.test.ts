@@ -11,6 +11,9 @@ test('ida e volta preserva todos os campos', () => {
     apelido: 'Tom',
     aparencia: { forma: 'frutifera', folhagem: 'roxo', destaque: 'amarelo', vaso: 'azul' },
     cadastradaEm: new Date('2026-10-17T14:00:00.000Z'),
+    plantadaEm: new Date('2026-09-17T14:00:00.000Z'),
+    colheitaIniciada: true,
+    floracaoIniciadaEm: new Date('2026-10-01T14:00:00.000Z'),
     faixasRecomendadas: FAIXAS_DE_TESTE,
     intervaloDeRegaEmDias: 3,
   });
@@ -58,6 +61,21 @@ test('a data de cadastro é gravada como texto ISO', () => {
   expect(paraRegistro(planta).cadastradaEm).toBe('2026-10-17T14:00:00.000Z');
 });
 
+test('a data de plantio e o estado de produção são persistidos', () => {
+  const plantadaEm = new Date('2026-09-17T14:00:00.000Z');
+  const planta = Planta.criar({
+    id: 'p1', idEspecie: 'tomate', apelido: 'Tom', aparencia: APARENCIA_INICIAL,
+    plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm,
+  });
+  expect(paraRegistro(planta)).toMatchObject({ plantadaEm: plantadaEm.toISOString(), colheitaIniciada: true, floracaoIniciadaEm: plantadaEm.toISOString() });
+  expect(deRegistro(paraRegistro(planta))).toMatchObject({ plantadaEm, colheitaIniciada: true, floracaoIniciadaEm: plantadaEm });
+});
+
+test('registros antigos sem os campos novos continuam legíveis, mas com idade desconhecida', () => {
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom' });
+  expect(planta).toMatchObject({ plantadaEm: null, colheitaIniciada: false, floracaoIniciadaEm: null });
+});
+
 test.each([undefined, null, 'ontem', 42])('registro antigo com data %p continua legível, com data desconhecida', (data) => {
   const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', cadastradaEm: data });
   expect(planta?.apelido).toBe('Tom');
@@ -94,3 +112,20 @@ test.each([{ id: 'p1' }, 'lixo', null, { id: 'p1', idEspecie: 'tomate', apelido:
     expect(deRegistro(bruto)).toBeNull();
   },
 );
+
+test('registro antigo, só com as faixas do dia, continua com elas e sem as faixas novas', () => {
+  const { luzDiaria: _l, umidadeDoArNoturna: _u, temperaturaNoturna: _t, ...doDia } = FAIXAS_DE_TESTE;
+  const planta = deRegistro({ id: 'p1', idEspecie: 'tomate', apelido: 'Tom', faixasRecomendadas: doDia });
+  expect(planta?.faixasRecomendadas).toEqual(doDia);
+});
+
+test('uma faixa nova malformada fica de fora, sem derrubar as outras faixas', () => {
+  const planta = deRegistro({
+    id: 'p1',
+    idEspecie: 'tomate',
+    apelido: 'Tom',
+    faixasRecomendadas: { ...FAIXAS_DE_TESTE, luzDiaria: { minimo: 20, maximo: 10 } },
+  });
+  expect(planta?.faixasRecomendadas).not.toHaveProperty('luzDiaria');
+  expect(planta?.faixasRecomendadas?.temperaturaNoturna).toEqual(FAIXAS_DE_TESTE.temperaturaNoturna);
+});

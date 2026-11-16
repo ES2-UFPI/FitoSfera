@@ -1,6 +1,7 @@
+import { StyleSheet } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { PainelDeCondicoes } from '@/apresentacao/componentes/PainelDeCondicoes';
-import { CORES } from '@/apresentacao/tema/cores';
+import { CORES } from '@/apresentacao/tema';
 
 const leitura = {
   umidadePercentual: 58,
@@ -21,7 +22,7 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   );
 
   expect(screen.getByRole('header', { name: 'Condições agora' })).toBeTruthy();
-  expect(screen.getByText('DADOS DE DEMONSTRAÇÃO')).toBeTruthy();
+  expect(screen.getByText('VALORES DE EXEMPLO')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
   expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
@@ -40,19 +41,34 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   expect(screen.getByTestId('icone-luz')).toBeTruthy();
 });
 
-test('leitura desatualizada mostra "sem dados" em vez dos valores antigos', () => {
-  render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, desatualizada: true }} />);
+test('leitura desatualizada mantém os últimos valores e os identifica como armazenados', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura, faixasRecomendadas, desatualizada: true }} />);
 
   expect(screen.getByRole('alert')).toBeTruthy();
-  expect(screen.getByText('Leitura desatualizada')).toBeTruthy();
+  expect(screen.getByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
-  expect(screen.getAllByText('sem dados')).toHaveLength(3);
-  expect(screen.queryByText('58')).toBeNull();
-  expect(screen.queryByText('24,5')).toBeNull();
-  expect(screen.queryByText('720')).toBeNull();
-  expect(screen.getByLabelText(/^Umidade: sem dados recentes\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Temperatura: sem dados recentes\./)).toBeTruthy();
-  expect(screen.getByLabelText(/^Luz: sem dados recentes\./)).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
+  expect(screen.getByText('24,5')).toBeTruthy();
+  expect(screen.getByText('720')).toBeTruthy();
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
+  expect(screen.getByLabelText(/^Umidade: 58 por cento\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Temperatura: 24,5 graus Celsius\./)).toBeTruthy();
+  expect(screen.getByLabelText(/^Luz: 720 lux\./)).toBeTruthy();
+});
+
+test('sem conexão, identifica o cache e não classifica os valores como atuais', () => {
+  render(
+    <PainelDeCondicoes
+      estado={{ tipo: 'leitura', leitura, faixasRecomendadas, offline: true }}
+    />,
+  );
+
+  expect(screen.getByRole('alert')).toBeTruthy();
+  expect(
+    screen.getByText('Estes são os últimos valores que chegaram. O sensor está sem conexão, então eles podem não ser os de agora.'),
+  ).toBeTruthy();
+  expect(screen.getByText('58')).toBeTruthy();
+  expect(screen.queryByText(/do ideal$/)).toBeNull();
 });
 
 test('mostra o estado de carregamento sem inventar valores', () => {
@@ -67,7 +83,7 @@ test('explica quando o sensor está indisponível', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'indisponivel' }} />);
 
   expect(screen.getByText('O sensor ainda não está disponível nesta versão.')).toBeTruthy();
-  expect(screen.queryByText('DADOS DE DEMONSTRAÇÃO')).toBeNull();
+  expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
 });
 
 test('sem leitura, mostra as faixas ideais da espécie sem inventar valores', () => {
@@ -173,12 +189,46 @@ test('leitura desatualizada não é avaliada contra a faixa', () => {
   );
 
   expect(screen.queryByText(/do ideal$/)).toBeNull();
-  expect(screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
-  expect(screen.queryByText('40')).toBeNull();
+  expect(screen.getByLabelText('Umidade: 40 por cento. Faixa ideal: 60 a 80 por cento.')).toBeTruthy();
+  expect(screen.getByText('40')).toBeTruthy();
 });
 
 test('sem faixa recomendada não indica situação', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura }} />);
 
   expect(screen.queryByText(/do ideal$/)).toBeNull();
+});
+
+test('leitura da noite mostra as faixas da noite e não cobra luz', () => {
+  const leituraANoite = { umidadePercentual: 78, temperaturaCelsius: 16, luminosidadeLux: 0, medidaEm: new Date(2026, 9, 17, 22, 5) };
+  render(
+    <PainelDeCondicoes
+      estado={{
+        tipo: 'leitura',
+        leitura: leituraANoite,
+        noite: true,
+        faixasRecomendadas: {
+          umidadePercentual: { minimo: 40, maximo: 80 },
+          temperaturaCelsius: { minimo: 13, maximo: 23 },
+        },
+      }}
+    />,
+  );
+
+  expect(screen.getByText('Ideal à noite: 40–80%')).toBeTruthy();
+  expect(screen.getByText('Ideal à noite: 13–23 °C')).toBeTruthy();
+  expect(screen.getByText('Sem meta à noite')).toBeTruthy();
+  expect(screen.getByText('☾ Noite')).toBeTruthy();
+  expect(screen.queryByText(/Abaixo do ideal/)).toBeNull();
+  expect(
+    screen.getByLabelText('Temperatura: 16 graus Celsius. Faixa ideal à noite: 13 a 23 graus Celsius. Dentro do ideal.'),
+  ).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 0 lux. À noite, a luz não tem meta.')).toBeTruthy();
+});
+
+test('os rótulos das medidas usam letra menos espaçada, para "TEMPERATURA" caber sem cortar a fonte do sistema', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'sem-leitura', faixasRecomendadas: { temperaturaCelsius: { minimo: 18, maximo: 28 } } }} />);
+  const rotulo = screen.getByText('TEMPERATURA');
+  expect(rotulo.props.numberOfLines).toBeUndefined();
+  expect(StyleSheet.flatten(rotulo.props.style).letterSpacing).toBeLessThan(1);
 });

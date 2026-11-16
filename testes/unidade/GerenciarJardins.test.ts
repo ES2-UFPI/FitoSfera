@@ -51,3 +51,13 @@ test('desassociar o sensor não remove o histórico de regas das plantas', async
   await uso.desassociar(JARDIM_PRINCIPAL.id);
   expect(await regas.listarPorPlanta('p1')).toHaveLength(1);
 });
+
+test('conta as plantas de cada jardim, sem precisar abrir um por um', async () => {
+  const jardins = new RepositorioDeJardinsAsyncStorage(new ArmazenamentoEmMemoria());
+  const plantas = { listar: async () => [{ idJardim: 'principal' }, { idJardim: 'sala' }, { idJardim: 'principal' }] };
+  const uso = new GerenciarJardins(jardins, new GeradorSequencial(), undefined, plantas as never);
+  const contagem = await uso.contarPlantas();
+  expect(contagem.get('principal')).toBe(2);
+  expect(contagem.get('sala')).toBe(1);
+  expect(contagem.get('varanda')).toBeUndefined();
+});

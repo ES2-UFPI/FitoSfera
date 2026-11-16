@@ -1,3 +1,4 @@
+import { TEXTOS } from '@/textos';
 import { ID_JARDIM_PRINCIPAL } from './Planta';
 
 export interface Jardim {
@@ -8,6 +9,6 @@ export interface Jardim {
 
 export const JARDIM_PRINCIPAL: Jardim = {
   id: ID_JARDIM_PRINCIPAL,
-  nome: 'Jardim principal',
+  nome: TEXTOS.comum.jardimPrincipal,
   idSensor: null,
 };

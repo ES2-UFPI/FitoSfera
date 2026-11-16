@@ -2,8 +2,9 @@
 
 O arquivo [`catalogo-plantas.json`](catalogo-plantas.json) é a lista de espécies que o app conhece. Ele vai
 embutido no bundle e é lido por [`RepositorioDeEspeciesLocal`](RepositorioDeEspeciesLocal.ts), sem acesso à
-rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas histórias, os lembretes de rega
-(US08), o nível de dificuldade (US12) e a previsão de colheita (US14).
+rede. Alimenta a busca do cadastro — inclusive o filtro e a ordenação por dificuldade (US12) —, as faixas
+ideais do painel, o nível de dificuldade de cada espécie (US12) e, nas próximas histórias, os lembretes de
+rega (US08) e a previsão de colheita (US14).
 
 ## Schema de uma espécie
 
@@ -17,11 +18,15 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
   "faixasIdeais": {
     "umidadeDoAr": { "minimo": 50, "maximo": 80, "fonte": "..." },
     "temperatura": { "minimo": 20, "maximo": 35, "fonte": "..." },
-    "luminosidade": { "minimo": 20000, "maximo": 80000, "fonte": "..." }
+    "luminosidade": { "minimo": 20000, "maximo": 80000, "fonte": "..." },
+    "luzDiaria": { "minimo": 18, "maximo": 30, "fonte": "..." },
+    "umidadeDoArNoturna": { "minimo": 50, "maximo": 90, "fonte": "..." },
+    "temperaturaNoturna": { "minimo": 15, "maximo": 30, "fonte": "..." }
   },
   "intervaloDeRegaEmDias": 3,
   "nivelDeDificuldade": "facil",
-  "cicloAteColheitaEmDias": { "minimo": 120, "maximo": 150 }
+  "cicloAteColheitaEmDias": { "minimo": 120, "maximo": 150 },
+  "frutifera": false
 }
 ```
 
@@ -32,14 +37,34 @@ rede. Alimenta a busca do cadastro, as faixas ideais do painel e, nas próximas 
 | `nomeCientifico` | sim | Nome científico. Para grupos, use o gênero ou a família (`Phalaenopsis`, `Cactaceae`). |
 | `nomesAlternativos` | sim | Outros nomes populares, usados na busca. Pode ser `[]`. |
 | `foto` | sim | Caminho de uma imagem em `assets/`, ou `null` enquanto a espécie não tiver foto. |
-| `faixasIdeais` | sim | As três faixas: `umidadeDoAr` em %, `temperatura` em °C e `luminosidade` em lux. |
-| `faixasIdeais.*.minimo` / `maximo` | sim | Números, com `minimo` **menor** que `maximo`. Umidade entre 0 e 100, temperatura entre -10 e 50, luz entre 0 e 120000. |
+| `faixasIdeais` | sim | As seis faixas: `umidadeDoAr` (%) e `temperatura` (°C) durante o dia, `luminosidade` num instante (lux), `luzDiaria` somada no dia (DLI, mol/m²/dia), e `umidadeDoArNoturna` (%) e `temperaturaNoturna` (°C) durante a noite. |
+| `faixasIdeais.*.minimo` / `maximo` | sim | Números, com `minimo` **menor** que `maximo`. Umidade entre 0 e 100, temperatura entre -10 e 50, luminosidade entre 0 e 120000, luz diária entre 0 e 70. |
 | `faixasIdeais.*.fonte` | sim | De onde veio a faixa (instituição e publicação). |
 | `intervaloDeRegaEmDias` | sim | Inteiro positivo: de quantos em quantos dias regar em condições normais. |
-| `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. |
-| `cicloAteColheitaEmDias` | sim | Dias do plantio à primeira colheita (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. |
+| `nivelDeDificuldade` | sim | `facil`, `medio` ou `dificil`. **Não é o que o app mostra**: o nível é calculado pelo `ClassificadorDeDificuldade` a partir da rega, da `luzDiaria` e da ficha de manejo. Este campo fica como gabarito da calibração. |
+| `cicloAteColheitaEmDias` | sim | Dias do plantio da muda à primeira colheita das frutíferas (`minimo` ≤ `maximo`), ou `null` para quem não se colhe. Os ciclos das demais espécies ainda são os valores anteriores do catálogo. |
+| `frutifera` | sim | `true` para espécies que dão frutos (tomate, morango, pimenta…). Só elas registram colheitas e mostram rendimento (US15). Ter ciclo até a colheita não basta: a alface se colhe e não é frutífera. |
+| `tempoMedioAteColheitaEmDias` | nas frutíferas | Inteiro positivo: estimativa desde o plantio da muda até a primeira colheita. |
+| `estagiosDeDesenvolvimento` | nas frutíferas | Lista ordenada de `{ "nome": "muda", "duracaoEmDias": 7 }`, com nomes preenchidos e dias inteiros positivos. A soma das durações deve ser igual ao tempo médio. |
 
 O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/EspecieVegetal.ts`.
+
+## Estimativas para espécies frutíferas
+
+O dia zero é o **plantio de uma muda**, não a semeadura. O ciclo termina na **primeira colheita**;
+flores e frutos posteriores podem aparecer ao mesmo tempo em plantas que continuam produzindo. Os estágios
+`muda`, `crescimento`, `floração` e `frutificação` são uma **distribuição aproximada para exibição** do tempo total:
+as publicações não fornecem as quatro durações exatas para cada espécie. A média não representa uma previsão
+individual, que depende da cultivar, da estação e das condições de cultivo.
+
+| Espécie | Referência para os dias e interpretação |
+| --- | --- |
+| Abobrinha | [Oregon State University Extension, *Squash (Summer)*](https://extension.oregonstate.edu/imported-publication/squash-summer): mudas levam cerca de 40–50 dias até a maturidade; referência de 45 dias. |
+| Limoeiro (`Citrus × limon`) | [Clemson Extension, *In-Ground Citrus Production*](https://hgic.clemson.edu/factsheet/in-ground-citrus/): limões jovens enxertados levam cerca de 1–3 anos para superar a juvenilidade; [University of Maryland Extension, *Growing Dwarf Citrus*](https://extension.umd.edu/resource/growing-dwarf-citrus): o fruto pode levar 6–9 meses para amadurecer. A faixa aproximada de 545–1365 dias e o ponto médio de 955 dias combinam esses dois intervalos (ano de 365 dias e mês de 30); pressupõem uma muda jovem **enxertada**, não uma árvore já adulta nem uma planta de semente. |
+| Morango | [Purdue University, *Planting Bare-root Strawberry Plants*](https://fff.hort.purdue.edu/article/planting-bare-root-strawberry-plants/): cultivar de dia neutro pode produzir em cerca de dois meses após o plantio; [Penn State Extension, *Growing Strawberries*](https://extension.psu.edu/growing-strawberries): fruto amadurece cerca de 28–30 dias após a floração. Média de 60 dias; o máximo de 90 dias já existia no catálogo e é apenas uma margem, não um dado dessas publicações. Não se aplica a cultivares que só produzem no segundo ano. |
+| Pimenta (`Capsicum frutescens`) | [Oklahoma State University Extension, *Pepper Production*](https://extension.okstate.edu/fact-sheets/pepper-production): pimentas picantes levam cerca de 100 dias da muda ao fruto verde ou 140 dias ao fruto vermelho. A média de 140 dias considera a pimenta madura/vermelha; a faixa inclui a colheita verde. |
+| Pimentão | [University of Georgia Extension, *Home Garden Peppers*](https://fieldreport.caes.uga.edu/publications/C1005/home-garden-peppers/): 70–85 dias desde o transplante; média aproximada de 80 dias para o fruto verde. [Utah State University Extension, *Harvest and Handling*](https://extension.usu.edu/vegetableguide/tomato-pepper-eggplant/harvest-handling): cerca de 30 dias da floração ao pimentão verde. |
+| Tomate | [University of Maryland Extension, *Growing Tomatoes in a Home Garden*](https://extension.umd.edu/resource/growing-tomatoes-home-garden): 65–90 dias desde o transplante; [University of Georgia Extension, *Commercial Tomato Production Handbook*](https://fieldreport.caes.uga.edu/publications/B1312/commercial-tomato-production-handbook/): cerca de 75 dias até a primeira colheita; [South Dakota State University Extension, *Will Heat Make My Tomatoes Ripen Faster?*](https://extension.sdstate.edu/will-heat-make-my-tomatoes-ripen-faster): cerca de 42 dias da floração à maturação em condições favoráveis. |
 
 ## Como acrescentar uma espécie
 
@@ -58,13 +83,34 @@ O tipo correspondente no domínio é `EspecieVegetal`, em `src/dominio/modelos/E
 
 Se a espécie tiver foto, coloque a imagem em `assets/especies/<id>.jpg` e preencha `foto` com esse caminho.
 
+## Luz diária e faixas da noite
+
+A `luzDiaria` é a meta de luz somada ao longo do dia, em DLI (mol/m²/dia), a unidade usada na horticultura. Os
+valores seguem a tabela "DLI Needs of Indoor Plants" da Iowa State University Extension, por categoria; a
+`fonte` de cada espécie diz a categoria. O `maximo` é o topo da faixa recomendada, não um limite de dano.
+
+| Categoria | DLI | Espécies |
+| --- | --- | --- |
+| Luz baixa | 3 a 6 | zamioculca, espada-de-são-jorge, jiboia, samambaia |
+| Luz média | 6 a 10 | costela-de-adão, antúrio, orquídea, begônia |
+| Luz alta | 12 a 16 | folhosas e ervas de folha (alface, rúcula, couve, coentro, salsinha, cebolinha, hortelã, manjericão), suculentas (cacto, suculenta, babosa) e gerânio |
+| Luz muito alta | 18 a 30 | hortaliças de fruto e raiz (tomate, pimentão, pimenta, abobrinha, morango, cenoura), limoeiro e ervas de sol pleno (alecrim, lavanda, orégano, camomila, capim-limão, boldo) |
+
+As faixas da noite ainda são **estimativas**, marcadas assim na `fonte`, até alguém revisar espécie por espécie:
+
+- `temperaturaNoturna`: a faixa do dia 5 °C abaixo. As extensões universitárias recomendam noites de 3 a 8 °C
+  mais frias, e os valores publicados para tomate, pimentão e alface caem dentro da faixa calculada.
+- `umidadeDoArNoturna`: o mínimo do dia e o máximo 10 pontos acima, até 95%, porque a umidade relativa sobe
+  quando o ar esfria.
+
 ## Faixas e plantas já cadastradas
 
 No cadastro, a planta guarda uma **cópia** das faixas da espécie, e o status dela é calculado com essa cópia.
 Por isso, mudar uma faixa aqui só vale para plantas cadastradas depois; as que já existem continuam com as
 faixas da época do cadastro.
 
-O catálogo embutido sempre tem as três faixas, porque a validação exige. Ainda assim, o domínio aceita uma
+O catálogo embutido sempre tem as seis faixas, porque a validação exige. Por enquanto a planta copia só a umidade,
+a temperatura e a luminosidade do dia; a luz diária e as faixas da noite chegam às plantas com a #90. Ainda assim, o domínio aceita uma
 espécie sem faixas (`faixasIdeais: null`): o cadastro acontece normalmente e a planta fica sem faixas, aparecendo
 como "sem dados".
 
@@ -73,3 +119,61 @@ como "sem dados".
 As faixas da primeira versão são valores de referência para cultivo doméstico, compilados a partir das fontes
 citadas em cada faixa. Ao revisar uma espécie, confira o valor na fonte e, se ele mudar, atualize também a
 `fonte` com a publicação exata.
+
+## Fichas de manejo
+
+O arquivo [`exigencias-de-manejo.json`](exigencias-de-manejo.json) guarda, por id de espécie, os três fatos de
+manejo que o [`ClassificadorDeDificuldade`](../../dominio/regras/ClassificadorDeDificuldade.ts) soma à rega e à
+`luzDiaria` para decidir o nível de dificuldade (US12). A luz entra pelas categorias da tabela acima: "luz
+muito alta" vale 2 pontos, "luz alta" vale 1 e sombra não pesa, porque pouca luz é o que uma casa dá de graça. Ele é separado do catálogo porque nem toda espécie tem ficha
+pesquisada, e porque o nível é **calculado**: quem resolve é o
+[`RepositorioDeEspeciesLocal`](RepositorioDeEspeciesLocal.ts), que anexa a ficha à espécie e substitui o
+`nivelDeDificuldade` pelo resultado da política. O campo do JSON continua sendo o valor curado, usado como
+gabarito da calibração, e não a resposta.
+
+Hoje **32 das 33 espécies têm ficha**; falta só o boldo, e `idsSemFichaDeManejo` é quem lista a pendência.
+Espécie sem ficha pontua 0 no critério de manejo, e aí o total não passa de 4 — rega 2 mais luz 2 — contra o
+corte de 5: **espécie sem ficha nunca sai exigente**.
+
+```json
+{
+  "tomate": {
+    "exigeControleDePraga": { "presente": true, "fonte": "Embrapa Hortaliças, sistemas de produção" },
+    "morreComEncharcamento": { "presente": false, "fonte": "Embrapa Hortaliças, sistemas de produção" },
+    "exigeManejoEstrutural": { "presente": true, "fonte": "Embrapa Hortaliças, sistemas de produção" }
+  }
+}
+```
+
+| Campo | Regra |
+| --- | --- |
+| chave do bloco | Um `id` que exista em `catalogo-plantas.json`. Espécie ainda não pesquisada simplesmente não aparece no arquivo. |
+| `<fato>.presente` | `true` ou `false`, pelo protocolo abaixo. Não existe "revisar" nem valor em branco: ficha entra completa ou não entra. |
+| `<fato>.fonte` | A publicação consultada, no mesmo rigor que o catálogo exige das faixas ideais. |
+
+### Protocolo de resposta
+
+O critério vale igual para todas as espécies, e a pergunta é sempre o que a ficha de cultivo **diz**, não o que
+a gente acha da planta:
+
+| Fato | Responda `true` quando | Responda `false` quando |
+| --- | --- | --- |
+| `exigeControleDePraga` | A fonte descreve praga ou doença recorrente com verbo de ação obrigatória: controlar, tratar, aplicar. | A fonte usa verbo de vigilância (monitorar, observar, fique atento) ou condicional (pode ocorrer). |
+| `morreComEncharcamento` | A fonte menciona podridão de raiz, apodrecimento ou morte e declínio por excesso de água. | A fonte só pede solo bem drenado — isso quase toda ficha pede, e sozinho não basta. |
+| `exigeManejoEstrutural` | Poda, desbrota, tutoramento ou amarração são necessários para a planta produzir ou não se quebrar. | A fonte apresenta a poda como escolha de forma, aparência ou momento de colheita. |
+
+Ficha pela metade é pior que ficha nenhuma: um fato em branco contaria como "não" e baixaria a dificuldade sem
+ninguém ter lido a fonte. Por isso a validação exige os três fatos com fonte, e espécie sem ficha fica de fora
+do arquivo — `idsSemFichaDeManejo` lista essas pendências.
+
+### Como acrescentar uma ficha
+
+1. Abra a fonte citada nas faixas daquela espécie, ou outra publicação de mesmo nível (Embrapa, extensões
+   universitárias, sociedades de horticultura).
+2. Responda os três fatos pelo protocolo acima e escreva a publicação em cada `fonte`.
+3. Rode a validação, a mesma que o CI roda:
+
+   ```bash
+   npm run validar-catalogo
+   ```
+

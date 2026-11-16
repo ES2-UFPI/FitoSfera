@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
-import { ALVO_DE_TOQUE, ESPACO } from '../tema/medidas';
+import { ALVO_DE_TOQUE, ESPACO } from '../tema';
 import { IndicadorDePassos, Passo } from './IndicadorDePassos';
 
 /** Voltar à esquerda e o progresso do cadastro à direita. */

@@ -10,6 +10,12 @@ export interface RegistroDePlanta {
   aparencia: { forma: string; folhagem: string; destaque: string; vaso: string };
   /** Data e hora do cadastro em ISO 8601, ou null quando desconhecida. */
   cadastradaEm: string | null;
+  /** Data aproximada de plantio da muda em ISO 8601; null quando desconhecida. */
+  plantadaEm: string | null;
+  /** Se a primeira colheita já começou; ausente em registros antigos equivale a false. */
+  colheitaIniciada: boolean;
+  /** Início aproximado da floração produtiva atual em ISO 8601, ou null quando desconhecido. */
+  floracaoIniciadaEm: string | null;
   /** Faixas copiadas da espécie no cadastro (desde a versão 2), ou null quando a espécie não tinha faixa. */
   faixasRecomendadas: FaixasRecomendadas | null;
   /** Intervalo de rega copiado da espécie, em dias; null em registro gravado antes deste campo existir. */
@@ -24,6 +30,9 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
     apelido: planta.apelido,
     aparencia: { ...planta.aparencia },
     cadastradaEm: planta.cadastradaEm?.toISOString() ?? null,
+    plantadaEm: planta.plantadaEm?.toISOString() ?? null,
+    colheitaIniciada: planta.colheitaIniciada,
+    floracaoIniciadaEm: planta.floracaoIniciadaEm?.toISOString() ?? null,
     faixasRecomendadas: planta.faixasRecomendadas,
     intervaloDeRegaEmDias: planta.intervaloDeRegaEmDias,
   };
@@ -32,7 +41,7 @@ export function paraRegistro(planta: Planta): RegistroDePlanta {
 /** Devolve null para o que não dá para ler, em vez de derrubar a listagem inteira. */
 export function deRegistro(bruto: unknown): Planta | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, faixasRecomendadas, intervaloDeRegaEmDias } =
+  const { id, idJardim, idEspecie, apelido, aparencia, cadastradaEm, plantadaEm, colheitaIniciada, floracaoIniciadaEm, faixasRecomendadas, intervaloDeRegaEmDias } =
     bruto as Record<string, unknown>;
   if (typeof id !== 'string' || typeof idEspecie !== 'string' || typeof apelido !== 'string') return null;
   try {
@@ -43,6 +52,9 @@ export function deRegistro(bruto: unknown): Planta | null {
       apelido,
       aparencia: normalizarAparencia(aparencia),
       cadastradaEm: lerData(cadastradaEm),
+      plantadaEm: lerData(plantadaEm),
+      colheitaIniciada: colheitaIniciada === true,
+      floracaoIniciadaEm: lerData(floracaoIniciadaEm),
       faixasRecomendadas: lerFaixas(faixasRecomendadas),
       intervaloDeRegaEmDias: lerIntervalo(intervaloDeRegaEmDias),
     });
@@ -68,15 +80,26 @@ function lerIntervalo(bruto: unknown): number | null {
   return bruto;
 }
 
-/** Faixas ausentes ou malformadas deixam a planta sem faixas (status "sem dados"), sem perder o registro. */
+/**
+ * Faixas do dia ausentes ou malformadas deixam a planta sem faixas (status "sem dados"), sem perder o registro.
+ * As faixas da versão 4 são opcionais: uma que não dá para ler só fica de fora.
+ */
 function lerFaixas(bruto: unknown): FaixasRecomendadas | null {
   if (typeof bruto !== 'object' || bruto === null) return null;
-  const { umidadeDoAr, temperatura, luminosidade } = bruto as Record<string, unknown>;
-  const faixas = [umidadeDoAr, temperatura, luminosidade].map(lerFaixa);
+  const campos = bruto as Record<string, unknown>;
+  const faixas = [campos.umidadeDoAr, campos.temperatura, campos.luminosidade].map(lerFaixa);
   if (faixas.some((faixa) => faixa === null)) return null;
   const [umidade, temperaturaLida, luz] = faixas as FaixaRecomendada[];
-  return { umidadeDoAr: umidade, temperatura: temperaturaLida, luminosidade: luz };
+  const opcionais = Object.fromEntries(
+    FAIXAS_DA_VERSAO_4.flatMap((nome) => {
+      const faixa = lerFaixa(campos[nome]);
+      return faixa === null ? [] : [[nome, faixa]];
+    }),
+  );
+  return { umidadeDoAr: umidade, temperatura: temperaturaLida, luminosidade: luz, ...opcionais };
 }
+
+const FAIXAS_DA_VERSAO_4 = ['luzDiaria', 'umidadeDoArNoturna', 'temperaturaNoturna'] as const;
 
 function lerFaixa(bruto: unknown): FaixaRecomendada | null {
   if (typeof bruto !== 'object' || bruto === null) return null;

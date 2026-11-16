@@ -9,8 +9,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Path, Rect } from 'react-native-svg';
-import { CORES } from '../tema/cores';
-import { ALTURA_DA_AREA_DOS_VASOS, LARGURA_DO_VASO } from '../tema/medidas';
+import { TEXTOS } from '@/textos';
+import { ALTURA_DA_AREA_DOS_VASOS, CORES, LARGURA_DO_VASO } from '../tema';
 
 const DIAMETRO_DO_BOTAO = 38;
 const PULSO_MS = 1800;
@@ -18,7 +18,7 @@ const PULSO_MS = 1800;
 /** Vaso tracejado com um "+" pulsando: o próximo lugar livre da estante, que abre o cadastro. */
 export function VasoFantasma({
   aoTocar,
-  rotulo = 'Cadastrar uma nova planta',
+  rotulo = TEXTOS.jardim.cadastrarNovaPlanta,
 }: {
   aoTocar: () => void;
   rotulo?: string;

@@ -12,6 +12,8 @@ export interface ConexaoBle {
   monitorar(aoReceber: (valor: string | null) => void): () => void;
   ler(): Promise<string | null>;
   pedirLeitura(): Promise<void>;
+  /** Confirma um pacote novo depois de validá-lo; o firmware usa a sequência para evitar perda. */
+  confirmarPacote(sequencia: number): Promise<void>;
   aoCair(aviso: () => void): () => void;
   desconectar(): Promise<void>;
 }
