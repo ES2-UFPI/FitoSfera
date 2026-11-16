@@ -126,3 +126,66 @@ test('falha do armazenamento sobe como erro comum, não como recusa', async () =
   await expect(registrar.executar(pedido())).rejects.toThrow('armazenamento indisponível');
   await expect(registrar.executar(pedido())).rejects.not.toBeInstanceOf(ColheitaInvalida);
 });
+
+describe('colher marca a planta como já produzindo', () => {
+  test('uma planta que ainda não estava produzindo passa a estar, sem data de floração', async () => {
+    const colheitas = new RepositorioDeColheitasEmMemoria();
+    const plantas = new RepositorioDePlantasEmMemoria([plantaDeTeste({ id: 'tomateiro', idEspecie: 'tomate' })]);
+    const registrar = new RegistrarColheita(colheitas, plantas, new GeradorSequencial(), new RelogioParado(agora));
+
+    await registrar.executar(pedido());
+
+    expect(await plantas.obterPorId('tomateiro')).toMatchObject({ colheitaIniciada: true, floracaoIniciadaEm: null });
+  });
+
+  test('a data de floração que a pessoa já informou fica como estava', async () => {
+    const floracao = new Date(2026, 9, 1);
+    const plantas = new RepositorioDePlantasEmMemoria([
+      plantaDeTeste({ id: 'tomateiro', idEspecie: 'tomate', colheitaIniciada: true, floracaoIniciadaEm: floracao }),
+    ]);
+    const registrar = new RegistrarColheita(
+      new RepositorioDeColheitasEmMemoria(),
+      plantas,
+      new GeradorSequencial(),
+      new RelogioParado(agora),
+    );
+
+    await registrar.executar(pedido());
+
+    expect(await plantas.obterPorId('tomateiro')).toMatchObject({ colheitaIniciada: true, floracaoIniciadaEm: floracao });
+  });
+
+  test('se não der para marcar a planta, a colheita continua registrada', async () => {
+    const colheitas = new RepositorioDeColheitasEmMemoria();
+    const plantas = new RepositorioDePlantasEmMemoria([plantaDeTeste({ id: 'tomateiro', idEspecie: 'tomate' })]);
+    jest.spyOn(plantas, 'atualizar').mockRejectedValue(new Error('disco cheio'));
+    const registrar = new RegistrarColheita(colheitas, plantas, new GeradorSequencial(), new RelogioParado(agora));
+
+    await expect(registrar.executar(pedido())).resolves.toMatchObject({ idPlanta: 'tomateiro' });
+    expect(colheitas.salvas).toHaveLength(1);
+  });
+});
+
+describe('colheita antes do plantio', () => {
+  function montarComPlantio(plantadaEm: Date | null) {
+    const colheitas = new RepositorioDeColheitasEmMemoria();
+    const plantas = new RepositorioDePlantasEmMemoria([plantaDeTeste({ id: 'tomateiro', idEspecie: 'tomate', plantadaEm })]);
+    return { colheitas, registrar: new RegistrarColheita(colheitas, plantas, new GeradorSequencial(), new RelogioParado(agora)) };
+  }
+
+  test('um dia antes do plantio é recusado, sem gravar', async () => {
+    const { colheitas, registrar } = montarComPlantio(new Date(2026, 8, 1));
+    expect(await motivoDaRecusa(registrar, { dia: { dia: 31, mes: 8, ano: 2026 } })).toBe('data-antes-do-plantio');
+    expect(colheitas.salvas).toEqual([]);
+  });
+
+  test('o próprio dia do plantio vale, mesmo com o plantio gravado com hora', async () => {
+    const { registrar } = montarComPlantio(new Date(2026, 8, 1, 18, 30));
+    await expect(registrar.executar(pedido({ dia: { dia: 1, mes: 9, ano: 2026 } }))).resolves.toBeTruthy();
+  });
+
+  test('sem data de plantio, qualquer dia passado vale', async () => {
+    const { registrar } = montarComPlantio(null);
+    await expect(registrar.executar(pedido({ dia: { dia: 1, mes: 1, ano: 2020 } }))).resolves.toBeTruthy();
+  });
+});

@@ -73,7 +73,7 @@ sensor conecta e espera a primeira leitura (até 20 s); só então é incluído 
 `fitosfera:v2:sensores-pareados`. Parear não associa automaticamente o dispositivo ao jardim: a escolha é feita
 na tela do jardim. O registro antigo `fitosfera:v2:sensor-pareado` continua legível após atualizar o app.
 
-**Protocolo e atualização:** o firmware publica automaticamente a cada 5 min. O pacote atual tem 19 bytes, com
+**Protocolo e atualização:** o firmware publica automaticamente a cada minuto, o que deixa a soma da luz do dia mais fiel. O pacote atual tem 19 bytes, com
 sequência, id do reinício, acumulado de luz desde o boot, tempo sem confirmação e as três medições; o app envia
 `[0x02, sequência]` depois de processar cada pacote válido. Pacote sem temperatura ou umidade é confirmado, mas
 não vira uma leitura parcial no painel; luminosidade ausente vira `null`. O decodificador também mantém compatibilidade

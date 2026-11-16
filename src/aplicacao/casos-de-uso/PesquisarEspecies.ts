@@ -1,8 +1,14 @@
-import { EspecieVegetal, ordemDaDificuldade } from '@/dominio/modelos/EspecieVegetal';
+import { EspecieVegetal, NivelDeDificuldade, ordemDaDificuldade } from '@/dominio/modelos/EspecieVegetal';
 import { RepositorioDeEspecies } from '@/dominio/portas/RepositorioDeEspecies';
 
-/** "Fáceis" é só o nível fácil: médio e exigente ficam de fora. */
-export type FiltroDeDificuldade = 'todas' | 'somente-faceis';
+/** Cada filtro deixa um nível só: "somente-faceis" tira as médias e as exigentes, e assim por diante. */
+export type FiltroDeDificuldade = 'todas' | 'somente-faceis' | 'somente-medias' | 'somente-exigentes';
+
+const NIVEL_DO_FILTRO: Record<Exclude<FiltroDeDificuldade, 'todas'>, NivelDeDificuldade> = {
+  'somente-faceis': 'facil',
+  'somente-medias': 'medio',
+  'somente-exigentes': 'dificil',
+};
 
 /** `alfabetica` é a ordem que o repositório já entrega. */
 export type OrdemDaBusca = 'alfabetica' | 'mais-faceis-primeiro';
@@ -21,9 +27,9 @@ export class PesquisarEspecies {
     const { termo = '', filtro = 'todas', ordem = 'alfabetica' } = criterios;
     const encontradas = await this.especies.pesquisar(termo.trim());
     const filtradas =
-      filtro === 'somente-faceis'
-        ? encontradas.filter((especie) => especie.nivelDeDificuldade === 'facil')
-        : encontradas;
+      filtro === 'todas'
+        ? encontradas
+        : encontradas.filter((especie) => especie.nivelDeDificuldade === NIVEL_DO_FILTRO[filtro]);
     return ordem === 'mais-faceis-primeiro' ? ordenarPelaDificuldade(filtradas) : filtradas;
   }
 }

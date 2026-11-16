@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { ColheitasDaPlanta, DIAS_DO_INDICADOR_DE_RENDIMENTO } from '@/aplicacao/casos-de-uso/ObterColheitasDaPlanta';
-import { UNIDADES_DE_COLHEITA } from '@/dominio/modelos/RegistroDeColheita';
+import { RegistroDeColheita, UNIDADES_DE_COLHEITA } from '@/dominio/modelos/RegistroDeColheita';
 import { TEXTOS } from '@/textos';
 import { formatarData } from '../formatarData';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { Cartao } from '../componentes/Cartao';
 import { descreverQuantidade } from './FormularioDeColheita';
 import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
@@ -49,7 +50,14 @@ function Indicador({ colheitas }: { colheitas: ColheitasDaPlanta }) {
  * O histórico de colheitas da planta, da mais recente para a mais antiga, com o indicador de rendimento do último
  * mês. Puramente visual: recebe as colheitas já lidas pela tela.
  */
-export function CartaoDasColheitas({ estado }: { estado: EstadoDasColheitas }) {
+export function CartaoDasColheitas({
+  estado,
+  aoApagar,
+}: {
+  estado: EstadoDasColheitas;
+  /** Sem esta função, a lista não oferece o "Apagar": quem decide e confirma é a tela. */
+  aoApagar?(registro: RegistroDeColheita): void;
+}) {
   return (
     <Cartao>
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
@@ -76,15 +84,22 @@ export function CartaoDasColheitas({ estado }: { estado: EstadoDasColheitas }) {
               const data = formatarData(registro.colhidaEm) ?? TEXTOS.historico.dataDesconhecida;
               const quantidade = descreverQuantidade(registro);
               return (
-                <View
-                  key={registro.id}
-                  style={estilos.item}
-                  accessible
-                  accessibilityLabel={TEXTOS.colheitas.itemFalado(data, quantidade)}
-                  testID="item-de-colheita"
-                >
-                  <View style={estilos.marcador} />
-                  <Text style={TEXTO.corpo}>{TEXTOS.colheitas.itemDaLista(data, quantidade)}</Text>
+                <View key={registro.id} style={estilos.item}>
+                  <View
+                    style={estilos.descricao}
+                    accessible
+                    accessibilityLabel={TEXTOS.colheitas.itemFalado(data, quantidade)}
+                    testID="item-de-colheita"
+                  >
+                    <View style={estilos.marcador} />
+                    <Text style={[TEXTO.corpo, estilos.textoDoItem]}>{TEXTOS.colheitas.itemDaLista(data, quantidade)}</Text>
+                  </View>
+                  {aoApagar ? (
+                    <BotaoDeApagar
+                      rotulo={TEXTOS.apagarRegistro.rotuloDaColheita(data, quantidade)}
+                      aoTocar={() => aoApagar(registro)}
+                    />
+                  ) : null}
                 </View>
               );
             })}
@@ -105,6 +120,8 @@ const estilos = StyleSheet.create({
   total: { fontFamily: FONTES.forte, fontSize: 16, color: CORES.texto },
   lista: { gap: ESPACO.pequeno },
   item: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  descricao: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  textoDoItem: { flexShrink: 1 },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acao },
   erro: { color: CORES.erro },
 });

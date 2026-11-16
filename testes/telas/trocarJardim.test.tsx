@@ -59,3 +59,18 @@ test('sensor associado a um jardim não pode ser associado ao outro', async () =
   fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Este sensor já está em uso em outro jardim.');
 });
+
+test('o seletor mostra quantas plantas tem cada jardim, e não só o aberto', async () => {
+  renderizarApp({
+    jardins: [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }, { id: 'varanda', nome: 'Varanda', idSensor: null }],
+    plantas: [plantaDeTeste({ id: 'p1', apelido: 'Alecrim' }),
+      plantaDeTeste({ id: 'p2', apelido: 'Samambaia', idJardim: 'sala' }),
+      plantaDeTeste({ id: 'p3', apelido: 'Hortelã', idJardim: 'sala' })],
+  });
+  expect(await screen.findByLabelText('Alecrim. Sem dados. Toque para ver os detalhes.')).toBeTruthy();
+  fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
+  expect(await screen.findByText('2 plantas')).toBeTruthy();
+  expect(screen.getByText('1 planta')).toBeTruthy();
+  expect(screen.getByText('Nenhuma planta ainda')).toBeTruthy();
+  expect(screen.queryByText('Toque para abrir')).toBeNull();
+});

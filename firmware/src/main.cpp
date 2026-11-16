@@ -32,8 +32,9 @@ const char* NOME_BLE     = "FitoSfera";
 #define CMD_MEDIR_AGORA 0x01
 #define CMD_CONFIRMAR   0x02
 
-// Os sensores só são lidos a cada ciclo de envio (ou a pedido do app)
-const unsigned long INTERVALO_MS = 5UL * 60UL * 1000UL;
+// Os sensores são lidos e o pacote é enviado a cada minuto (e também a pedido do app). Com leituras próximas,
+// a soma da luz do dia acompanha as mudanças de verdade, em vez de ligar dois pontos distantes por uma reta
+const unsigned long INTERVALO_MS = 60UL * 1000UL;
 // Se algum sensor falhar, tenta de novo logo, até MAX_TENTATIVAS vezes; na última, envia o que houver
 const unsigned long REPETICAO_MS = 5000;
 const int MAX_TENTATIVAS = 3;

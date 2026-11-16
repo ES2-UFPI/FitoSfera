@@ -3,28 +3,26 @@ import { CriteriosDaBusca } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { TEXTOS } from '@/textos';
 import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO } from '../tema';
 
-export type ModoDaBusca = 'todas' | 'faceis' | 'mais-faceis-primeiro';
+export type ModoDaBusca = 'todas' | 'faceis' | 'medias' | 'exigentes';
 
-/**
- * Filtrar e ordenar são critérios separados no caso de uso; aqui eles chegam como três escolhas exclusivas,
- * que é o controle simples que a tela pede. Não se perde combinação nenhuma: "Fáceis" já traz tudo do mesmo
- * nível, então ordenar dentro dela não mudaria a lista.
- */
-export const CRITERIOS_DO_MODO: Record<ModoDaBusca, Pick<CriteriosDaBusca, 'filtro' | 'ordem'>> = {
-  todas: { filtro: 'todas', ordem: 'alfabetica' },
-  faceis: { filtro: 'somente-faceis', ordem: 'alfabetica' },
-  'mais-faceis-primeiro': { filtro: 'todas', ordem: 'mais-faceis-primeiro' },
+/** Cada opção é um filtro por nível; a lista fica sempre na ordem alfabética do catálogo. */
+export const CRITERIOS_DO_MODO: Record<ModoDaBusca, Pick<CriteriosDaBusca, 'filtro'>> = {
+  todas: { filtro: 'todas' },
+  faceis: { filtro: 'somente-faceis' },
+  medias: { filtro: 'somente-medias' },
+  exigentes: { filtro: 'somente-exigentes' },
 };
 
 /** A ordem em que as opções aparecem, com o rótulo de cada uma. */
 const OPCOES: readonly { modo: ModoDaBusca; rotulo: string }[] = [
   { modo: 'todas', rotulo: TEXTOS.cadastro.mostrarTodas },
   { modo: 'faceis', rotulo: TEXTOS.cadastro.mostrarFaceis },
-  { modo: 'mais-faceis-primeiro', rotulo: TEXTOS.cadastro.maisFaceisPrimeiro },
+  { modo: 'medias', rotulo: TEXTOS.cadastro.mostrarMedias },
+  { modo: 'exigentes', rotulo: TEXTOS.cadastro.mostrarExigentes },
 ];
 
 /**
- * O controle de dificuldade da busca: ver todas, só as fáceis, ou todas com as mais fáceis no topo.
+ * O controle de dificuldade da busca: ver todas, ou só as fáceis, as médias ou as exigentes.
  *
  * Repete o padrão de pílula de opção da `TelaCompararRendimento` — grupo de rádio, borda na cor de ação na
  * escolhida —, sem extrair um componente comum: são duas telas, e unificá-las não é desta issue.

@@ -27,7 +27,7 @@ type ModoDoPlantio = 'hoje' | 'data' | 'desconhecida';
 /** Passo 3 do cadastro: dar um apelido e colocar a planta na estante. */
 export function TelaBatizar() {
   const { especie, aparencia, edicao } = useRascunho();
-  const { container, recarregarJardim, idJardimSelecionado } = useAplicativo();
+  const { container, recarregarJardim, idJardimSelecionado, avisarEdicaoSalva } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const [apelido, definirApelido] = useState(edicao?.apelido ?? especie?.nomeComum ?? '');
@@ -37,7 +37,9 @@ export function TelaBatizar() {
   const [dataDoPlantio, definirDataDoPlantio] = useState(() =>
     edicao?.plantadaEm ? escreverDataDePlantio(edicao.plantadaEm) : escreverDataDePlantio(container.relogio.agora()),
   );
-  const [colheitaIniciada, definirColheitaIniciada] = useState(edicao?.colheitaIniciada ?? false);
+  // No cadastro a pergunta começa sem resposta (null) e precisa ser respondida; na edição, vem a da planta.
+  const [respostaDaProducao, definirRespostaDaProducao] = useState<boolean | null>(edicao ? edicao.colheitaIniciada : null);
+  const colheitaIniciada = respostaDaProducao === true;
   const [inicioDaFloracao, definirInicioDaFloracao] = useState(() =>
     edicao?.floracaoIniciadaEm ? escreverDataDePlantio(edicao.floracaoIniciadaEm) : '',
   );
@@ -59,11 +61,22 @@ export function TelaBatizar() {
   const dataInformada = lerDataDePlantio(dataDoPlantio, container.relogio.agora());
   const dataDoPlantioValida = !especie?.frutifera || modoDoPlantio !== 'data' || dataInformada !== 'invalida';
   const floracaoInformada = lerDataDePlantio(inicioDaFloracao, container.relogio.agora());
-  const dataDeFloracaoValida = !colheitaIniciada || inicioDaFloracao.trim() === '' || floracaoInformada !== 'invalida';
+  const plantio =
+    modoDoPlantio === 'hoje' ? container.relogio.agora() : modoDoPlantio === 'data' && dataInformada instanceof Date ? dataInformada : null;
+  // Só o dia conta: o plantio "hoje" leva a hora de agora, e a floração digitada é meia-noite.
+  const floracaoAntesDoPlantio =
+    colheitaIniciada &&
+    floracaoInformada instanceof Date &&
+    plantio !== null &&
+    floracaoInformada.getTime() < new Date(plantio.getFullYear(), plantio.getMonth(), plantio.getDate()).getTime();
+  const dataDeFloracaoValida =
+    !colheitaIniciada || inicioDaFloracao.trim() === '' || (floracaoInformada !== 'invalida' && !floracaoAntesDoPlantio);
+  const producaoRespondida = !especie?.frutifera || respostaDaProducao !== null;
   const emAndamento = estado.tipo === 'salvando' || estado.tipo === 'sucesso';
+  const podeSalvar = valido && dataDoPlantioValida && dataDeFloracaoValida && producaoRespondida;
 
   async function colocarNaEstante() {
-    if (!valido || !dataDoPlantioValida || !dataDeFloracaoValida || salvandoAgora.current) return;
+    if (!podeSalvar || salvandoAgora.current) return;
     salvandoAgora.current = true;
     definirEstado({ tipo: 'salvando' });
     try {
@@ -85,6 +98,7 @@ export function TelaBatizar() {
             : {}),
         });
         await recarregarJardim();
+        avisarEdicaoSalva(edicao.idPlanta);
         navegador.dismissTo({ pathname: '/planta/[id]', params: { id: edicao.idPlanta } });
       } else if (especie) {
         const planta = await container.cadastrarPlanta.executar({
@@ -135,6 +149,13 @@ export function TelaBatizar() {
               style={estilos.entrada}
             />
           </View>
+          {/* A dica e o contador são do apelido: ficam colados ao campo, e não no fim da tela. */}
+          <View style={estilos.ajuda}>
+            <MensagemDoCampo estado={estado} />
+            <Text style={[estilos.textoDeAjuda, tamanho > LIMITE_DO_APELIDO && estilos.erro]}>
+              {tamanho}/{LIMITE_DO_APELIDO}
+            </Text>
+          </View>
           {especie?.frutifera ? (
             <View style={estilos.plantio}>
               <Text style={TEXTO.rotulo}>{TEXTOS.cadastro.idadeDaMuda}</Text>
@@ -158,7 +179,7 @@ export function TelaBatizar() {
                 ))}
               </View>
               {modoDoPlantio === 'data' ? (
-                <View style={[estilos.campo, !dataDoPlantioValida && estilos.campoComErro]}>
+                <View style={[estilos.campo, estilos.campoDentroDaPergunta, !dataDoPlantioValida && estilos.campoComErro]}>
                   <TextInput
                     value={dataDoPlantio}
                     onChangeText={definirDataDoPlantio}
@@ -176,20 +197,36 @@ export function TelaBatizar() {
                   {TEXTOS.cadastro.dataDoPlantioInvalida}
                 </Text>
               ) : null}
-              <Pressable
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: colheitaIniciada }}
-                accessibilityLabel={TEXTOS.cadastro.colheitaJaIniciada}
-                onPress={() => definirColheitaIniciada((atual) => !atual)}
-                style={estilos.opcaoDoPlantio}
-              >
-                <View style={[estilos.radio, colheitaIniciada && estilos.radioSelecionado]} />
-                <Text style={TEXTO.corpo}>{TEXTOS.cadastro.colheitaJaIniciada}</Text>
-              </Pressable>
+            </View>
+          ) : null}
+          {especie?.frutifera ? (
+            <View style={estilos.plantio}>
+              <Text style={TEXTO.rotulo}>{TEXTOS.cadastro.jaEstaProduzindo}</Text>
+              <View accessibilityRole="radiogroup" style={estilos.opcoesDaProducao}>
+                {([
+                  [true, TEXTOS.cadastro.sim, TEXTOS.cadastro.simJaProduz],
+                  [false, TEXTOS.cadastro.nao, TEXTOS.cadastro.naoProduzAinda],
+                ] as const).map(([resposta, rotulo, rotuloFalado]) => (
+                  <Pressable
+                    key={rotulo}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: respostaDaProducao === resposta }}
+                    accessibilityLabel={rotuloFalado}
+                    onPress={() => definirRespostaDaProducao(resposta)}
+                    style={estilos.opcaoDoPlantio}
+                  >
+                    <View style={[estilos.radio, respostaDaProducao === resposta && estilos.radioSelecionado]} />
+                    <Text style={TEXTO.corpo}>{rotulo}</Text>
+                  </Pressable>
+                ))}
+              </View>
+              {respostaDaProducao === null ? (
+                <Text style={estilos.textoDeAjuda}>{TEXTOS.cadastro.respondaSeProduz}</Text>
+              ) : null}
               {colheitaIniciada ? (
                 <View style={estilos.dataFloracao}>
                   <Text style={TEXTO.rotulo}>{TEXTOS.cadastro.inicioDaFloracao}</Text>
-                  <View style={[estilos.campo, !dataDeFloracaoValida && estilos.campoComErro]}>
+                  <View style={[estilos.campo, estilos.campoDentroDaPergunta, !dataDeFloracaoValida && estilos.campoComErro]}>
                     <TextInput
                       value={inicioDaFloracao}
                       onChangeText={definirInicioDaFloracao}
@@ -201,28 +238,24 @@ export function TelaBatizar() {
                       style={estilos.entrada}
                     />
                   </View>
-                  <Text style={estilos.textoDeAjuda}>{TEXTOS.cadastro.ajudaDoInicioDaFloracao}</Text>
+                  <Text style={estilos.textoDeAjuda}>
+                    {edicao ? TEXTOS.cadastro.ajudaDoInicioDaFloracao : TEXTOS.cadastro.ajudaDoInicioDaFloracaoNoCadastro}
+                  </Text>
                   {!dataDeFloracaoValida ? (
                     <Text style={[estilos.textoDeAjuda, estilos.erro]} accessibilityRole="alert">
-                      {TEXTOS.cadastro.dataDoPlantioInvalida}
+                      {floracaoAntesDoPlantio ? TEXTOS.cadastro.floracaoAntesDoPlantio : TEXTOS.cadastro.dataDoPlantioInvalida}
                     </Text>
                   ) : null}
                 </View>
               ) : null}
             </View>
           ) : null}
-          <View style={estilos.ajuda}>
-            <MensagemDoCampo estado={estado} />
-            <Text style={[estilos.textoDeAjuda, tamanho > LIMITE_DO_APELIDO && estilos.erro]}>
-              {tamanho}/{LIMITE_DO_APELIDO}
-            </Text>
-          </View>
         </ScrollView>
         <View style={[estilos.rodape, { paddingBottom: margens.bottom + ESPACO.grande }]}>
           <BotaoPrincipal
             titulo={edicao ? TEXTOS.cadastro.salvarAlteracoes : TEXTOS.cadastro.colocarNaEstante}
             largo
-            desabilitado={!valido || !dataDoPlantioValida || !dataDeFloracaoValida || emAndamento}
+            desabilitado={!podeSalvar || emAndamento}
             aoTocar={() => void colocarNaEstante()}
           />
         </View>
@@ -265,9 +298,12 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.superficie,
   },
   campoComErro: { borderColor: CORES.erro },
+  /** A pergunta já tem a margem lateral; o campo dentro dela não soma outra. */
+  campoDentroDaPergunta: { marginHorizontal: 0, marginTop: ESPACO.pequeno },
   plantio: { marginHorizontal: ESPACO.amplo, marginTop: ESPACO.grande, gap: ESPACO.pequeno },
   dataFloracao: { gap: ESPACO.pequeno },
   opcoesDoPlantio: { gap: ESPACO.pequeno },
+  opcoesDaProducao: { flexDirection: 'row', gap: ESPACO.folgado },
   opcaoDoPlantio: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno, minHeight: 44 },
   radio: { width: 18, height: 18, borderRadius: RAIO.pilula, borderWidth: 1.5, borderColor: CORES.bordaSuave },
   radioSelecionado: { backgroundColor: CORES.acao, borderColor: CORES.acao },

@@ -39,6 +39,8 @@ export type EstadoDoPainel =
       readonly offline?: boolean;
       readonly desatualizada?: boolean;
       readonly atualizando?: boolean;
+      /** Leitura feita à noite: as faixas recebidas são as da noite e a luz não tem meta. */
+      readonly noite?: boolean;
     };
 
 interface Props {
@@ -71,6 +73,8 @@ function Indicador({
   icone,
   faixaRecomendada,
   avaliarSituacao = true,
+  noite = false,
+  semMetaANoite = false,
 }: {
   rotulo: string;
   valor: number | null;
@@ -79,8 +83,12 @@ function Indicador({
   icone: ReactNode;
   faixaRecomendada?: FaixaDoPainel;
   avaliarSituacao?: boolean;
+  /** A faixa recebida é a da noite, e o rótulo diz isso. */
+  noite?: boolean;
+  /** A medida não tem meta neste período (a luz à noite): mostra o valor, sem comparar. */
+  semMetaANoite?: boolean;
 }) {
-  const situacao = avaliarSituacao && valor !== null && faixaRecomendada
+  const situacao = avaliarSituacao && !semMetaANoite && valor !== null && faixaRecomendada
     ? compararMedicaoComFaixa(valor, faixaRecomendada)
     : null;
   const apresentacao = situacao === null ? null : APRESENTACAO_DA_SITUACAO[situacao];
@@ -90,13 +98,20 @@ function Indicador({
   const faixaVisivel = faixaRecomendada
     ? `${formatarNumero(faixaRecomendada.minimo)}–${formatarNumero(faixaRecomendada.maximo)}${unidade === '%' ? '' : ' '}${unidade}`
     : null;
-  const descricaoDaFaixa = faixaRecomendada
-    ? TEXTOS.condicoes.faixaIdeal(
-        formatarNumero(faixaRecomendada.minimo),
-        formatarNumero(faixaRecomendada.maximo),
-        descricaoDaUnidade,
-      )
-    : `${TEXTOS.condicoes.faixaNaoInformada}.`;
+  const descricaoDaFaixa = semMetaANoite
+    ? TEXTOS.condicoes.luzSemMetaANoite
+    : faixaRecomendada
+      ? (noite ? TEXTOS.condicoes.faixaIdealANoite : TEXTOS.condicoes.faixaIdeal)(
+          formatarNumero(faixaRecomendada.minimo),
+          formatarNumero(faixaRecomendada.maximo),
+          descricaoDaUnidade,
+        )
+      : `${TEXTOS.condicoes.faixaNaoInformada}.`;
+  const textoDaFaixa = semMetaANoite
+    ? TEXTOS.condicoes.semMetaANoite
+    : faixaVisivel
+      ? (noite ? TEXTOS.condicoes.idealANoite : TEXTOS.condicoes.ideal)(faixaVisivel)
+      : TEXTOS.condicoes.faixaNaoInformada;
 
   return (
     <View
@@ -107,7 +122,11 @@ function Indicador({
       }`}
     >
       <View style={estilos.icone}>{icone}</View>
-      <Text style={TEXTO.rotulo}>{rotulo.toUpperCase()}</Text>
+      {/* Espaçamento entre letras menor que o dos outros rótulos: com o padrão, "TEMPERATURA" não cabia na coluna e
+          quebrava no meio da palavra. Sem limitar linhas, para continuar acompanhando a fonte do sistema. */}
+      <Text style={[TEXTO.rotulo, estilos.rotuloDoIndicador]}>
+        {rotulo.toUpperCase()}
+      </Text>
       <View style={estilos.linhaDoValor}>
         {valorFormatado === null ? (
           <Text style={estilos.semDados}>{TEXTOS.condicoes.semDados}</Text>
@@ -118,7 +137,12 @@ function Indicador({
           </>
         )}
       </View>
-      <Text style={estilos.faixa}>{faixaVisivel ? TEXTOS.condicoes.ideal(faixaVisivel) : TEXTOS.condicoes.faixaNaoInformada}</Text>
+      <Text style={estilos.faixa}>{textoDaFaixa}</Text>
+      {semMetaANoite && avaliarSituacao ? (
+        <View style={estilos.situacao}>
+          <Text style={[estilos.textoDaSituacao, { color: CORES.textoApoio }]}>{TEXTOS.condicoes.noite}</Text>
+        </View>
+      ) : null}
       {apresentacao ? (
         <View style={[estilos.situacao, foraDoIdeal && { backgroundColor: apresentacao.cor }]}>
           <Text
@@ -139,10 +163,12 @@ function Indicadores({
   leitura,
   faixas,
   avaliarSituacoes = true,
+  noite = false,
 }: {
   leitura: LeituraDoPainel | null;
   faixas?: FaixasRecomendadasDoPainel;
   avaliarSituacoes?: boolean;
+  noite?: boolean;
 }) {
   const { fontScale } = useWindowDimensions();
   return (
@@ -158,6 +184,7 @@ function Indicadores({
         icone={<IconeUmidade testID="icone-umidade" cor={CORES_DA_LOGO.gota} />}
         faixaRecomendada={faixas?.umidadePercentual}
         avaliarSituacao={avaliarSituacoes}
+        noite={noite}
       />
       <Indicador
         rotulo={TEXTOS.condicoes.temperatura}
@@ -167,6 +194,7 @@ function Indicadores({
         icone={<IconeTemperatura testID="icone-temperatura" cor={CORES_DOS_DESTAQUES.laranja.cor} />}
         faixaRecomendada={faixas?.temperaturaCelsius}
         avaliarSituacao={avaliarSituacoes}
+        noite={noite}
       />
       <Indicador
         rotulo={TEXTOS.condicoes.luz}
@@ -176,6 +204,7 @@ function Indicadores({
         icone={<IconeLuz testID="icone-luz" cor={CORES_DA_LOGO.sol} />}
         faixaRecomendada={faixas?.luminosidadeLux}
         avaliarSituacao={avaliarSituacoes}
+        semMetaANoite={noite}
       />
     </View>
   );
@@ -246,6 +275,7 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
             leitura={estado.leitura}
             faixas={estado.faixasRecomendadas}
             avaliarSituacoes={!estado.desatualizada && !estado.offline}
+            noite={estado.noite}
           />
           <Text style={TEXTO.apoio}>{TEXTOS.condicoes.explicacaoDoLux}</Text>
         </>
@@ -316,7 +346,7 @@ const estilos = StyleSheet.create({
     flex: 1,
     minWidth: 0,
     paddingVertical: ESPACO.medio,
-    paddingHorizontal: ESPACO.pequeno,
+    paddingHorizontal: ESPACO.minimo,
     alignItems: 'center',
     borderRadius: RAIO.pequeno,
     borderWidth: 1.5,
@@ -324,6 +354,7 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.fundoTopo,
     gap: ESPACO.minimo,
   },
+  rotuloDoIndicador: { letterSpacing: 0.6, textAlign: 'center' },
   indicadorForaDoIdeal: {
     borderWidth: 2.5,
     borderColor: CORES.statusAtencao,

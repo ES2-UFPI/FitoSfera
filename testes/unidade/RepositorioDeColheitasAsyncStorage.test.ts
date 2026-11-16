@@ -132,3 +132,16 @@ describe('dado corrompido ou ilegível', () => {
     expect((await repo.listarPorPlanta('p1')).map((registro) => registro.id)).toEqual(['ok']);
   });
 });
+
+test('apagar tira só aquela colheita, e o resto continua na ordem', async () => {
+  for (const c of [colheita('p1', 1), colheita('p1', 2), colheita('p1', 3), colheita('p2', 1)]) await repo.gravar(c);
+  await repo.apagar('p1', 'p1-c2');
+  expect((await repo.listarPorPlanta('p1')).map((c) => c.id)).toEqual(['p1-c3', 'p1-c1']);
+  expect(await repo.listarPorPlanta('p2')).toHaveLength(1);
+});
+
+test('apagar não reescreve uma lista ilegível', async () => {
+  await armazenamento.setItem(CHAVES.colheitasDaPlanta('p1'), '{quebrado');
+  await repo.apagar('p1', 'p1-c1');
+  expect(await armazenamento.getItem(CHAVES.colheitasDaPlanta('p1'))).toBe('{quebrado');
+});

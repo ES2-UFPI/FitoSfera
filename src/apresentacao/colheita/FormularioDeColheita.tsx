@@ -14,7 +14,7 @@ type Estado =
   | { readonly tipo: 'ocioso' }
   | { readonly tipo: 'registrando' }
   | { readonly tipo: 'registrada'; readonly registro: RegistroDeColheita }
-  | { readonly tipo: 'recusada'; readonly motivo: MotivoDaColheitaInvalida }
+  | { readonly tipo: 'recusada'; readonly motivo: MotivoDaColheitaInvalida; readonly plantadaEm: Date | null }
   | { readonly tipo: 'falhou' };
 
 const TEXTO_DA_UNIDADE: Record<UnidadeDeColheita, string> = {
@@ -65,7 +65,7 @@ export function FormularioDeColheita({
       definirQuantidade('');
       definirDia(escreverDia(registrar.hoje()));
     } catch (falha) {
-      if (falha instanceof ColheitaInvalida) definirEstado({ tipo: 'recusada', motivo: falha.motivo });
+      if (falha instanceof ColheitaInvalida) definirEstado({ tipo: 'recusada', motivo: falha.motivo, plantadaEm: falha.plantadaEm });
       else {
         console.warn('Não deu para registrar a colheita.', falha);
         definirEstado({ tipo: 'falhou' });
@@ -78,7 +78,8 @@ export function FormularioDeColheita({
   const recusa = estado.tipo === 'recusada' ? estado.motivo : null;
   const erroNaQuantidade =
     recusa === 'quantidade-vazia' || recusa === 'quantidade-invalida' || recusa === 'unidades-fracionadas';
-  const erroNaData = recusa === 'data-invalida' || recusa === 'data-no-futuro';
+  const erroNaData = recusa === 'data-invalida' || recusa === 'data-no-futuro' || recusa === 'data-antes-do-plantio';
+  const plantioRecusado = estado.tipo === 'recusada' && estado.plantadaEm !== null ? formatarData(estado.plantadaEm) : null;
 
   return (
     <Cartao>
@@ -163,7 +164,9 @@ export function FormularioDeColheita({
       ) : null}
       {recusa !== null ? (
         <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
-          {TEXTOS.colheita.recusas[recusa]}
+          {recusa === 'data-antes-do-plantio' && plantioRecusado !== null
+            ? TEXTOS.colheita.antesDoPlantio(plantioRecusado)
+            : TEXTOS.colheita.recusas[recusa]}
         </Text>
       ) : null}
       {estado.tipo === 'falhou' ? (

@@ -4,8 +4,11 @@ import { calcularLuzRecebida, MarcaDoContadorDeLuz, PeriodoDeLuz } from '@/domin
 import { ArmazenamentoChaveValor } from './ArmazenamentoChaveValor';
 import { CHAVES } from './chaves';
 
-/** Com o sensor publicando a cada 5 min, cobre mais de um dia e meio de períodos com luz. */
-export const LIMITE_DE_PERIODOS_DE_LUZ = 500;
+/**
+ * Cada pacote com luz vira um período. Com o sensor publicando a cada minuto, um dia claro de 12 horas gera cerca de
+ * 720; o limite guarda uns dois dias de luz (o cálculo usa só o dia de hoje e a ponta da véspera).
+ */
+export const LIMITE_DE_PERIODOS_DE_LUZ = 3000;
 
 interface EstadoDaLuz {
   readonly marca: MarcaDoContadorDeLuz | null;

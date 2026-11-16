@@ -84,8 +84,14 @@ describe('status resumido na estante', () => {
     expect(screen.getByLabelText('Tomatinho. Ok. Toque para ver os detalhes.')).toBeTruthy();
   });
 
-  test('leitura fora da faixa mostra "atenção"', async () => {
+  test('pouca luz, com o resto na faixa, continua "ok" na estante', async () => {
     renderizarApp({ plantas: [plantaDeTeste()], leitura: leitura(800), agora });
+    expect(await screen.findByText('ok')).toBeTruthy();
+  });
+
+  test('leitura fora da faixa mostra "atenção"', async () => {
+    // Luz demais (sol direto) conta para o status; luz de menos, não.
+    renderizarApp({ plantas: [plantaDeTeste()], leitura: leitura(30000), agora });
     expect(await screen.findByText('atenção')).toBeTruthy();
     expect(screen.getByLabelText('Tomatinho. Precisa de atenção. Toque para ver os detalhes.')).toBeTruthy();
   });

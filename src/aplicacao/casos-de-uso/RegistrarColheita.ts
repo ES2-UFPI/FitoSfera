@@ -19,10 +19,15 @@ export type MotivoDaColheitaInvalida =
   | 'unidade-invalida'
   | 'data-invalida'
   | 'data-no-futuro'
+  | 'data-antes-do-plantio'
   | 'planta-inexistente';
 
 export class ColheitaInvalida extends Error {
-  constructor(readonly motivo: MotivoDaColheitaInvalida) {
+  constructor(
+    readonly motivo: MotivoDaColheitaInvalida,
+    /** Só em 'data-antes-do-plantio': o plantio que a data furou, para a mensagem dizer qual é. */
+    readonly plantadaEm: Date | null = null,
+  ) {
     super(`Colheita inválida: ${motivo}.`);
     this.name = 'ColheitaInvalida';
   }
@@ -43,12 +48,13 @@ const HORA_DE_UM_DIA_PASSADO = 12;
 
 /**
  * Grava uma colheita da planta depois de validar a quantidade (maior que zero), a unidade e a data. Colhida hoje,
- * ela leva a hora de agora; num dia anterior, o meio-dia, já que a pessoa só informou o dia.
+ * ela leva a hora de agora; num dia anterior, o meio-dia, já que a pessoa só informou o dia. Quem colhe já está
+ * produzindo, então a planta passa a ser marcada assim (como a opção "já está produzindo" do cadastro).
  */
 export class RegistrarColheita {
   constructor(
     private readonly colheitas: RepositorioDeColheitas,
-    private readonly plantas: Pick<RepositorioDePlantas, 'existe'>,
+    private readonly plantas: Pick<RepositorioDePlantas, 'existe' | 'obterPorId' | 'atualizar'>,
     private readonly gerador: GeradorDeIdentificador,
     private readonly relogio: Relogio,
   ) {}
@@ -64,6 +70,10 @@ export class RegistrarColheita {
     const quantidade = validarQuantidade(pedido.quantidade, unidade);
     const colhidaEm = this.validarData(pedido.dia);
     if (!(await this.plantas.existe(pedido.idPlanta))) throw new ColheitaInvalida('planta-inexistente');
+    const plantadaEm = (await this.plantas.obterPorId(pedido.idPlanta))?.plantadaEm ?? null;
+    // Compara só o dia: o plantio "hoje" é gravado com hora, e a colheita de um dia passado, ao meio-dia.
+    if (plantadaEm !== null && inicioDoDia(colhidaEm) < inicioDoDia(plantadaEm))
+      throw new ColheitaInvalida('data-antes-do-plantio', plantadaEm);
 
     const registro: RegistroDeColheita = {
       id: this.gerador.gerar(),
@@ -73,7 +83,22 @@ export class RegistrarColheita {
       colhidaEm,
     };
     await this.colheitas.gravar(registro);
+    await this.marcarComoProduzindo(pedido.idPlanta);
     return registro;
+  }
+
+  /**
+   * A data da floração fica vazia: só a pessoa sabe quando a leva atual começou. Se a marcação falhar, a colheita
+   * já foi gravada e continua valendo; avisar erro faria a pessoa registrar a mesma colheita de novo.
+   */
+  private async marcarComoProduzindo(idPlanta: string): Promise<void> {
+    try {
+      const planta = await this.plantas.obterPorId(idPlanta);
+      if (planta === null || planta.colheitaIniciada) return;
+      await this.plantas.atualizar(planta.marcarComoProduzindo());
+    } catch (falha) {
+      console.warn('A colheita foi gravada, mas não deu para marcar a planta como produzindo.', falha);
+    }
   }
 
   private validarData(dia: PedidoDeColheita['dia']): Date {
@@ -99,6 +124,10 @@ function validarQuantidade(quantidade: number | null, unidade: UnidadeDeColheita
   // Frutos se contam inteiros; gramas podem ter fração.
   if (unidade === 'unidades' && !Number.isInteger(quantidade)) throw new ColheitaInvalida('unidades-fracionadas');
   return quantidade;
+}
+
+function inicioDoDia(data: Date): number {
+  return new Date(data.getFullYear(), data.getMonth(), data.getDate()).getTime();
 }
 
 /** 31/02 ou 00/13 não existem: o Date "corrigiria" para outro dia, e a comparação pega isso. */

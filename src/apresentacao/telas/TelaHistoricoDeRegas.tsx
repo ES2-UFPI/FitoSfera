@@ -4,7 +4,9 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LIMITE_DO_HISTORICO_DE_REGAS, RegaDoHistorico } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { TEXTOS } from '@/textos';
+import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
+import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
 import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
 import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -30,6 +32,9 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
   const { container, idJardimSelecionado } = useAplicativo();
   const margens = useSafeAreaInsets();
   const [estado, definirEstado] = useState<Estado>({ tipo: 'carregando' });
+  const [paraApagar, definirParaApagar] = useState<RegaDoHistorico | null>(null);
+  const [apagando, definirApagando] = useState(false);
+  const [erroAoApagar, definirErroAoApagar] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -54,6 +59,31 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
       };
     }, [container, id, idJardimSelecionado]),
   );
+
+  function pedirParaApagar(rega: RegaDoHistorico) {
+    definirErroAoApagar(false);
+    definirParaApagar(rega);
+  }
+
+  async function apagar() {
+    if (paraApagar === null || apagando) return;
+    definirApagando(true);
+    try {
+      await container.apagarRegistros.apagarRega(id, paraApagar.rega.id);
+      const regas = await container.listarRegas.executar(id);
+      definirEstado((anterior) => (anterior.tipo === 'pronto' ? { ...anterior, regas } : anterior));
+      definirParaApagar(null);
+    } catch (falha) {
+      console.warn('Não deu para apagar a rega.', falha);
+      definirErroAoApagar(true);
+    } finally {
+      definirApagando(false);
+    }
+  }
+
+  const quandoParaApagar = paraApagar
+    ? formatarData(paraApagar.rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida
+    : '';
 
   return (
     <FundoAconchegante style={{ paddingTop: margens.top + ESPACO.pequeno }}>
@@ -86,21 +116,36 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
         {estado.tipo === 'pronto' && estado.regas.length > 0 ? (
           <View style={estilos.lista}>
             <Text style={TEXTO.rotulo}>{resumirQuantidade(estado.regas.length).toUpperCase()}</Text>
-            {estado.regas.map(({ rega, diasAtras }) => (
-              <View
-                key={rega.id}
-                style={estilos.item}
-                accessible
-                accessibilityLabel={`${formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}, ${descreverQuandoRegou(diasAtras)}.`}
-              >
-                <View style={estilos.marcador} />
-                <Text style={estilos.quando}>{formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}</Text>
-                <Text style={TEXTO.apoio}>{descreverQuandoRegou(diasAtras)}</Text>
-              </View>
-            ))}
+            {estado.regas.map((item) => {
+              const { rega, diasAtras } = item;
+              const quando = formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
+              return (
+                <View key={rega.id} style={estilos.item}>
+                  {/* A descrição é um elemento só para o leitor de tela; o botão fica fora dela para ser alcançável. */}
+                  <View style={estilos.descricao} accessible accessibilityLabel={`${quando}, ${descreverQuandoRegou(diasAtras)}.`}>
+                    <View style={estilos.marcador} />
+                    <Text style={estilos.quando}>{quando}</Text>
+                    <Text style={TEXTO.apoio}>{descreverQuandoRegou(diasAtras)}</Text>
+                  </View>
+                  <BotaoDeApagar rotulo={TEXTOS.apagarRegistro.rotuloDaRega(quando)} aoTocar={() => pedirParaApagar(item)} />
+                </View>
+              );
+            })}
           </View>
         ) : null}
       </ScrollView>
+      <DialogoDeConfirmacao
+        titulo={TEXTOS.apagarRegistro.tituloDaRega(quandoParaApagar)}
+        explicacao={TEXTOS.apagarRegistro.explicacaoDaRega}
+        tituloDoBotao={TEXTOS.apagarRegistro.confirmarRega}
+        tituloEmAndamento={TEXTOS.apagarRegistro.apagando}
+        mensagemDeErro={TEXTOS.apagarRegistro.falha}
+        visivel={paraApagar !== null}
+        emAndamento={apagando}
+        erro={erroAoApagar}
+        aoConfirmar={() => void apagar()}
+        aoCancelar={() => definirParaApagar(null)}
+      />
     </FundoAconchegante>
   );
 }
@@ -131,7 +176,8 @@ const estilos = StyleSheet.create({
     backgroundColor: CORES.superficie,
     gap: ESPACO.medio,
   },
-  item: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACO.pequeno },
+  item: { flexDirection: 'row', alignItems: 'center', gap: ESPACO.pequeno },
+  descricao: { flex: 1, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: ESPACO.pequeno },
   marcador: { width: 6, height: 6, borderRadius: RAIO.pilula, backgroundColor: CORES.acaoRega },
   quando: { fontFamily: FONTES.forte, fontSize: 15, color: CORES.texto },
   erro: { color: CORES.erro },

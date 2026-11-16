@@ -1,7 +1,8 @@
 import { FaixaRecomendada, FaixasRecomendadas } from '../modelos/FaixaRecomendada';
 import { Leitura } from '../modelos/Leitura';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from './AvaliacaoDaLeitura';
-import { ehNoite } from './PeriodoDoDia';
+import { faixasDoPeriodo } from './PeriodoDoDia';
+import { luzContaParaOStatus } from './StatusDaPlanta';
 
 /** As grandezas que o sensor mede, na ordem em que aparecem para a pessoa. */
 export const GRANDEZAS = ['umidadeDoAr', 'temperatura', 'luminosidade'] as const;
@@ -28,18 +29,6 @@ const MEDICAO_DA_GRANDEZA: Record<Grandeza, (leitura: Leitura) => number | null>
 export const TEMPO_MINIMO_DO_DESVIO_MS = 30 * 60_000;
 
 /**
- * As faixas que valem na hora da leitura. À noite, temperatura e umidade usam as faixas da noite (ou as do dia, se a
- * planta não tiver as da noite), e a luminosidade não tem faixa: escuro à noite é o normal, não um desvio.
- */
-function faixasDoPeriodo(faixas: FaixasRecomendadas, instante: Date): Partial<Record<Grandeza, FaixaRecomendada>> {
-  if (!ehNoite(instante)) return faixas;
-  return {
-    umidadeDoAr: faixas.umidadeDoArNoturna ?? faixas.umidadeDoAr,
-    temperatura: faixas.temperaturaNoturna ?? faixas.temperatura,
-  };
-}
-
-/**
  * Os desvios de uma leitura, na ordem de `GRANDEZAS`, pelas faixas do período em que ela foi medida (dia ou noite).
  * Usa a mesma comparação do painel (`compararMedicaoComFaixa`), então um valor exatamente no limite está dentro e
  * não vira desvio.
@@ -49,9 +38,12 @@ export function detectarDesvios(leitura: Leitura, faixas: FaixasRecomendadas): r
   return GRANDEZAS.flatMap((grandeza) => {
     const valor = MEDICAO_DA_GRANDEZA[grandeza](leitura);
     const faixa = doPeriodo[grandeza];
-    if (valor === null || faixa === undefined) return [];
+    if (valor === null || faixa === null) return [];
     const situacao = compararMedicaoComFaixa(valor, faixa);
-    return situacao === 'ideal' ? [] : [{ grandeza, sentido: situacao, valor, faixa }];
+    if (situacao === 'ideal') return [];
+    // Mesma regra do status: luz abaixo do ideal não vira aviso, senão a planta de sol pleno avisaria todo dia.
+    if (grandeza === 'luminosidade' && !luzContaParaOStatus(situacao)) return [];
+    return [{ grandeza, sentido: situacao, valor, faixa }];
   });
 }
 

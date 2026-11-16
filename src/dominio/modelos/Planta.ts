@@ -70,4 +70,10 @@ export class Planta {
   editar(alteracoes: { apelido: string; aparencia: Aparencia }): Planta {
     return Planta.criar({ ...this, ...alteracoes });
   }
+
+  /** A planta já deu colheita. A floração da leva atual fica sem data até a pessoa informar. */
+  marcarComoProduzindo(): Planta {
+    if (this.colheitaIniciada) return this;
+    return Planta.criar({ ...this, colheitaIniciada: true, floracaoIniciadaEm: null });
+  }
 }

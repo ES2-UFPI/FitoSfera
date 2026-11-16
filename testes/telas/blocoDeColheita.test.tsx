@@ -84,8 +84,8 @@ test('sem data de início da floração, pede a referência necessária para pre
     agora,
   });
 
-  expect(await screen.findByText('Estimativa indisponível')).toBeTruthy();
-  expect(screen.getByText('Informe quando começou a floração para estimar esta leva.')).toBeTruthy();
+  expect(await screen.findByText('Em colheita')).toBeTruthy();
+  expect(screen.getByText('Para prever a próxima leva, informe quando começou a floração atual.')).toBeTruthy();
 });
 
 test('usa o histórico ambiental guardado para ajustar o prazo exibido', async () => {

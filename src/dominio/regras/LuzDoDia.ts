@@ -9,7 +9,10 @@ import { NASCER_DO_SOL, POR_DO_SOL } from './PeriodoDoDia';
  */
 export const UMOL_POR_SEGUNDO_POR_LUX = 0.0185;
 
-/** O sensor publica a cada 5 min; sem contato por mais que isto, a luz depois do último contato é desconhecida. */
+/**
+ * O sensor publica a cada minuto, mas com o app fechado o contato depende da tarefa do sistema (de 15 em 15 min, no
+ * mínimo); sem contato por mais que isto, a luz depois do último contato é desconhecida.
+ */
 export const TOLERANCIA_SEM_CONTATO_MS = 20 * 60_000;
 
 /** Um período sem contato que atravessa a meia-noite e cobre mais horas de sol que isto não dá para dividir. */

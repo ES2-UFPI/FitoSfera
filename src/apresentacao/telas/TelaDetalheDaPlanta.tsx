@@ -1,10 +1,12 @@
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
+import { RegistroDeColheita } from '@/dominio/modelos/RegistroDeColheita';
 import { LuzDoDia } from '@/dominio/regras/LuzDoDia';
 import { estagioDaPlanta } from '@/dominio/regras/EstagioDaPlanta';
+import { ehNoite, faixasDoPeriodo } from '@/dominio/regras/PeriodoDoDia';
 import { JANELA_DA_ESTIMATIVA_MS } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
 import { TEXTOS } from '@/textos';
 import { CartaoDasColheitas, EstadoDasColheitas } from '../colheita/CartaoDasColheitas';
@@ -16,6 +18,9 @@ import { CartaoDaDificuldade } from '../componentes/CartaoDaDificuldade';
 import { CartaoDaLuzDeHoje, INTERVALO_DA_LUZ_DE_HOJE_MS } from '../componentes/CartaoDaLuzDeHoje';
 import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHistorico';
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
+import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
+import { descreverQuantidade } from '../colheita/FormularioDeColheita';
+import { formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { SeloDeStatus } from '../componentes/SeloDeStatus';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
@@ -29,40 +34,54 @@ import { useConexaoDoSensor } from '../componentes/useConexaoDoSensor';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { TabuaDeMadeira } from '../estante/Prateleira';
 import { DesenhoDaPlanta } from '../ilustracao/DesenhoDaPlanta';
-import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, TEXTO } from '../tema';
+import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 
-function faixasDoPainel(item: PlantaNoJardim): FaixasRecomendadasDoPainel | undefined {
+/**
+ * As faixas que o painel mostra, pelas do período da leitura (a mesma regra dos avisos e do selo da estante).
+ * Sem leitura não há hora para escolher, então ficam as do dia.
+ */
+function faixasDoPainel(item: PlantaNoJardim, medidaEm: Date | null): FaixasRecomendadasDoPainel | undefined {
   const faixas = item.planta.faixasRecomendadas;
   if (faixas === null) return undefined;
+  const doPeriodo = medidaEm === null ? faixas : faixasDoPeriodo(faixas, medidaEm);
   return {
-    umidadePercentual: faixas.umidadeDoAr,
-    temperaturaCelsius: faixas.temperatura,
-    luminosidadeLux: faixas.luminosidade,
+    umidadePercentual: doPeriodo.umidadeDoAr,
+    temperaturaCelsius: doPeriodo.temperatura,
+    luminosidadeLux: doPeriodo.luminosidade ?? undefined,
   };
 }
 
 function estadoDoPainel(item: PlantaNoJardim, atualizando = false, offline = false): EstadoDoPainel {
-  const faixasRecomendadas = faixasDoPainel(item);
   if (item.ultimaLeitura !== null) {
     return {
       tipo: 'leitura',
       leitura: item.ultimaLeitura,
       desatualizada: item.leituraDesatualizada,
       offline,
-      faixasRecomendadas,
+      faixasRecomendadas: faixasDoPainel(item, item.ultimaLeitura.medidaEm),
+      noite: ehNoite(item.ultimaLeitura.medidaEm),
       atualizando,
     };
   }
-  return { tipo: 'sem-leitura', faixasRecomendadas };
+  return { tipo: 'sem-leitura', faixasRecomendadas: faixasDoPainel(item, null) };
 }
 
+/** Quanto tempo a confirmação de edição fica no topo do detalhe. */
+const TEMPO_DA_FAIXA_DE_EDICAO_MS = 4_000;
+/** Tempo para desfazer uma rega tocada sem querer. */
+const PRAZO_PARA_DESFAZER_A_REGA_MS = 8_000;
+
 export function TelaDetalheDaPlanta({ id }: { id: string }) {
-  const { container, recarregarJardim, idJardimSelecionado } = useAplicativo();
+  const { container, recarregarJardim, idJardimSelecionado, consumirEdicaoSalva } = useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const conexao = useConexaoDoSensor();
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
-  const [estadoDaRega, definirEstadoDaRega] = useState<'ocioso' | 'registrando' | 'sucesso' | 'erro'>('ocioso');
+  const [estadoDaRega, definirEstadoDaRega] = useState<
+    'ocioso' | 'registrando' | 'sucesso' | 'desfazendo' | 'desfeita' | 'erro' | 'erroAoDesfazer'
+  >('ocioso');
+  // A rega que o "Desfazer" apaga; null quando o prazo para desfazer acabou.
+  const [regaDesfazivel, definirRegaDesfazivel] = useState<string | null>(null);
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
   const [colheitas, definirColheitas] = useState<EstadoDasColheitas>(undefined);
@@ -71,6 +90,13 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   const [tiqueDaLuz, definirTiqueDaLuz] = useState(0);
   const [exclusao, definirExclusao] = useState<'fechada' | 'confirmando' | 'excluindo' | 'erro'>('fechada');
   const registroEmAndamento = useRef(false);
+  const rolagem = useRef<ScrollView>(null);
+  const [colheitaParaApagar, definirColheitaParaApagar] = useState<RegistroDeColheita | null>(null);
+  const [apagandoColheita, definirApagandoColheita] = useState(false);
+  const [erroAoApagarColheita, definirErroAoApagarColheita] = useState(false);
+  const [edicaoSalva, definirEdicaoSalva] = useState(false);
+  // Muda a cada edição salva: remonta o formulário de colheita, que assim esquece a confirmação antiga.
+  const [geracaoDaEdicao, definirGeracaoDaEdicao] = useState(0);
   const inclinacaoDoRegador = useRef(new Animated.Value(0)).current;
 
   function animarRegador(): Promise<void> {
@@ -90,8 +116,9 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
     const animacao = animarRegador();
     definirEstadoDaRega('registrando');
     try {
-      await Promise.all([container.registrarRega.executar(item.planta.id), animacao]);
+      const [rega] = await Promise.all([container.registrarRega.executar(item.planta.id), animacao]);
       definirEstadoDaRega('sucesso');
+      definirRegaDesfazivel(rega.id);
       void carregarHistorico(item.planta);
     } catch {
       await animacao;
@@ -100,6 +127,27 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       registroEmAndamento.current = false;
     }
   }
+
+  async function desfazerRega() {
+    if (regaDesfazivel === null || !item || item === 'falhou') return;
+    definirEstadoDaRega('desfazendo');
+    try {
+      await container.apagarRegistros.apagarRega(item.planta.id, regaDesfazivel);
+      definirRegaDesfazivel(null);
+      definirEstadoDaRega('desfeita');
+      void carregarHistorico(item.planta);
+    } catch (falha) {
+      console.warn('Não deu para desfazer a rega.', falha);
+      definirEstadoDaRega('erroAoDesfazer');
+    }
+  }
+
+  // O "Desfazer" é para o toque duplo de agora, não para corrigir o histórico: some depois de alguns segundos.
+  useEffect(() => {
+    if (regaDesfazivel === null) return;
+    const temporizador = setTimeout(() => definirRegaDesfazivel(null), PRAZO_PARA_DESFAZER_A_REGA_MS);
+    return () => clearTimeout(temporizador);
+  }, [regaDesfazivel]);
 
   function carregarHistorico(planta: PlantaNoJardim['planta']): Promise<void> {
     return container.obterHistorico.executar(planta).then(definirHistorico, (falha) => {
@@ -125,6 +173,32 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       atual = false;
     };
   }, [container, plantaCarregada?.id]);
+
+  /** Colher marca a planta como produzindo: relê a planta junto com as colheitas para o bloco mostrar isso. */
+  function aposColher(idPlanta: string): Promise<void> {
+    const plantaRelida = container.obterPlanta.executar(id, idJardimSelecionado).then(
+      (encontrado) => {
+        if (encontrado !== null) definirItem(encontrado);
+      },
+      (falha) => console.warn('Não deu para reler a planta depois da colheita.', falha),
+    );
+    return Promise.all([carregarColheitas(idPlanta), plantaRelida]).then(() => undefined);
+  }
+
+  async function apagarColheita() {
+    if (colheitaParaApagar === null || apagandoColheita) return;
+    definirApagandoColheita(true);
+    try {
+      await container.apagarRegistros.apagarColheita(colheitaParaApagar.idPlanta, colheitaParaApagar.id);
+      await carregarColheitas(colheitaParaApagar.idPlanta);
+      definirColheitaParaApagar(null);
+    } catch (falha) {
+      console.warn('Não deu para apagar a colheita.', falha);
+      definirErroAoApagarColheita(true);
+    } finally {
+      definirApagandoColheita(false);
+    }
+  }
 
   function carregarColheitas(idPlanta: string): Promise<void> {
     return container.obterColheitas.executar(idPlanta).then(definirColheitas, (falha) => {
@@ -210,12 +284,32 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
     }
   }
 
+  // Voltando da edição: a faixa de confirmação fica no topo, então a tela sobe até ela.
+  useFocusEffect(
+    useCallback(() => {
+      if (!consumirEdicaoSalva(id)) return;
+      definirEdicaoSalva(true);
+      definirGeracaoDaEdicao((geracao) => geracao + 1);
+      definirEstadoDaRega((estado) => (estado === 'registrando' || estado === 'desfazendo' ? estado : 'ocioso'));
+      definirRegaDesfazivel(null);
+      rolagem.current?.scrollTo({ y: 0, animated: false });
+    }, [consumirEdicaoSalva, id]),
+  );
+  useEffect(() => {
+    if (!edicaoSalva) return;
+    const temporizador = setTimeout(() => definirEdicaoSalva(false), TEMPO_DA_FAIXA_DE_EDICAO_MS);
+    return () => clearTimeout(temporizador);
+  }, [edicaoSalva, geracaoDaEdicao]);
+
   useFocusEffect(
     useCallback(() => {
       let atual = true;
       container.obterPlanta.executar(id, idJardimSelecionado).then(
         (encontrado) => {
-          if (atual) definirItem(encontrado);
+          if (!atual) return;
+          definirItem(encontrado);
+          // Uma rega apagada no histórico completo muda a "última rega" deste cartão.
+          if (encontrado !== null) void carregarHistorico(encontrado.planta);
         },
         (falha) => {
           console.warn('Não deu para ler a planta do armazenamento do aparelho.', falha);
@@ -303,6 +397,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       ) : null}
       {item && item !== 'falhou' ? (
         <ScrollView
+          ref={rolagem}
           contentContainerStyle={[
             estilos.conteudo,
             { paddingBottom: margens.bottom + ESPACO.folgado },
@@ -328,6 +423,11 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               <View style={estilos.status}>
                 <SeloDeStatus status={item.status} />
               </View>
+              {edicaoSalva ? (
+                <Text style={estilos.faixaDeEdicao} accessibilityLiveRegion="polite" accessibilityRole="alert">
+                  {TEXTOS.detalhe.alteracoesSalvas}
+                </Text>
+              ) : null}
             </View>
           </View>
           <PainelDeCondicoes
@@ -355,6 +455,10 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               )}
               estagio={estagioDaPlanta(item.planta, item.especie, container.relogio.agora())}
               colheitaIniciada={item.planta.colheitaIniciada}
+              ultimaColheitaEm={
+                colheitas !== undefined && colheitas !== 'falhou' ? colheitas.registros[0]?.colhidaEm ?? null : null
+              }
+              aoInformarFloracao={() => navegador.push({ pathname: '/editar/[id]/apelido', params: { id } })}
             />
           ) : null}
           <CartaoDoHistorico
@@ -391,9 +495,37 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               variante="rega"
               largo
             />
-            {estadoDaRega === 'sucesso' ? (
+            {/* Na falha ao desfazer, a linha continua: a mensagem pede para tentar de novo, então o botão precisa estar lá. */}
+            {estadoDaRega === 'sucesso' || estadoDaRega === 'desfazendo' || estadoDaRega === 'erroAoDesfazer' ? (
+              <View style={estilos.linhaDaConfirmacao}>
+                <Text style={[TEXTO.corpo, estilos.confirmacao]} accessibilityLiveRegion="polite">
+                  {TEXTOS.detalhe.regaRegistrada}
+                </Text>
+                {regaDesfazivel !== null ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={TEXTOS.detalhe.desfazerRega}
+                    accessibilityState={{ disabled: estadoDaRega === 'desfazendo' }}
+                    disabled={estadoDaRega === 'desfazendo'}
+                    onPress={() => void desfazerRega()}
+                    hitSlop={ESPACO.pequeno}
+                    style={estilos.desfazer}
+                  >
+                    <Text style={estilos.textoDoDesfazer}>
+                      {estadoDaRega === 'desfazendo' ? TEXTOS.detalhe.desfazendoRega : TEXTOS.detalhe.desfazer}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : null}
+            {estadoDaRega === 'desfeita' ? (
               <Text style={[TEXTO.corpo, estilos.confirmacao]} accessibilityLiveRegion="polite">
-                {TEXTOS.detalhe.regaRegistrada}
+                {TEXTOS.detalhe.regaDesfeita}
+              </Text>
+            ) : null}
+            {estadoDaRega === 'erroAoDesfazer' ? (
+              <Text style={[TEXTO.corpo, estilos.erro]} accessibilityRole="alert">
+                {TEXTOS.detalhe.falhaAoDesfazerRega}
               </Text>
             ) : null}
             {estadoDaRega === 'erro' ? (
@@ -404,8 +536,14 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
           </CartaoDoHistorico>
           {item.especie?.frutifera ? (
             <>
-              <CartaoDasColheitas estado={colheitas} />
-              <FormularioDeColheita idPlanta={item.planta.id} aoRegistrar={() => void carregarColheitas(item.planta.id)} />
+              <CartaoDasColheitas
+                estado={colheitas}
+                aoApagar={(registro) => {
+                  definirErroAoApagarColheita(false);
+                  definirColheitaParaApagar(registro);
+                }}
+              />
+              <FormularioDeColheita key={geracaoDaEdicao} idPlanta={item.planta.id} aoRegistrar={() => void aposColher(item.planta.id)} />
               <View style={estilos.atalhoDoRendimento}>
                 <BotaoPrincipal
                   titulo={TEXTOS.rendimento.compararComOutras}
@@ -434,8 +572,28 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               />
             </View>
           </View>
+          <DialogoDeConfirmacao
+            titulo={
+              colheitaParaApagar
+                ? TEXTOS.apagarRegistro.tituloDaColheita(
+                    formatarData(colheitaParaApagar.colhidaEm) ?? TEXTOS.historico.dataDesconhecida,
+                    descreverQuantidade(colheitaParaApagar),
+                  )
+                : ''
+            }
+            explicacao={TEXTOS.apagarRegistro.explicacaoDaColheita}
+            tituloDoBotao={TEXTOS.apagarRegistro.confirmarColheita}
+            tituloEmAndamento={TEXTOS.apagarRegistro.apagando}
+            mensagemDeErro={TEXTOS.apagarRegistro.falha}
+            visivel={colheitaParaApagar !== null}
+            emAndamento={apagandoColheita}
+            erro={erroAoApagarColheita}
+            aoConfirmar={() => void apagarColheita()}
+            aoCancelar={() => definirColheitaParaApagar(null)}
+          />
           <ConfirmacaoDeExclusao
             apelido={item.planta.apelido}
+            comColheitas={item.especie?.frutifera ?? false}
             visivel={exclusao !== 'fechada'}
             excluindo={exclusao === 'excluindo'}
             erro={exclusao === 'erro'}
@@ -468,6 +626,33 @@ const estilos = StyleSheet.create({
   atalhoDoRendimento: { alignSelf: 'stretch', maxWidth: LARGURA_DO_CONTEUDO, width: '100%' },
   acao: { flexGrow: 1, flexBasis: 140 },
   confirmacao: { color: CORES.texto, textAlign: 'center' },
+  linhaDaConfirmacao: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    columnGap: ESPACO.pequeno,
+  },
+  desfazer: { minHeight: 44, justifyContent: 'center', paddingHorizontal: ESPACO.pequeno },
+  textoDoDesfazer: {
+    ...TEXTO.corpo,
+    fontFamily: FONTES.forte,
+    color: CORES.acaoRega,
+    textDecorationLine: 'underline',
+  },
+  faixaDeEdicao: {
+    ...TEXTO.apoio,
+    color: CORES.texto,
+    marginTop: ESPACO.pequeno,
+    alignSelf: 'flex-start',
+    paddingHorizontal: ESPACO.pequeno,
+    paddingVertical: ESPACO.fino,
+    borderRadius: RAIO.pilula,
+    borderWidth: 1,
+    borderColor: CORES.bordaTranquila,
+    backgroundColor: CORES.fundoTranquilo,
+    overflow: 'hidden',
+  },
   erro: { color: CORES.erro, textAlign: 'center' },
   texto: { textAlign: 'center', marginTop: ESPACO.medio, paddingHorizontal: ESPACO.folgado },
 });

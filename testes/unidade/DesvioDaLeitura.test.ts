@@ -45,12 +45,16 @@ describe('detectarDesvios', () => {
     ['umidade logo acima do máximo', { umidadePercentual: 70.1 }, 'umidadeDoAr', 'acima'],
     ['temperatura logo abaixo do mínimo', { temperaturaCelsius: 17.9 }, 'temperatura', 'abaixo'],
     ['temperatura logo acima do máximo', { temperaturaCelsius: 28.1 }, 'temperatura', 'acima'],
-    ['luminosidade logo abaixo do mínimo', { luminosidadeLux: 4999 }, 'luminosidade', 'abaixo'],
     ['luminosidade logo acima do máximo', { luminosidadeLux: 20001 }, 'luminosidade', 'acima'],
   ])('%s: vira um desvio %s %s', (_, medicao, grandeza, sentido) => {
     expect(detectarDesvios(leitura(medicao), FAIXAS)).toEqual([
       { grandeza, sentido, valor: Object.values(medicao)[0], faixa: FAIXAS[grandeza as 'temperatura'] },
     ]);
+  });
+
+  test('luz abaixo do mínimo não vira desvio: a falta de luz é assunto do total do dia', () => {
+    expect(detectarDesvios(leitura({ luminosidadeLux: 4999 }), FAIXAS)).toEqual([]);
+    expect(detectarDesvios(leitura({ luminosidadeLux: 0 }), FAIXAS)).toEqual([]);
   });
 
   test('várias grandezas fora da faixa viram vários desvios, na ordem das grandezas', () => {
@@ -113,17 +117,17 @@ describe('faixa do período da leitura (#91)', () => {
     ]);
   });
 
-  test('escuro à noite não é desvio de luz', () => {
-    expect(detectarDesvios(leitura({ luminosidadeLux: 0, medidaEm: DE_NOITE }), COM_NOITE)).toEqual([]);
-    expect(detectarDesvios(leitura({ luminosidadeLux: 0, medidaEm: DE_DIA }), COM_NOITE)).toHaveLength(1);
+  test('luz forte à noite não é desvio: à noite a luz não tem meta', () => {
+    expect(detectarDesvios(leitura({ luminosidadeLux: 25000, medidaEm: DE_NOITE }), COM_NOITE)).toEqual([]);
+    expect(detectarDesvios(leitura({ luminosidadeLux: 25000, medidaEm: DE_DIA }), COM_NOITE)).toHaveLength(1);
   });
 
   test('a noite vai das 18h às 6h', () => {
-    const escuro = (hora: number) => detectarDesvios(leitura({ luminosidadeLux: 0, medidaEm: new Date(2026, 9, 17, hora) }), COM_NOITE);
-    expect(escuro(5)).toEqual([]);
-    expect(escuro(6)).toHaveLength(1);
-    expect(escuro(17)).toHaveLength(1);
-    expect(escuro(18)).toEqual([]);
+    const forte = (hora: number) => detectarDesvios(leitura({ luminosidadeLux: 25000, medidaEm: new Date(2026, 9, 17, hora) }), COM_NOITE);
+    expect(forte(5)).toEqual([]);
+    expect(forte(6)).toHaveLength(1);
+    expect(forte(17)).toHaveLength(1);
+    expect(forte(18)).toEqual([]);
   });
 
   test('planta sem as faixas da noite usa as do dia também à noite', () => {
