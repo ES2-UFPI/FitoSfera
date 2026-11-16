@@ -1,7 +1,10 @@
 import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 
-/** Atualiza cada jardim de forma independente; SensorComCache persiste leituras bem-sucedidas. */
+/**
+ * Atualiza cada jardim de forma independente; SensorComCache persiste leituras bem-sucedidas. Jardim sem sensor
+ * associado fica de fora: não há o que atualizar, e isso não é falha.
+ */
 export class AtualizarLeituras {
   constructor(
     private readonly jardins: RepositorioDeJardins,
@@ -16,7 +19,9 @@ export class AtualizarLeituras {
       console.warn('Não foi possível listar os jardins para atualizar as leituras.', falha);
       return { houveFalha: true };
     }
-    const paraAtualizar = idJardim === undefined ? jardins : jardins.filter((jardim) => jardim.id === idJardim);
+    const paraAtualizar = jardins.filter(
+      (jardim) => jardim.idSensor !== null && (idJardim === undefined || jardim.id === idJardim),
+    );
     const resultados = await Promise.all(paraAtualizar.map(async (jardim) => {
       try {
         const leitura = await (await this.fontes.obter(jardim.id)).atualizarLeitura();

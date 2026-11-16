@@ -80,7 +80,7 @@ lib_deps =
 
 ### Contrato BLE
 
-O ESP32 anuncia com o nome `FitoSfera` e expõe um serviço com uma característica de leitura e notificação e uma característica de comando. O firmware atual publica uma medição automática a cada **5 min**, além de enviar uma medição imediata quando o app assina as notificações ou pede uma leitura. O dispositivo fica sempre ligado e conectável.
+O ESP32 anuncia com o nome `FitoSfera` e expõe um serviço com uma característica de leitura e notificação e uma característica de comando. O firmware atual publica uma medição automática a cada **1 min**, além de enviar uma medição imediata quando o app assina as notificações ou pede uma leitura. O dispositivo fica sempre ligado e conectável.
 
 | Item | UUID |
 |---|---|
@@ -167,9 +167,9 @@ function decodificarPacote(bytes: Uint8Array): PacoteDoSensor | null {
 
 **Tratamento de falha de leitura.** O DHT11 retorna `NaN` em caso de falha de comunicação, ocorrência esperada em uma fração das leituras. A verificação por `isnan()` impede a propagação de valores inválidos. No pacote de 19 bytes, cada grandeza ausente tem seu próprio sentinela, então a falha de uma medição não apaga as demais.
 
-**Nova tentativa rápida.** Se o DHT11 ou o BH1750 falharem numa leitura, o firmware tenta de novo em 5 s, até 3 vezes, antes de voltar ao intervalo de 5 min. Isso vale também para leituras pedidas pelo app. Depois das tentativas, envia os valores disponíveis e marca os ausentes com os sentinelas do contrato.
+**Nova tentativa rápida.** Se o DHT11 ou o BH1750 falharem numa leitura, o firmware tenta de novo em 5 s, até 3 vezes, antes de voltar ao intervalo de 1 min. Isso vale também para leituras pedidas pelo app. Depois das tentativas, envia os valores disponíveis e marca os ausentes com os sentinelas do contrato.
 
-**CPU a 80 MHz.** O firmware reduz a frequência da CPU de 240 para 80 MHz (o mínimo com BLE) logo no início do `setup()`. A carga é leve (dois sensores a cada 5 min), e a redução diminui o consumo ativo. O ganho ainda não foi medido no circuito; os valores do orçamento de corrente acima correspondem a 240 MHz e devem ser reavaliados com um medidor.
+**CPU a 80 MHz.** O firmware reduz a frequência da CPU de 240 para 80 MHz (o mínimo com BLE) logo no início do `setup()`. A carga é leve (dois sensores a cada minuto), e a redução diminui o consumo ativo. O ganho ainda não foi medido no circuito; os valores do orçamento de corrente acima correspondem a 240 MHz e devem ser reavaliados com um medidor.
 
 **Periférico opcional.** Na inicialização, o firmware lista no monitor serial os endereços I2C encontrados. Se o BH1750 não responder, o firmware avisa e continua, em vez de travar.
 
@@ -192,7 +192,7 @@ A montagem seguiu validação incremental, com cada camada testada isoladamente 
 
 **Precisão do DHT11.** A resolução de 1 °C e 1 %, com incerteza de ±2 °C, é adequada para detecção de tendências mas insuficiente para caracterização fina de microclima. O DHT22 ou o BME280 são substitutos pino-compatíveis quando maior precisão for necessária.
 
-**Ausência de referência temporal.** O dispositivo não tem relógio, e a serial mostra só o tempo desde a inicialização. A hora da medição é carimbada pelo aplicativo ao receber o pacote; uma leitura guardada na característica pode ser do último ciclo automático (até cerca de 5 min). O app pode pedir uma nova medição e esperar a notificação.
+**Ausência de referência temporal.** O dispositivo não tem relógio, e a serial mostra só o tempo desde a inicialização. A hora da medição é carimbada pelo aplicativo ao receber o pacote; uma leitura guardada na característica pode ser do último ciclo automático (até cerca de 1 min). O app pode pedir uma nova medição e esperar a notificação.
 
 **Sem pareamento nem segurança.** O firmware não faz *bonding*: qualquer celular ao alcance pode conectar e ler os dados, e quem conectar primeiro ocupa a única vaga. O primeiro uso (escolher o dispositivo certo entre os que estiverem por perto) e a restrição ao celular do dono ainda não foram implementados.
 

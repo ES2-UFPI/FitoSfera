@@ -107,3 +107,17 @@ describe('dado corrompido', () => {
     expect(armazenamento.valores.size).toBe(0);
   });
 });
+
+test('apagar tira só aquela rega, sem mexer nas outras nem nas de outra planta', async () => {
+  for (const r of [rega('p1', 1), rega('p1', 2), rega('p2', 1)]) await repo.gravar(r);
+  await repo.apagar('p1', 'p1-r2');
+  expect((await repo.listarPorPlanta('p1')).map((r) => r.id)).toEqual(['p1-r1']);
+  expect((await repo.listarPorPlanta('p2')).map((r) => r.id)).toEqual(['p2-r1']);
+});
+
+test('apagar uma rega que não existe não é erro e não muda nada', async () => {
+  await repo.gravar(rega('p1', 1));
+  await expect(repo.apagar('p1', 'nao-existe')).resolves.toBeUndefined();
+  await expect(repo.apagar('p9', 'p1-r1')).resolves.toBeUndefined();
+  expect(await repo.listarPorPlanta('p1')).toHaveLength(1);
+});

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from 'expo-router/testing-library';
+import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
@@ -95,4 +95,114 @@ test('se o armazenamento falhar, avisa e deixa tentar de novo', async () => {
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Não deu para registrar a colheita. Tente novamente.');
   expect(screen.getByLabelText('Quantidade')).toHaveProp('value', '3');
+});
+
+describe('a expectativa depois de colher', () => {
+  test('sem a data da floração, mostra que está em colheita e pede a data', async () => {
+    abrirTomateiro({ colheitas: [{ id: 'c1', idPlanta: 'p1', quantidade: 5, unidade: 'unidades', colhidaEm: new Date(2026, 10, 8, 12) }] });
+
+    fireEvent.changeText(await screen.findByLabelText('Quantidade'), '12');
+    fireEvent.press(screen.getByRole('button', { name: 'Registrar colheita' }));
+
+    expect(await screen.findByText('Em colheita')).toBeTruthy();
+    expect(screen.getByText('Última colheita em 11/11/2026')).toBeTruthy();
+    expect(screen.getByText('Estágio: colheita')).toBeTruthy();
+    expect(screen.getByText('Para prever a próxima leva, informe quando começou a floração atual.')).toBeTruthy();
+    expect(screen.queryByText('Estimativa indisponível')).toBeNull();
+  });
+
+  test('planta já produzindo mostra a última colheita registrada', async () => {
+    abrirTomateiro({
+      plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomateiro', colheitaIniciada: true, floracaoIniciadaEm: null })],
+      colheitas: [{ id: 'c1', idPlanta: 'p1', quantidade: 5, unidade: 'unidades', colhidaEm: new Date(2026, 10, 8, 12) }],
+    });
+
+    expect(await screen.findByText('Última colheita em 08/11/2026')).toBeTruthy();
+    expect(screen.getByText('Em colheita')).toBeTruthy();
+  });
+
+  test('o botão leva para a edição, onde fica a data da floração', async () => {
+    abrirTomateiro({
+      plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomateiro', colheitaIniciada: true, floracaoIniciadaEm: null })],
+    });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Informar início da floração' }));
+
+    expect(await screen.findByText(/floração/i, { exact: false })).toBeTruthy();
+    expect(screen).toHavePathname('/editar/p1/apelido');
+  });
+});
+
+test('na edição, a resposta sobre a produção já vem marcada com o que a planta tem', async () => {
+  renderizarApp({
+    plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomateiro', colheitaIniciada: false })],
+    url: '/editar/p1/apelido',
+    agora,
+  });
+
+  const nao = await screen.findByRole('radio', { name: 'Não, ainda não está produzindo' });
+  expect(nao.props.accessibilityState.checked).toBe(true);
+  expect(screen.getByRole('button', { name: 'Salvar alterações' }).props.accessibilityState.disabled).toBe(false);
+});
+
+test('colheita com data antes do plantio é recusada com uma mensagem clara', async () => {
+  const { colheitas } = abrirTomateiro({
+    plantas: [plantaDeTeste({ id: 'p1', idEspecie: 'tomate', apelido: 'Tomateiro', plantadaEm: new Date(2026, 10, 1) })],
+  });
+
+  fireEvent.changeText(await screen.findByLabelText('Quantidade'), '6');
+  fireEvent.changeText(screen.getByLabelText('Data da colheita'), '05/10/2026');
+  fireEvent.press(screen.getByRole('button', { name: 'Registrar colheita' }));
+
+  expect(await screen.findByText('A colheita não pode ser antes do plantio (01/11/2026).')).toBeTruthy();
+  expect(colheitas.salvas).toEqual([]);
+});
+
+test('excluir uma frutífera avisa que as colheitas também saem', async () => {
+  abrirTomateiro();
+  fireEvent.press(await screen.findByRole('button', { name: 'Excluir' }));
+  expect(
+    await screen.findByText('A planta sai da estante junto com o histórico de regas e de colheitas. Não dá para desfazer.'),
+  ).toBeTruthy();
+});
+
+describe('voltando da edição', () => {
+  test('mostra "Alterações salvas" no topo e some com a confirmação antiga da colheita', async () => {
+    abrirTomateiro();
+    fireEvent.changeText(await screen.findByLabelText('Quantidade'), '12');
+    fireEvent.press(screen.getByRole('button', { name: 'Registrar colheita' }));
+    expect(await screen.findByText('✓ Colheita registrada: 12 frutos em 11/11/2026.')).toBeTruthy();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Editar' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Continuar' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Salvar alterações' }));
+
+    expect(await screen.findByText('✓ Alterações salvas')).toBeTruthy();
+    expect(screen).toHavePathname('/planta/p1');
+    expect(screen.queryByText('✓ Colheita registrada: 12 frutos em 11/11/2026.')).toBeNull();
+  });
+
+  test('abrir a planta sem ter editado não mostra a faixa', async () => {
+    abrirTomateiro();
+    expect(await screen.findByRole('header', { name: 'Tomateiro' })).toBeTruthy();
+    expect(screen.queryByText('✓ Alterações salvas')).toBeNull();
+  });
+});
+
+describe('apagar uma colheita', () => {
+  const colhida = (id: string, dia: number, quantidade: number) =>
+    ({ id, idPlanta: 'p1', quantidade, unidade: 'unidades' as const, colhidaEm: new Date(2026, 10, dia, 9, 0) });
+
+  test('pede confirmação e, confirmando, tira a colheita da lista e do armazenamento', async () => {
+    const { colheitas } = abrirTomateiro({ colheitas: [colhida('c1', 8, 5), colhida('c2', 10, 7)] });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Apagar a colheita de 7 frutos em 10/11/2026' }));
+    expect(screen.getByRole('header', { name: 'Apagar a colheita de 7 frutos em 10/11/2026?' })).toBeTruthy();
+    expect(screen.getByText('Ela sai do histórico e da conta do rendimento. Não dá para desfazer.')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Apagar colheita' }));
+
+    await waitFor(() => expect(screen.queryByLabelText('Colheita de 7 frutos em 10/11/2026.')).toBeNull());
+    expect(screen.getByLabelText('Colheita de 5 frutos em 08/11/2026.')).toBeTruthy();
+    expect(colheitas.salvas.map((c) => c.id)).toEqual(['c1']);
+  });
 });

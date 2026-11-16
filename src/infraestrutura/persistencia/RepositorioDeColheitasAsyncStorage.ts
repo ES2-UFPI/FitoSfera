@@ -43,6 +43,14 @@ export class RepositorioDeColheitasAsyncStorage implements RepositorioDeColheita
     return leitura.tipo === 'lista' ? leitura.registros : [];
   }
 
+  async apagar(idPlanta: string, idColheita: string): Promise<void> {
+    const leitura = await this.ler(idPlanta);
+    // Lista ilegível fica como está: reescrever apagaria também o que a recuperação ainda pode ler.
+    if (leitura.tipo !== 'lista' || !leitura.registros.some((registro) => registro.id === idColheita)) return;
+    const mantidas = leitura.registros.filter((registro) => registro.id !== idColheita);
+    await this.armazenamento.setItem(CHAVES.colheitasDaPlanta(idPlanta), JSON.stringify(mantidas.map(paraRegistro)));
+  }
+
   async apagarDaPlanta(idPlanta: string): Promise<void> {
     await this.armazenamento.removeItem(CHAVES.colheitasDaPlanta(idPlanta));
     await this.armazenamento.removeItem(CHAVES.colheitasIlegiveisDaPlanta(idPlanta));

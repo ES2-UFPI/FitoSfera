@@ -7,10 +7,10 @@ export const CONTRATO_DO_SENSOR = {
   /** `0x01` pede leitura imediata; `0x02, sequência` confirma um pacote novo. */
   pedidoDeLeitura: 'AQ==',
   comandoDeConfirmacao: 0x02,
-  /** O pacote automático novo é emitido a cada cinco minutos. */
-  intervaloDeLeituraMs: 5 * 60_000,
-  /** Idade tolerada para usar a leitura guardada sem provocar uma medição imediata. */
-  idadeMaximaDaLeituraGuardadaMs: 2 * 5 * 60_000,
+  /** O pacote automático novo é emitido a cada minuto. */
+  intervaloDeLeituraMs: 60_000,
+  /** Idade tolerada para usar a leitura guardada sem provocar uma medição imediata: perder um pacote é normal. */
+  idadeMaximaDaLeituraGuardadaMs: 2 * 60_000,
   /** Com três tentativas do DHT11 a cada 5 s, uma resposta que demora mais que isto não vem mais. */
   tempoLimiteDaLeituraMs: 20_000,
 } as const;

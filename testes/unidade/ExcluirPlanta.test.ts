@@ -121,6 +121,7 @@ test('se a remoção da planta falhar, mantém as regas para não perder o hist�
     {
       gravar: (r) => regas.gravar(r),
       listarPorPlanta: (id) => regas.listarPorPlanta(id),
+      apagar: (idPlanta, idRega) => regas.apagar(idPlanta, idRega),
       apagarDaPlanta: async (id) => {
         ordem.push('regas');
         await regas.apagarDaPlanta(id);
@@ -173,6 +174,7 @@ test('falha ao apagar regas fica marcada e é concluída na recuperação seguin
   const regasInstaveis = {
     gravar: (item: ReturnType<typeof rega>) => regas.gravar(item),
     listarPorPlanta: (id: string) => regas.listarPorPlanta(id),
+    apagar: (idPlanta: string, idRega: string) => regas.apagar(idPlanta, idRega),
     apagarDaPlanta: async (id: string) => {
       if (falhar) { falhar = false; throw new Error('armazenamento indisponível'); }
       await regas.apagarDaPlanta(id);

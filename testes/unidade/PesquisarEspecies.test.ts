@@ -62,6 +62,15 @@ test('apara o termo antes de pesquisar', async () => {
   expect(termoRecebido).toBe('cacto');
 });
 
+test.each([
+  ['somente-medias', 'medio'],
+  ['somente-exigentes', 'dificil'],
+] as const)('o filtro "%s" deixa só as de nível %s', async (filtro, nivel) => {
+  const niveis = (await caso.executar({ filtro })).map((item) => item.nivelDeDificuldade);
+  expect(niveis.length).toBeGreaterThan(0);
+  expect(niveis.every((n) => n === nivel)).toBe(true);
+});
+
 test('o filtro "somente-faceis" deixa só as de nível fácil', async () => {
   expect(await nomes({ filtro: 'somente-faceis' })).toEqual(['Alface', 'Cacto']);
 });

@@ -8,6 +8,8 @@ export interface RepositorioDeColheitas {
   gravar(registro: RegistroDeColheita): Promise<void>;
   /** Da colheita mais recente para a mais antiga; planta sem colheitas devolve lista vazia. */
   listarPorPlanta(idPlanta: string): Promise<readonly RegistroDeColheita[]>;
+  /** Apaga uma colheita só, lançada por engano. Id inexistente não é erro. */
+  apagar(idPlanta: string, idColheita: string): Promise<void>;
   /** Apaga todas as colheitas da planta; usado quando ela sai do jardim. */
   apagarDaPlanta(idPlanta: string): Promise<void>;
 }

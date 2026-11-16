@@ -74,6 +74,28 @@ describe('SensorSimulado', () => {
     });
   });
 
+  describe('o dia simulado segue o horário local', () => {
+    const lerAs = (horas: number, minutos = 0) =>
+      new SensorSimulado(new RelogioParado(new Date(2026, 10, 15, horas, minutos))).lerLeituraAtual();
+
+    test('a luz é maior ao meio-dia do que de manhã e no fim da tarde', async () => {
+      const [manha, meioDia, tarde] = await Promise.all([lerAs(9), lerAs(12), lerAs(16)]);
+      expect(meioDia!.luminosidadeLux).toBeGreaterThan(manha!.luminosidadeLux!);
+      expect(meioDia!.luminosidadeLux).toBeGreaterThan(tarde!.luminosidadeLux!);
+    });
+
+    test('de noite não há luz', async () => {
+      const leituras = await Promise.all([lerAs(19), lerAs(23), lerAs(0), lerAs(3), lerAs(5, 30)]);
+      leituras.forEach((leitura) => expect(leitura?.luminosidadeLux).toBe(0));
+    });
+
+    test('a tarde é mais quente e mais seca que a madrugada', async () => {
+      const [madrugada, tarde] = await Promise.all([lerAs(4), lerAs(14)]);
+      expect(tarde!.temperaturaCelsius).toBeGreaterThan(madrugada!.temperaturaCelsius!);
+      expect(tarde!.umidadePercentual).toBeLessThan(madrugada!.umidadePercentual!);
+    });
+  });
+
   test('permite forçar uma grandeza e avisa os observadores imediatamente', async () => {
     const sensor = new SensorSimulado(new RelogioParado(instante));
     const aoReceber = jest.fn();

@@ -52,7 +52,7 @@ describe('status resumido de cada planta', () => {
 
   test('leitura recente dentro da faixa da espécie vem ok; fora dela, atencao', async () => {
     expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura() })).toEqual(['ok']);
-    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura({ luminosidadeLux: 800 }) })).toEqual([
+    expect(await statusDoJardim({ plantas: [plantaDeTeste()], leitura: leitura({ temperaturaCelsius: 35 }) })).toEqual([
       'atencao',
     ]);
   });

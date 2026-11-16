@@ -1,4 +1,4 @@
-import { fireEvent, screen } from 'expo-router/testing-library';
+import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { LIMITE_DO_HISTORICO_DE_REGAS } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
 import { plantaDeTeste } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
@@ -111,4 +111,93 @@ test('"Voltar" no histórico aberto direto pelo link leva ao jardim', async () =
   fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
   expect(screen).toHavePathname('/');
+});
+
+describe('desfazer a rega', () => {
+  test('o "Desfazer" apaga a rega que acabou de ser registrada, e o histórico volta a ficar vazio', async () => {
+    const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+    expect(await screen.findByText('✓ Rega registrada agora.')).toBeTruthy();
+    expect(regas.salvas).toHaveLength(1);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Desfazer a rega registrada agora' }));
+    expect(await screen.findByText('Rega desfeita.')).toBeTruthy();
+    expect(regas.salvas).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Desfazer a rega registrada agora' })).toBeNull();
+  });
+
+  test('desfazer só apaga a rega de agora, não as anteriores', async () => {
+    const { regas } = renderizarApp({
+      plantas: [plantaDeTeste()],
+      regas: [rega('antiga', new Date(2026, 9, 19, 18, 30))],
+      url: '/planta/p1',
+      agora,
+    });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+    fireEvent.press(await screen.findByRole('button', { name: 'Desfazer a rega registrada agora' }));
+    expect(await screen.findByText('Rega desfeita.')).toBeTruthy();
+    expect(regas.salvas.map((r) => r.id)).toEqual(['antiga']);
+  });
+
+  test('o botão some depois de alguns segundos, e a confirmação fica', async () => {
+    jest.useFakeTimers();
+    try {
+      renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+      fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+      expect(await screen.findByRole('button', { name: 'Desfazer a rega registrada agora' })).toBeTruthy();
+
+      act(() => jest.advanceTimersByTime(8_000));
+      expect(screen.queryByRole('button', { name: 'Desfazer a rega registrada agora' })).toBeNull();
+      expect(screen.getByText('✓ Rega registrada agora.')).toBeTruthy();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
+
+describe('apagar uma rega do histórico', () => {
+  function abrirComDuasRegas() {
+    return renderizarApp({
+      plantas: [plantaDeTeste()],
+      regas: [rega('r1', new Date(2026, 9, 19, 18, 30)), rega('r2', new Date(2026, 9, 18, 7, 15))],
+      url: '/historico/p1',
+      agora,
+    });
+  }
+
+  test('pede confirmação com a data da rega e, confirmando, tira só ela da lista', async () => {
+    const { regas } = abrirComDuasRegas();
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Apagar a rega de 19/10/2026 às 18:30' }));
+    expect(screen.getByRole('header', { name: 'Apagar a rega de 19/10/2026 às 18:30?' })).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'Apagar rega' }));
+
+    await waitFor(() => expect(screen.queryByLabelText(/^19\/10\/2026 às 18:30/)).toBeNull());
+    expect(screen.getByLabelText(/^18\/10\/2026 às 07:15/)).toBeTruthy();
+    expect(screen.getByText('1 REGA REGISTRADA')).toBeTruthy();
+    expect(regas.salvas.map((r) => r.id)).toEqual(['r2']);
+  });
+
+  test('cancelar não apaga nada', async () => {
+    const { regas } = abrirComDuasRegas();
+    fireEvent.press(await screen.findByRole('button', { name: 'Apagar a rega de 19/10/2026 às 18:30' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+    await waitFor(() => expect(screen.queryByRole('header', { name: /^Apagar a rega/ })).toBeNull());
+    expect(regas.salvas).toHaveLength(2);
+  });
+});
+
+test('se desfazer falhar, avisa e deixa o "Desfazer" para tentar de novo', async () => {
+  const { container } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+  const apagarRega = jest.spyOn(container.apagarRegistros, 'apagarRega').mockRejectedValueOnce(new Error('disco cheio'));
+
+  fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+  fireEvent.press(await screen.findByRole('button', { name: 'Desfazer a rega registrada agora' }));
+  expect(await screen.findByText('Não deu para desfazer a rega. Tente de novo.')).toBeTruthy();
+
+  fireEvent.press(screen.getByRole('button', { name: 'Desfazer a rega registrada agora' }));
+  expect(await screen.findByText('Rega desfeita.')).toBeTruthy();
+  expect(apagarRega).toHaveBeenCalledTimes(2);
 });

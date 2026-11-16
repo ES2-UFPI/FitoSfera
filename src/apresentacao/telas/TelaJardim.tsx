@@ -32,6 +32,7 @@ export function TelaJardim() {
   const [sensores, definirSensores] = useState<readonly SensorPareado[]>([]);
   const [erroDoSensor, definirErroDoSensor] = useState('');
   const [sensorAberto, definirSensorAberto] = useState(false);
+  const [plantasPorJardim, definirPlantasPorJardim] = useState<ReadonlyMap<string, number>>(new Map());
   const [atualizandoLeituras, definirAtualizandoLeituras] = useState(false);
   const [erroDaAtualizacao, definirErroDaAtualizacao] = useState(false);
   const temporizadorDoErro = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -67,6 +68,23 @@ export function TelaJardim() {
   useEffect(() => () => {
     if (temporizadorDoErro.current !== null) clearTimeout(temporizadorDoErro.current);
   }, []);
+
+  // A contagem só importa com o seletor aberto, então é lida ao abrir: assim reflete cadastros e exclusões recentes.
+  useEffect(() => {
+    if (!seletorAberto) return;
+    let ativo = true;
+    void container.gerenciarJardins.contarPlantas().then(
+      (contagem) => { if (ativo) definirPlantasPorJardim(contagem); },
+      () => undefined,
+    );
+    return () => { ativo = false; };
+  }, [container, seletorAberto]);
+
+  function textoDaQuantidade(idJardim: string, selecionado: boolean) {
+    // O jardim aberto usa a estante, que é a lista mais nova; os outros, a contagem lida ao abrir o seletor.
+    const quantidade = selecionado ? lista.length : plantasPorJardim.get(idJardim) ?? 0;
+    return quantidade === 0 ? TEXTOS.jardim.nenhumaPlantaNoJardim : TEXTOS.jardim.quantidadeDePlantas(quantidade);
+  }
 
   function mostrarErroDaAtualizacao() {
     if (temporizadorDoErro.current !== null) clearTimeout(temporizadorDoErro.current);
@@ -229,7 +247,7 @@ export function TelaJardim() {
                     onPress={() => void trocarJardim(jardim.id)} style={[estilos.opcaoDeJardim, selecionado && estilos.jardimSelecionado]}>
                     <View style={estilos.detalheDaOpcao}>
                       <Text style={estilos.nomeDaOpcao}>{jardim.nome}</Text>
-                      <Text style={TEXTO.apoio}>{selecionado ? TEXTOS.jardim.quantidadeDePlantas(lista.length) : TEXTOS.jardim.toqueParaAbrir}</Text>
+                      <Text style={TEXTO.apoio}>{textoDaQuantidade(jardim.id, selecionado)}</Text>
                     </View>
                     {selecionado ? <Text style={estilos.seloAtual}>{TEXTOS.jardim.seloAtual}</Text> : null}
                   </Pressable>

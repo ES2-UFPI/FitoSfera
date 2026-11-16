@@ -35,6 +35,14 @@ export class RepositorioDeRegasAsyncStorage implements RepositorioDeRegas {
     return leitura.tipo === 'lista' ? leitura.regas : [];
   }
 
+  async apagar(idPlanta: string, idRega: string): Promise<void> {
+    const leitura = await this.ler(idPlanta);
+    // Lista ilegível fica como está: reescrever apagaria também o que a recuperação ainda pode ler.
+    if (leitura.tipo !== 'lista' || !leitura.regas.some((rega) => rega.id === idRega)) return;
+    const mantidas = leitura.regas.filter((rega) => rega.id !== idRega);
+    await this.armazenamento.setItem(CHAVES.regasDaPlanta(idPlanta), JSON.stringify(mantidas.map(paraRegistro)));
+  }
+
   async apagarDaPlanta(idPlanta: string): Promise<void> {
     await this.armazenamento.removeItem(CHAVES.regasDaPlanta(idPlanta));
     await this.armazenamento.removeItem(CHAVES.regasIlegiveisDaPlanta(idPlanta));

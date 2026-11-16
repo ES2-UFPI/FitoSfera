@@ -1,6 +1,7 @@
 import { Jardim } from '@/dominio/modelos/Jardim';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
+import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
 import { SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
 import { TEXTOS } from '@/textos';
 
@@ -13,10 +14,19 @@ export class SensorJaEmUso extends Error {
 
 export class GerenciarJardins {
   constructor(private readonly jardins: RepositorioDeJardins, private readonly gerador: GeradorDeIdentificador,
-    private readonly sensores?: { listarPareados(): Promise<readonly SensorPareado[]> }) {}
+    private readonly sensores?: { listarPareados(): Promise<readonly SensorPareado[]> },
+    private readonly plantas?: Pick<RepositorioDePlantas, 'listar'>) {}
 
   listar(): Promise<readonly Jardim[]> {
     return this.jardins.listar();
+  }
+
+  /** Quantas plantas cada jardim tem, pelo id do jardim. Jardim sem planta não aparece no mapa. */
+  async contarPlantas(): Promise<ReadonlyMap<string, number>> {
+    const contagem = new Map<string, number>();
+    for (const planta of (await this.plantas?.listar()) ?? [])
+      contagem.set(planta.idJardim, (contagem.get(planta.idJardim) ?? 0) + 1);
+    return contagem;
   }
 
   obterSelecionado(): Promise<string> {

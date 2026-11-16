@@ -16,6 +16,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToqueNaNotificacao, ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
@@ -123,6 +124,11 @@ export class RepositorioDeRegasEmMemoria implements RepositorioDeRegas {
       .sort((a, b) => b.regadaEm.getTime() - a.regadaEm.getTime());
   }
 
+  async apagar(idPlanta: string, idRega: string) {
+    this.salvas.splice(0, this.salvas.length,
+      ...this.salvas.filter((rega) => rega.idPlanta !== idPlanta || rega.id !== idRega));
+  }
+
   async apagarDaPlanta(idPlanta: string) {
     this.salvas.splice(0, this.salvas.length, ...this.salvas.filter((rega) => rega.idPlanta !== idPlanta));
   }
@@ -147,6 +153,11 @@ export class RepositorioDeColheitasEmMemoria implements RepositorioDeColheitas {
     return this.salvas
       .filter((registro) => registro.idPlanta === idPlanta)
       .sort((a, b) => b.colhidaEm.getTime() - a.colhidaEm.getTime());
+  }
+
+  async apagar(idPlanta: string, idColheita: string) {
+    this.salvas.splice(0, this.salvas.length,
+      ...this.salvas.filter((registro) => registro.idPlanta !== idPlanta || registro.id !== idColheita));
   }
 
   async apagarDaPlanta(idPlanta: string) {
@@ -500,7 +511,7 @@ export function criarContainerDeTeste(
   const luz = new RegistroDeLuzEmMemoria();
   if (opcoes.luz) luz.definir(opcoes.luz.periodos, opcoes.luz.ultimoContato);
   const container: Container = {
-    gerenciarJardins: new GerenciarJardins(jardins, gerador),
+    gerenciarJardins: new GerenciarJardins(jardins, gerador, undefined, plantas),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, leituras, relogio),
     obterLeituraAtual: new ObterLeituraAtual(leituras),
@@ -517,6 +528,7 @@ export function criarContainerDeTeste(
     ),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
+    apagarRegistros: new ApagarRegistros(regas, colheitas),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
     estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
     relogio,

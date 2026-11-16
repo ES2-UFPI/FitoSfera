@@ -58,7 +58,7 @@ test('digitação rápida espera o debounce e pesquisa somente o último termo',
 
   await act(async () => jest.advanceTimersByTime(1));
   expect(executar).toHaveBeenCalledTimes(1);
-  expect(executar).toHaveBeenCalledWith({ termo: 'tom', filtro: 'todas', ordem: 'mais-faceis-primeiro' });
+  expect(executar).toHaveBeenCalledWith({ termo: 'tom', filtro: 'todas' });
 
 });
 
@@ -148,7 +148,6 @@ describe('o nível de dificuldade ao lado da espécie', () => {
 });
 
 describe('o controle de dificuldade da busca', () => {
-  /** Alfabética e "mais fáceis primeiro" dão ordens opostas aqui, senão o teste da ordem não provaria nada. */
   const especies = [
     especieCom('Alface', 1, 18, { manejo: true }), //      2 + 2 + 1 = 5 → exigente
     especieCom('Boldo', 2, 12, { encharcamento: true }), // 2 + 1 + 1 = 4 → médio
@@ -158,25 +157,44 @@ describe('o controle de dificuldade da busca', () => {
   const marcada = (modo: string) =>
     screen.getByTestId(`opcao-da-busca-${modo}`).props.accessibilityState?.checked;
 
-  test('abre com "Mais fáceis primeiro" escolhida', async () => {
+  test('as opções são Todas, Fáceis, Médias e Exigentes, e abre em "Todas", em ordem alfabética', async () => {
     renderizarApp({ url: '/cadastro', especies });
-    await screen.findAllByTestId('resultado-especie');
-    expect(marcada('mais-faceis-primeiro')).toBe(true);
-    expect(marcada('todas')).toBe(false);
-    expect(marcada('faceis')).toBe(false);
-  });
-
-  test('o padrão põe as mais fáceis no topo e as exigentes no fim', async () => {
-    renderizarApp({ url: '/cadastro', especies });
-    expect(await nomesListados()).toEqual(['Cacto', 'Boldo', 'Alface']);
-  });
-
-  test('"Todas" volta para a ordem alfabética', async () => {
-    renderizarApp({ url: '/cadastro', especies });
-    await screen.findAllByTestId('resultado-especie');
-    fireEvent.press(screen.getByTestId('opcao-da-busca-todas'));
-    await waitFor(async () => expect(await nomesListados()).toEqual(['Alface', 'Boldo', 'Cacto']));
+    expect(await nomesListados()).toEqual(['Alface', 'Boldo', 'Cacto']);
+    expect(screen.getAllByRole('radio').map((opcao) => opcao.props.accessibilityLabel)).toEqual([
+      'Todas',
+      'Fáceis',
+      'Médias',
+      'Exigentes',
+    ]);
     expect(marcada('todas')).toBe(true);
+    expect(screen.queryByText('Mais fáceis primeiro')).toBeNull();
+  });
+
+  test('"Médias" mostra só as de nível médio', async () => {
+    renderizarApp({ url: '/cadastro', especies });
+    await screen.findAllByTestId('resultado-especie');
+    fireEvent.press(screen.getByTestId('opcao-da-busca-medias'));
+    await waitFor(async () => expect(await nomesListados()).toEqual(['Boldo']));
+    expect(marcada('medias')).toBe(true);
+  });
+
+  test('"Exigentes" mostra só as exigentes', async () => {
+    renderizarApp({ url: '/cadastro', especies });
+    await screen.findAllByTestId('resultado-especie');
+    fireEvent.press(screen.getByTestId('opcao-da-busca-exigentes'));
+    await waitFor(async () => expect(await nomesListados()).toEqual(['Alface']));
+  });
+
+  test('com "Médias" ou "Exigentes", a lista vazia também culpa o filtro', async () => {
+    renderizarApp({ url: '/cadastro', especies });
+    await screen.findAllByTestId('resultado-especie');
+    fireEvent.press(screen.getByTestId('opcao-da-busca-medias'));
+    fireEvent.changeText(screen.getByPlaceholderText('Nome da planta'), 'cacto');
+    expect(await screen.findByText(/Nenhuma planta de dificuldade média/)).toBeTruthy();
+
+    fireEvent.press(screen.getByTestId('opcao-da-busca-exigentes'));
+    expect(await screen.findByText(/Nenhuma planta exigente/)).toBeTruthy();
+    expect(screen.queryByText('Não encontramos essa planta na nossa lista de espécies.')).toBeNull();
   });
 
   test('"Fáceis" esconde a média e a exigente', async () => {

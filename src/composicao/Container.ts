@@ -16,6 +16,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { ToquesNaNotificacao } from '@/aplicacao/portas/ToquesNaNotificacao';
@@ -37,6 +38,7 @@ export interface Container {
   readonly excluirPlanta: ExcluirPlanta;
   readonly registrarRega: RegistrarRega;
   readonly registrarColheita: RegistrarColheita;
+  readonly apagarRegistros: ApagarRegistros;
   readonly compararRendimento: CompararRendimento;
   readonly estimadorDeColheita: EstimadorDeColheita;
   readonly relogio: Relogio;

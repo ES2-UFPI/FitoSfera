@@ -4,6 +4,9 @@ import { Leitura } from '@/dominio/modelos/Leitura';
 import { FontesDeJardim } from '@/dominio/portas/FontesDeJardim';
 import { RepositorioDeJardinsEmMemoria, SensorFixo } from '../apoio/fakes';
 
+/** Os jardins dos testes têm sensor: jardim sem sensor nem é consultado (último teste). */
+const PRINCIPAL_COM_SENSOR = { ...JARDIM_PRINCIPAL, idSensor: 'sensor-da-sala' };
+
 const leitura: Leitura = {
   temperaturaCelsius: 24,
   umidadePercentual: 55,
@@ -12,8 +15,8 @@ const leitura: Leitura = {
 };
 
 test('atualiza cada jardim sem deixar a falha de uma fonte interromper as demais', async () => {
-  const jardimDoQuintal = { ...JARDIM_PRINCIPAL, id: 'quintal', nome: 'Quintal' };
-  const jardins = new RepositorioDeJardinsEmMemoria([JARDIM_PRINCIPAL, jardimDoQuintal]);
+  const jardimDoQuintal = { ...JARDIM_PRINCIPAL, id: 'quintal', nome: 'Quintal', idSensor: 'sensor-do-quintal' };
+  const jardins = new RepositorioDeJardinsEmMemoria([PRINCIPAL_COM_SENSOR, jardimDoQuintal]);
   const sensorPrincipal = new SensorFixo(leitura);
   const sensorDoQuintal = new SensorFixo('falha');
   const fontes: FontesDeJardim = {
@@ -35,7 +38,7 @@ test('atualiza cada jardim sem deixar a falha de uma fonte interromper as demais
 test('uma execução posterior continua atualizando jardins depois de uma falha de rede', async () => {
   const sensor = new SensorFixo(leitura);
   const fontes: FontesDeJardim = { obter: jest.fn(async () => sensor) };
-  const jardins = new RepositorioDeJardinsEmMemoria();
+  const jardins = new RepositorioDeJardinsEmMemoria([PRINCIPAL_COM_SENSOR]);
   const atualizar = new AtualizarLeituras(jardins, fontes);
   const atualizarLeitura = jest.spyOn(sensor, 'atualizarLeitura');
   atualizarLeitura.mockRejectedValueOnce(new Error('rede indisponível'));
@@ -48,8 +51,8 @@ test('uma execução posterior continua atualizando jardins depois de uma falha 
 });
 
 test('pede uma medição nova somente para o jardim solicitado', async () => {
-  const jardimDoQuintal = { ...JARDIM_PRINCIPAL, id: 'quintal', nome: 'Quintal' };
-  const jardins = new RepositorioDeJardinsEmMemoria([JARDIM_PRINCIPAL, jardimDoQuintal]);
+  const jardimDoQuintal = { ...JARDIM_PRINCIPAL, id: 'quintal', nome: 'Quintal', idSensor: 'sensor-do-quintal' };
+  const jardins = new RepositorioDeJardinsEmMemoria([PRINCIPAL_COM_SENSOR, jardimDoQuintal]);
   const sensorPrincipal = new SensorFixo(leitura);
   const sensorDoQuintal = new SensorFixo(leitura);
   const fontes: FontesDeJardim = {
@@ -63,4 +66,21 @@ test('pede uma medição nova somente para o jardim solicitado', async () => {
 
   expect(atualizarPrincipal).not.toHaveBeenCalled();
   expect(atualizarQuintal).toHaveBeenCalledTimes(1);
+});
+
+test('jardim sem sensor não tem o que atualizar: não consulta fonte nenhuma e não conta como falha', async () => {
+  const varanda = { ...JARDIM_PRINCIPAL, id: 'varanda', nome: 'Varanda', idSensor: null };
+  const jardins = new RepositorioDeJardinsEmMemoria([PRINCIPAL_COM_SENSOR, varanda]);
+  const sensor = new SensorFixo(leitura);
+  const fontes: FontesDeJardim = { obter: jest.fn(async () => sensor) };
+  const aviso = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+  const atualizar = new AtualizarLeituras(jardins, fontes);
+
+  await expect(atualizar.executar()).resolves.toEqual({ houveFalha: false });
+  await expect(atualizar.executar('varanda')).resolves.toEqual({ houveFalha: false });
+
+  expect(fontes.obter).toHaveBeenCalledTimes(1);
+  expect(fontes.obter).toHaveBeenCalledWith(PRINCIPAL_COM_SENSOR.id);
+  expect(aviso).not.toHaveBeenCalled();
+  aviso.mockRestore();
 });

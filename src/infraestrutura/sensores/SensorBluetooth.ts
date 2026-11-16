@@ -24,7 +24,7 @@ export interface GuardaDoSensorPareado {
 export const ESPERA_INICIAL_PARA_RECONECTAR_MS = 5_000;
 export const ESPERA_MAXIMA_PARA_RECONECTAR_MS = 60_000;
 
-/** Permite perder uma publicação automática de cinco minutos sem pedir outra medição imediatamente. */
+/** Permite perder uma publicação automática (uma por minuto) sem pedir outra medição imediatamente. */
 export const IDADE_MAXIMA_DA_LEITURA_GUARDADA_MS = CONTRATO_DO_SENSOR.idadeMaximaDaLeituraGuardadaMs;
 
 /**

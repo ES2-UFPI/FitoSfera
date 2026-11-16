@@ -330,6 +330,25 @@ describe('os cuidados da espécie no detalhe', () => {
     ).toBeTruthy();
   });
 
+  test('toda espécie mostra rega, sol e temperatura; a fácil também', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1' });
+    expect(await screen.findByText('Regar a cada 3 dias')).toBeTruthy();
+    expect(screen.getByText('Sol parcial: 3 a 6 horas de sol direto por dia')).toBeTruthy();
+    expect(screen.getByText('Prefere entre 18 e 28 °C')).toBeTruthy();
+    expect(
+      screen.getByLabelText(
+        'Regar a cada 3 dias. Sol parcial: 3 a 6 horas de sol direto por dia. Prefere entre 18 e 28 graus Celsius.',
+      ),
+    ).toBeTruthy();
+  });
+
+  test('numa espécie exigente, os cuidados vêm antes do porquê da dificuldade', async () => {
+    renderizarApp({ plantas: [plantaDeTeste()], especies: [tomateExigente], url: '/planta/p1' });
+    expect(await screen.findByText('Regar todo dia')).toBeTruthy();
+    expect(screen.getByText('Sol pleno: 6 horas ou mais de sol direto por dia')).toBeTruthy();
+    expect(screen.getByText('POR QUE É EXIGENTE')).toBeTruthy();
+  });
+
   test('espécie fora do catálogo não mostra o cartão', async () => {
     renderizarApp({ plantas: [plantaDeTeste({ idEspecie: 'sumiu' })], url: '/planta/p1' });
     expect(await screen.findByText('Espécie desconhecida')).toBeTruthy();

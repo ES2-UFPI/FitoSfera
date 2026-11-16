@@ -18,6 +18,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
 import { GeradorDeIdentificadorAleatorio } from '@/infraestrutura/identificador/GeradorDeIdentificadorAleatorio';
@@ -74,7 +75,7 @@ export function criarContainer(): Container {
 
   return {
     gerenciarJardins: new GerenciarJardins(jardins, gerador,
-      sensor instanceof CentralDeSensoresBluetooth ? sensor : undefined),
+      sensor instanceof CentralDeSensoresBluetooth ? sensor : undefined, plantas),
     listarJardim: new ListarJardimVirtual(plantas, especies, sensor, relogio, fontes),
     obterPlanta: new ObterPlantaDoJardim(plantas, especies, sensor, relogio, fontes),
     obterLeituraAtual: new ObterLeituraAtual(sensor, fontes),
@@ -85,6 +86,7 @@ export function criarContainer(): Container {
     excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
+    apagarRegistros: new ApagarRegistros(regas, colheitas),
     compararRendimento: new CompararRendimento(plantas, colheitas, relogio),
     estimadorDeColheita: new EstimadorDeColheitaPorCondicoes(),
     relogio,

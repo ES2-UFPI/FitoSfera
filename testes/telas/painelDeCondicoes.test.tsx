@@ -1,3 +1,4 @@
+import { StyleSheet } from 'react-native';
 import { render, screen } from '@testing-library/react-native';
 import { PainelDeCondicoes } from '@/apresentacao/componentes/PainelDeCondicoes';
 import { CORES } from '@/apresentacao/tema';
@@ -196,4 +197,38 @@ test('sem faixa recomendada não indica situação', () => {
   render(<PainelDeCondicoes estado={{ tipo: 'leitura', leitura }} />);
 
   expect(screen.queryByText(/do ideal$/)).toBeNull();
+});
+
+test('leitura da noite mostra as faixas da noite e não cobra luz', () => {
+  const leituraANoite = { umidadePercentual: 78, temperaturaCelsius: 16, luminosidadeLux: 0, medidaEm: new Date(2026, 9, 17, 22, 5) };
+  render(
+    <PainelDeCondicoes
+      estado={{
+        tipo: 'leitura',
+        leitura: leituraANoite,
+        noite: true,
+        faixasRecomendadas: {
+          umidadePercentual: { minimo: 40, maximo: 80 },
+          temperaturaCelsius: { minimo: 13, maximo: 23 },
+        },
+      }}
+    />,
+  );
+
+  expect(screen.getByText('Ideal à noite: 40–80%')).toBeTruthy();
+  expect(screen.getByText('Ideal à noite: 13–23 °C')).toBeTruthy();
+  expect(screen.getByText('Sem meta à noite')).toBeTruthy();
+  expect(screen.getByText('☾ Noite')).toBeTruthy();
+  expect(screen.queryByText(/Abaixo do ideal/)).toBeNull();
+  expect(
+    screen.getByLabelText('Temperatura: 16 graus Celsius. Faixa ideal à noite: 13 a 23 graus Celsius. Dentro do ideal.'),
+  ).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 0 lux. À noite, a luz não tem meta.')).toBeTruthy();
+});
+
+test('os rótulos das medidas usam letra menos espaçada, para "TEMPERATURA" caber sem cortar a fonte do sistema', () => {
+  render(<PainelDeCondicoes estado={{ tipo: 'sem-leitura', faixasRecomendadas: { temperaturaCelsius: { minimo: 18, maximo: 28 } } }} />);
+  const rotulo = screen.getByText('TEMPERATURA');
+  expect(rotulo.props.numberOfLines).toBeUndefined();
+  expect(StyleSheet.flatten(rotulo.props.style).letterSpacing).toBeLessThan(1);
 });

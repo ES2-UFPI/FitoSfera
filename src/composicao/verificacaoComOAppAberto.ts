@@ -4,7 +4,10 @@ interface ComAvaliacaoDeLeitura {
   readonly avaliarLeitura: { executar(): Promise<unknown> };
 }
 
-/** O firmware publica automaticamente a cada cinco minutos. */
+/**
+ * Os avisos não precisam de mais que isto: um desvio só vira aviso depois de meia hora. As leituras de minuto em
+ * minuto do firmware chegam sozinhas pela notificação; esta verificação só garante a avaliação.
+ */
 export const INTERVALO_DA_VERIFICACAO_COM_O_APP_ABERTO_MS = 5 * 60_000;
 
 /**

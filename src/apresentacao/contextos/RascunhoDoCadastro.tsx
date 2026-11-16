@@ -36,7 +36,11 @@ export function ProvedorDoRascunho({
   const [aparencia, definirAparencia] = useState<Aparencia>(inicial?.aparencia ?? APARENCIA_INICIAL);
   const edicao = inicial?.edicao ?? null;
 
-  const escolherEspecie = useCallback((escolhida: EspecieVegetal) => definirEspecie(escolhida), []);
+  // A forma começa pela espécie: quem dá frutos já aparece com frutos, e o resto parte da aparência inicial.
+  const escolherEspecie = useCallback((escolhida: EspecieVegetal) => {
+    definirEspecie(escolhida);
+    definirAparencia((atual) => ({ ...atual, forma: escolhida.frutifera ? 'frutifera' : APARENCIA_INICIAL.forma }));
+  }, []);
   const mudarAparencia = useCallback(
     (parcial: Partial<Aparencia>) => definirAparencia((atual) => ({ ...atual, ...parcial })),
     [],

@@ -17,6 +17,12 @@ import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 export const ATRASO_DA_BUSCA_MS = 300;
 
 /** Passo 1 do cadastro: achar a espécie no catálogo pelo nome. */
+const LISTA_VAZIA_DO_FILTRO: Record<Exclude<ModoDaBusca, 'todas'>, string> = {
+  faceis: TEXTOS.cadastro.nenhumaFacil,
+  medias: TEXTOS.cadastro.nenhumaMedia,
+  exigentes: TEXTOS.cadastro.nenhumaExigente,
+};
+
 export function TelaBuscarEspecie() {
   const { container } = useAplicativo();
   const { escolherEspecie } = useRascunho();
@@ -25,8 +31,7 @@ export function TelaBuscarEspecie() {
   const [termo, definirTermo] = useState('');
   /** O termo que já valeu o debounce. Separado de `termo` para a troca de modo não esperar a digitação. */
   const [termoAplicado, definirTermoAplicado] = useState('');
-  // A tela abre com as mais fáceis no topo: é o que ajuda quem está decidindo por onde começar.
-  const [modo, definirModo] = useState<ModoDaBusca>('mais-faceis-primeiro');
+  const [modo, definirModo] = useState<ModoDaBusca>('todas');
   const [resultados, definirResultados] = useState<readonly EspecieVegetal[] | null>(null);
 
   // A lista inicial e a limpeza do campo são imediatas; somente a digitação espera o debounce.
@@ -62,8 +67,8 @@ export function TelaBuscarEspecie() {
   const vazio =
     resultados === null || resultados.length > 0
       ? null
-      : modo === 'faceis'
-        ? TEXTOS.cadastro.nenhumaFacil
+      : modo !== 'todas'
+        ? LISTA_VAZIA_DO_FILTRO[modo]
         : termoAplicado.trim() !== ''
           ? TEXTOS.cadastro.plantaForaDoCatalogo
           : null;
