@@ -17,6 +17,7 @@ import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 import { CartaoDosLembretes } from '../lembretes/CartaoDosLembretes';
 import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
+import { CartaoDaDemonstracao } from '../demonstracao/CartaoDaDemonstracao';
 
 type Grandeza = 'umidade' | 'temperatura' | 'luminosidade';
 type IconeDaGrandeza = ComponentType<{
@@ -111,7 +112,8 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
 }
 
 export function TelaAjustes() {
-  const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
+  const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim, modoDeDemonstracao } =
+    useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
   // Uma ação principal por tela: sem sensor pareado, parear é o mais urgente; senão, o horário dos lembretes.
@@ -120,6 +122,7 @@ export function TelaAjustes() {
   const margens = useSafeAreaInsets();
   const jardimAtual = jardins.find((jardim) => jardim.id === idJardimSelecionado);
   const simuladorAssociado = jardimAtual?.idSensor === 'simulado' || jardimAtual?.idSensor === `simulado:${idJardimSelecionado}`;
+  const temSensorNoJardim = Boolean(jardimAtual?.idSensor) && !simuladorAssociado;
 
   async function alternarAssociacaoSimulada() {
     if (simuladorAssociado) await container.gerenciarJardins.desassociar(idJardimSelecionado);
@@ -149,6 +152,9 @@ export function TelaAjustes() {
             aoAlternarAssociacao={alternarAssociacaoSimulada}
             aoAtualizarLeituras={recarregarJardim}
           />
+        ) : null}
+        {modoDeDemonstracao && container.simularSolNaDemonstracao ? (
+          <CartaoDaDemonstracao simularSol={container.simularSolNaDemonstracao} temSensorNoJardim={temSensorNoJardim} />
         ) : null}
       </ScrollView>
     </FundoAconchegante>

@@ -18,6 +18,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
 import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
@@ -97,6 +98,7 @@ export function criarContainer(): Container {
     obterLuzDoDia,
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
+    simularSolNaDemonstracao: sensor instanceof CentralDeSensoresBluetooth ? new SimularSolNaDemonstracao(luz, relogio) : null,
     toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias, {
       desviosEmAberto,

@@ -15,6 +15,15 @@ export const UMOL_POR_SEGUNDO_POR_LUX = 0.0185;
  */
 export const TOLERANCIA_SEM_CONTATO_MS = 20 * 60_000;
 
+/**
+ * Um período incompleto (o sensor reiniciou no meio) só perde a luz que o sensor contou antes de reiniciar e não
+ * chegou a enviar. Num reinício rápido isso é um minuto de luz, no máximo: não vale marcar o dia inteiro como
+ * incompleto. Só um período incompleto mais longo que a tolerância sem contato esconde luz de verdade.
+ */
+export function periodoEscondeLuz(periodo: PeriodoDeLuz): boolean {
+  return periodo.incompleta && periodo.fim.getTime() - periodo.inicio.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+}
+
 /** Um período sem contato que atravessa a meia-noite e cobre mais horas de sol que isto não dá para dividir. */
 export const HORAS_DE_SOL_PARA_DIVIDIR = 3;
 
@@ -33,6 +42,8 @@ export interface LuzDoDia {
   readonly progresso: number | null;
   /** Estimativa da luz do dia inteiro, pelo ritmo típico do sol. */
   readonly projecaoDli: number | null;
+  /** Como a luz recebida até agora já se compara com a meta: depois de "ideal", a planta já teve a luz do dia. */
+  readonly situacaoAtual: SituacaoDaMedicao | null;
   readonly situacaoProjetada: SituacaoDaMedicao | null;
 }
 
@@ -65,7 +76,7 @@ export function calcularLuzDoDia({
     const fracao = fracaoNoDia(periodo, inicioDoDia, fimDoDia);
     if (fracao === 0) continue;
     luxMinutos += periodo.luxMinutos * fracao;
-    if (periodo.incompleta || (fracao < 1 && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR))
+    if (periodoEscondeLuz(periodo) || (fracao < 1 && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR))
       incompleta = true;
   }
 
@@ -77,6 +88,7 @@ export function calcularLuzDoDia({
     incompleta,
     progresso: meta === null || meta.minimo <= 0 ? null : dli / meta.minimo,
     projecaoDli,
+    situacaoAtual: meta === null || meta.minimo <= 0 ? null : compararMedicaoComFaixa(dli, meta),
     situacaoProjetada: meta === null || projecaoDli === null ? null : compararMedicaoComFaixa(projecaoDli, meta),
   };
 }

@@ -16,6 +16,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
 import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -50,6 +51,8 @@ export interface Container {
   readonly controleDoSensorDeDesenvolvimento: ControleDoSensorDeDesenvolvimento | null;
   readonly toquesNaNotificacao: ToquesNaNotificacao;
   readonly pareamentoDoSensor: PareamentoDoSensor | null;
+  /** Só com o sensor Bluetooth; a tela mostra o botão depois do código secreto nos Ajustes. */
+  readonly simularSolNaDemonstracao: SimularSolNaDemonstracao | null;
   readonly avaliarLeitura: AvaliarLeitura;
   readonly ajustarPreferencias: AjustarPreferencias;
   readonly atualizarLeituras: AtualizarLeituras;

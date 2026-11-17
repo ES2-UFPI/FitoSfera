@@ -382,6 +382,11 @@ export const TEXTOS = {
       ideal: 'No ritmo de hoje, a planta deve receber a luz de que precisa.',
       acima: 'No ritmo de hoje, a planta deve receber mais luz do que o recomendado.',
     },
+    jaRecebeu: {
+      ideal: 'A planta já recebeu a luz de que precisa hoje.',
+      vaiPassar: 'A planta já recebeu a luz de que precisa. No ritmo de hoje, deve passar do recomendado.',
+      acima: 'A planta já recebeu mais luz do que o recomendado hoje.',
+    },
     cedoParaSaber: 'Ainda é cedo para saber como o dia vai terminar.',
     incompletos: 'Dados de hoje incompletos',
     parteNaoContada: 'O sensor ficou um tempo sem falar com o app, então parte da luz de hoje não foi contada.',
@@ -556,6 +561,21 @@ export const TEXTOS = {
 
   ajustes: {
     titulo: 'Ajustes',
+  },
+
+  demonstracao: {
+    titulo: 'Modo de demonstração',
+    explicacao: (lux: string) =>
+      `A luz das 7h até o sensor ligar é inventada (${lux} lux), só para apresentar o app. Dali em diante vale a luz medida pelo sensor.`,
+    simularSol: 'Simular sol desde as 7h',
+    simulando: 'Preenchendo a luz…',
+    preenchido: 'Pronto: a luz de hoje começa às 7h.',
+    jaPreenchido: 'A luz de hoje já está preenchida desde as 7h.',
+    semLeituraHoje: 'Ligue o sensor e espere a primeira leitura de hoje.',
+    antesDas7h: 'Ainda não são 7h: não há luz para preencher.',
+    semSensorNoJardim: 'Associe o sensor a este jardim para usar a demonstração.',
+    falha: 'Não deu para preencher a luz. Tente de novo.',
+    desligar: 'Desligar o modo',
   },
 
   simulador: {

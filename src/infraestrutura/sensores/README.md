@@ -57,6 +57,26 @@ Para ter um dia inteiro de luz na hora, o botão **Simular sol desde as 7h** (ab
 jardim) grava períodos de 5 minutos com sol forte de 40.000 lux (`LUX_DO_SOL_FORTE`) das 7h até agora, e o contador
 do simulador continua somando dali.
 
+**Modo de demonstração com o sensor físico:** serve para apresentar o app quando o sensor só foi ligado na hora da
+apresentação, depois das 7h. Vinte toques seguidos no botão **Ajustes** da barra de abas, com no máximo 1,5 s entre
+um e outro, mostram o cartão "Modo de demonstração" no fim dos Ajustes. Nada avisa a contagem. O modo fica só na
+memória: fechar o app desliga, e "Desligar o modo" também.
+
+O botão **Simular sol desde as 7h** do cartão
+([`SimularSolNaDemonstracao`](../../aplicacao/casos-de-uso/SimularSolNaDemonstracao.ts)) forja sol de 40.000 lux das 7h
+até o ponto em que a luz medida pelo sensor começa hoje, e mantém essa luz medida. A regra está em
+[`LuzDeDemonstracao.ts`](../../dominio/regras/LuzDeDemonstracao.ts):
+
+- A luz medida é a sequência de períodos completos e encadeados que termina na marca do contador. Ela para no
+  reinício do sensor, num buraco ou às 7h.
+- A marca não muda, então o próximo pacote do sensor continua a conta normalmente.
+- Os períodos incompletos de hoje, como o do reinício ao ligar o sensor, saem, para o cartão "Luz de hoje" não marcar
+  o dia como incompleto.
+- Sem nenhuma leitura do sensor hoje, ou antes das 7h, nada é gravado. Apertar de novo não forja duas vezes.
+
+O cartão só existe no app com o sensor Bluetooth (`EXPO_PUBLIC_SENSOR=bluetooth` ou o build de produção). O botão
+fica desligado quando o jardim selecionado não tem um sensor físico associado.
+
 ## Sensor físico por Bluetooth
 
 **Biblioteca:** [`react-native-ble-plx`](https://github.com/dotintent/react-native-ble-plx). É a biblioteca BLE

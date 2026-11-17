@@ -1,11 +1,13 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconeAjustes, IconeJardim } from '@/apresentacao/componentes/IconesDasAbas';
+import { useAplicativo } from '@/apresentacao/contextos/ContextoDoAplicativo';
 import { ALTURA_DA_BARRA_DE_ABAS, CORES, FONTES } from '@/apresentacao/tema';
 import { TEXTOS } from '@/textos';
 
 export default function LayoutDasAbas() {
   const margens = useSafeAreaInsets();
+  const { registrarToqueNaAbaAjustes } = useAplicativo();
 
   return (
     <Tabs
@@ -34,9 +36,11 @@ export default function LayoutDasAbas() {
       */}
       {/* O expo-router cria uma aba para cada arquivo da pasta: href null tira esta da barra. */}
       <Tabs.Screen name="ambiente" options={{ href: null }} />
+      {/* Os toques no botão Ajustes contam para o código secreto do modo de demonstração, sem nenhum aviso. */}
       <Tabs.Screen
         name="ajustes"
         options={{ title: TEXTOS.abas.ajustes, tabBarIcon: ({ color }) => <IconeAjustes cor={color} /> }}
+        listeners={{ tabPress: registrarToqueNaAbaAjustes }}
       />
     </Tabs>
   );

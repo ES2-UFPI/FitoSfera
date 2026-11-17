@@ -82,6 +82,31 @@ test('reinício do sensor no dia deixa o dia incompleto, sem inventar luz', () =
   expect(luz.incompleta).toBe(true);
 });
 
+test('reinício rápido do sensor não deixa o dia incompleto: perde no máximo o último minuto de luz', () => {
+  const luz = calcularLuzDoDia({
+    periodos: [
+      periodo(hora(10, 7), hora(10, 9), 1),
+      periodo(hora(10, 9), hora(10, 9, 1), 0, true),
+      periodo(hora(10, 9, 1), hora(10, 11), 1),
+    ],
+    conhecidaAte: hora(10, 11),
+    meta: META,
+    agora: hora(10, 11),
+  });
+  expect(luz.dli).toBeCloseTo(2);
+  expect(luz.incompleta).toBe(false);
+});
+
+test('reinício que deixa o sensor mais de 20 minutos sem contar luz deixa o dia incompleto', () => {
+  const luz = calcularLuzDoDia({
+    periodos: [periodo(hora(10, 7), hora(10, 9), 1), periodo(hora(10, 9), hora(10, 9, 21), 0, true)],
+    conhecidaAte: hora(10, 9, 21),
+    meta: META,
+    agora: hora(10, 9, 22),
+  });
+  expect(luz.incompleta).toBe(true);
+});
+
 test('sem contato recente com o sensor, a luz depois do último contato é desconhecida e o dia fica incompleto', () => {
   const luz = calcularLuzDoDia({
     periodos: [periodo(hora(10, 8), hora(10, 10), 2)],
@@ -161,6 +186,7 @@ describe('falta de luz no fim do dia (#91)', () => {
     incompleta: false,
     progresso: 0.33,
     projecaoDli: 4.3,
+    situacaoAtual: 'abaixo',
     situacaoProjetada: 'abaixo',
     ...parcial,
   });
