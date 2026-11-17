@@ -580,6 +580,13 @@ export const TEXTOS = {
     voltarAoHorarioAtual: 'Voltar ao horário atual',
     explicacaoDoRelogio:
       'Avance o tempo para ver as leituras mudarem e testar dados antigos. Isso não altera o horário do app.',
+    luzDoDia: 'Luz acumulada do dia',
+    explicacaoDaLuzDoDia: (lux: string) =>
+      `Preenche a luz de hoje com sol forte (${lux} lux) desde as 7h, para testar o cartão "Luz de hoje" e o aviso de falta de luz. Depois disso, o simulador continua somando a luz.`,
+    simularSol: 'Simular sol desde as 7h',
+    solSimulado: 'Pronto: a luz de hoje foi preenchida desde as 7h.',
+    antesDoSol: 'Ainda não são 7h no relógio da simulação: não há luz para preencher.',
+    usarParaSimularSol: 'Use o simulador neste jardim para preencher a luz do dia.',
     oQueEAutomatico: 'O que significa automático?',
     explicacaoDoAutomatico:
       'A condição muda sozinha ao longo do dia, como num dia de verdade. Você pode deixar uma medida automática e escolher só as outras.',

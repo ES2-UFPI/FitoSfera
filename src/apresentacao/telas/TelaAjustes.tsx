@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ConfiguracaoDoSensorDeDesenvolvimento,
   ControleDoSensorDeDesenvolvimento,
+  LUX_DO_SOL_FORTE,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { TEXTOS } from '@/textos';
@@ -176,6 +177,7 @@ function CartaoDoSensorDeDesenvolvimento({
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
   const [falhaAoAssociar, definirFalhaAoAssociar] = useState(false);
   const [horarioSimulado, definirHorarioSimulado] = useState(() => controle.obterHorarioSimulado(idJardim));
+  const [resultadoDoSol, definirResultadoDoSol] = useState<string | null>(null);
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -206,6 +208,13 @@ function CartaoDoSensorDeDesenvolvimento({
   function voltarAoHorarioAtual() {
     definirHorarioSimulado(controleAtivo.redefinirHorarioSimulado(idJardim));
     void aoAtualizarLeituras();
+  }
+
+  async function simularSol() {
+    if (controleAtivo.simularSolDesdeAs7h === undefined) return;
+    const preenchido = await controleAtivo.simularSolDesdeAs7h(idJardim);
+    definirResultadoDoSol(preenchido ? TEXTOS.simulador.solSimulado : TEXTOS.simulador.antesDoSol);
+    if (preenchido) void aoAtualizarLeituras();
   }
 
   return (
@@ -265,6 +274,22 @@ function CartaoDoSensorDeDesenvolvimento({
         </View>
         <BotaoPrincipal titulo={TEXTOS.simulador.voltarAoHorarioAtual} variante="secundaria" aoTocar={voltarAoHorarioAtual} />
       </View>
+      {controle.simularSolDesdeAs7h !== undefined ? (
+        <View style={estilos.relogioSimulado}>
+          <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.luzDoDia}</Text>
+          <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDaLuzDoDia(LUX_DO_SOL_FORTE.toLocaleString('pt-BR'))}</Text>
+          <BotaoPrincipal
+            titulo={TEXTOS.simulador.simularSol}
+            variante="secundaria"
+            desabilitado={!simuladorAssociado}
+            aoTocar={() => void simularSol()}
+          />
+          {!simuladorAssociado ? <Text style={TEXTO.apoio}>{TEXTOS.simulador.usarParaSimularSol}</Text> : null}
+          {resultadoDoSol !== null ? (
+            <Text style={TEXTO.apoio} accessibilityLiveRegion="polite">{resultadoDoSol}</Text>
+          ) : null}
+        </View>
+      ) : null}
       <View style={estilos.explicacaoDoAutomatico}>
         <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.oQueEAutomatico}</Text>
         <Text style={TEXTO.apoio}>

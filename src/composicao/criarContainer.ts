@@ -67,7 +67,7 @@ export function criarContainer(): Container {
   const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__, () =>
     criarSensorBluetooth(armazenamento, relogio),
   );
-  const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
+  const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio, luz) : null;
   const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras, luz);
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);

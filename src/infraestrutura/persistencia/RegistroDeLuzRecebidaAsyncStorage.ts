@@ -37,6 +37,23 @@ export class RegistroDeLuzRecebidaAsyncStorage implements RegistroDeLuzRecebida 
     return contagem;
   }
 
+  /**
+   * Só para o simulador de desenvolvimento: troca a luz a partir do início do primeiro período forjado pelos períodos
+   * forjados, e a marca pela do simulador, para as próximas leituras dele continuarem a conta dali.
+   */
+  gravarLuzSimulada(idJardim: string, marca: MarcaDoContadorDeLuz, periodos: readonly PeriodoDeLuz[]): Promise<void> {
+    const gravacao = (this.filas.get(idJardim) ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(async () => {
+        const inicio = periodos[0]?.inicio.getTime() ?? marca.medidaEm.getTime();
+        const anteriores = (await this.ler(idJardim)).periodos.filter((periodo) => periodo.fim.getTime() <= inicio);
+        const todos = [...anteriores, ...periodos].slice(-LIMITE_DE_PERIODOS_DE_LUZ);
+        await this.armazenamento.setItem(CHAVES.luzDoJardim(idJardim), JSON.stringify({ marca, periodos: todos }));
+      });
+    this.filas.set(idJardim, gravacao);
+    return gravacao;
+  }
+
   async listar(idJardim: string): Promise<readonly PeriodoDeLuz[]> {
     return (await this.ler(idJardim)).periodos;
   }
