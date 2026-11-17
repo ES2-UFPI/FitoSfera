@@ -1,3 +1,4 @@
+import { LuzRegistrada, RegistroDaLuzDeDemonstracao } from '@/aplicacao/portas/RegistroDaLuzDeDemonstracao';
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
 import { calcularLuzRecebida, MarcaDoContadorDeLuz, PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
@@ -22,7 +23,7 @@ const SEM_REGISTRO: EstadoDaLuz = { marca: null, periodos: [] };
  * somada com o app fechado não teria com o que ser comparada. Conteúdo ilegível recomeça a contagem: o próximo
  * contador vira o ponto de partida, sem inventar luz.
  */
-export class RegistroDeLuzRecebidaAsyncStorage implements RegistroDeLuzRecebida {
+export class RegistroDeLuzRecebidaAsyncStorage implements RegistroDeLuzRecebida, RegistroDaLuzDeDemonstracao {
   private readonly filas = new Map<string, Promise<void>>();
 
   constructor(private readonly armazenamento: ArmazenamentoChaveValor) {}
@@ -52,6 +53,26 @@ export class RegistroDeLuzRecebidaAsyncStorage implements RegistroDeLuzRecebida 
       });
     this.filas.set(idJardim, gravacao);
     return gravacao;
+  }
+
+  /** Para o modo de demonstração: troca os períodos pelos que `alterar` devolver e mantém a marca do sensor. */
+  alterarPeriodos(
+    idJardim: string,
+    alterar: (registro: LuzRegistrada) => readonly PeriodoDeLuz[] | null,
+  ): Promise<void> {
+    const alteracao = (this.filas.get(idJardim) ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(async () => {
+        const atual = await this.ler(idJardim);
+        const periodos = alterar(atual);
+        if (periodos === null) return;
+        await this.armazenamento.setItem(
+          CHAVES.luzDoJardim(idJardim),
+          JSON.stringify({ marca: atual.marca, periodos: periodos.slice(-LIMITE_DE_PERIODOS_DE_LUZ) }),
+        );
+      });
+    this.filas.set(idJardim, alteracao);
+    return alteracao;
   }
 
   async listar(idJardim: string): Promise<readonly PeriodoDeLuz[]> {

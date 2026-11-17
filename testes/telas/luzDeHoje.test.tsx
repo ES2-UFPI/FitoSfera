@@ -44,6 +44,30 @@ test('acima da meta: avisa que a planta deve receber luz demais', async () => {
   expect(screen.getByText('No ritmo de hoje, a planta deve receber mais luz do que o recomendado.')).toBeTruthy();
 });
 
+test('meta já alcançada: fala no passado, sem prometer o que a planta já recebeu', async () => {
+  abrirDetalhe({ periodos: manhaCom(13), ultimoContato: meioDia });
+
+  expect(await screen.findByText('108%')).toBeTruthy();
+  expect(
+    screen.getByText('A planta já recebeu a luz de que precisa. No ritmo de hoje, deve passar do recomendado.'),
+  ).toBeTruthy();
+});
+
+test('meta alcançada no fim do dia, sem passar do máximo: diz só que a planta já recebeu a luz', async () => {
+  const fimDoDia = new Date(2026, 10, 10, 18, 30);
+  abrirDetalhe({ periodos: manhaCom(14, fimDoDia), ultimoContato: fimDoDia }, { agora: fimDoDia });
+
+  expect(await screen.findByText('117%')).toBeTruthy();
+  expect(screen.getByText('A planta já recebeu a luz de que precisa hoje.')).toBeTruthy();
+});
+
+test('passou do máximo: diz que a planta já recebeu luz demais', async () => {
+  abrirDetalhe({ periodos: manhaCom(17), ultimoContato: meioDia });
+
+  expect(await screen.findByText('142%')).toBeTruthy();
+  expect(screen.getByText('A planta já recebeu mais luz do que o recomendado hoje.')).toBeTruthy();
+});
+
 test('cedo demais para projetar: mostra o progresso sem adivinhar como o dia termina', async () => {
   const cedo = new Date(2026, 10, 10, 7, 0);
   abrirDetalhe({ periodos: manhaCom(0.12, cedo), ultimoContato: cedo }, { agora: cedo });

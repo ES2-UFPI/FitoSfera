@@ -10,8 +10,14 @@ import { Cartao } from './Cartao';
  */
 export const INTERVALO_DA_LUZ_DE_HOJE_MS = 60_000;
 
-/** Como o dia deve terminar, pela projeção; sem projeção (cedo demais), não arrisca. */
+/**
+ * Com a meta já alcançada, fala do que a planta já recebeu; antes disso, de como o dia deve terminar, pela projeção.
+ * Sem projeção (cedo demais), não arrisca.
+ */
 function fraseDoRitmo(luz: LuzDoDia): string {
+  if (luz.situacaoAtual === 'acima') return TEXTOS.luzDeHoje.jaRecebeu.acima;
+  if (luz.situacaoAtual === 'ideal')
+    return luz.situacaoProjetada === 'acima' ? TEXTOS.luzDeHoje.jaRecebeu.vaiPassar : TEXTOS.luzDeHoje.jaRecebeu.ideal;
   return luz.situacaoProjetada === null ? TEXTOS.luzDeHoje.cedoParaSaber : TEXTOS.luzDeHoje.ritmo[luz.situacaoProjetada];
 }
 

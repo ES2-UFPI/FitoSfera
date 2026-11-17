@@ -3,6 +3,7 @@ import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Container } from '@/composicao/Container';
 import { criarContainer } from '@/composicao/criarContainer';
+import { codigoCompleto, ContagemDoCodigo, contarToque } from '../demonstracao/codigoDaDemonstracao';
 
 interface ValorDoAplicativo {
   readonly container: Container;
@@ -17,6 +18,10 @@ interface ValorDoAplicativo {
   /** A edição avisa que salvou; o detalhe da planta consome o aviso uma vez, ao voltar a aparecer. */
   avisarEdicaoSalva(idPlanta: string): void;
   consumirEdicaoSalva(idPlanta: string): boolean;
+  /** Liberado pelo código secreto; só na memória, então fechar o app desliga. */
+  readonly modoDeDemonstracao: boolean;
+  registrarToqueNaAbaAjustes(): void;
+  desligarModoDeDemonstracao(): void;
 }
 
 const ContextoDoAplicativo = createContext<ValorDoAplicativo | null>(null);
@@ -43,6 +48,18 @@ export function ProvedorDoAplicativo({
     edicaoSalva.current = null;
     return true;
   }, []);
+
+  const [modoDeDemonstracao, definirModoDeDemonstracao] = useState(false);
+  const contagemDoCodigo = useRef<ContagemDoCodigo | null>(null);
+  const registrarToqueNaAbaAjustes = useCallback(() => {
+    const contagem = contarToque(contagemDoCodigo.current, Date.now());
+    contagemDoCodigo.current = contagem;
+    if (codigoCompleto(contagem)) {
+      contagemDoCodigo.current = null;
+      definirModoDeDemonstracao(true);
+    }
+  }, []);
+  const desligarModoDeDemonstracao = useCallback(() => definirModoDeDemonstracao(false), []);
 
   const recarregarJardins = useCallback(async () => {
     const [lista, selecionado] = await Promise.all([
@@ -101,8 +118,9 @@ export function ProvedorDoAplicativo({
   const valor = useMemo(() => ({
     container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim,
     recarregarJardins, recarregarJardim, avisarEdicaoSalva, consumirEdicaoSalva,
+    modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao,
   }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim, recarregarJardins, recarregarJardim,
-    avisarEdicaoSalva, consumirEdicaoSalva]);
+    avisarEdicaoSalva, consumirEdicaoSalva, modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao]);
   return <ContextoDoAplicativo.Provider value={valor}>{children}</ContextoDoAplicativo.Provider>;
 }
 

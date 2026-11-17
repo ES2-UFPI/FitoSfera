@@ -16,6 +16,8 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
+import { LuzRegistrada, RegistroDaLuzDeDemonstracao } from '@/aplicacao/portas/RegistroDaLuzDeDemonstracao';
 import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -45,7 +47,7 @@ import { RepositorioDeColheitas } from '@/dominio/portas/RepositorioDeColheitas'
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
-import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
+import { MarcaDoContadorDeLuz, PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
 import { ObterLeiturasRecentes } from '@/aplicacao/casos-de-uso/ObterLeiturasRecentes';
 import { EstimadorDeColheitaPorCondicoes } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
@@ -175,11 +177,26 @@ export class ExclusoesPendentesEmMemoria implements RegistroDeExclusoesPendentes
 
 /** Simula o armazenamento do aparelho recusando a leitura. */
 /** A luz de cada jardim, já contabilizada: o teste diz o que o sensor somou, sem passar por contadores. */
-export class RegistroDeLuzEmMemoria implements RegistroDeLuzRecebida {
+export class RegistroDeLuzEmMemoria implements RegistroDeLuzRecebida, RegistroDaLuzDeDemonstracao {
   private readonly jardins = new Map<string, { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null }>();
+  private readonly marcas = new Map<string, MarcaDoContadorDeLuz>();
 
   definir(periodos: readonly PeriodoDeLuz[], ultimoContato: Date | null, idJardim = ID_JARDIM_PRINCIPAL): void {
     this.jardins.set(idJardim, { periodos, ultimoContato });
+  }
+
+  /** A marca do contador do sensor, que o modo de demonstração lê e nunca troca. */
+  definirMarca(marca: MarcaDoContadorDeLuz, idJardim = ID_JARDIM_PRINCIPAL): void {
+    this.marcas.set(idJardim, marca);
+  }
+
+  async alterarPeriodos(
+    idJardim: string,
+    alterar: (registro: LuzRegistrada) => readonly PeriodoDeLuz[] | null,
+  ): Promise<void> {
+    const atual = this.jardins.get(idJardim) ?? { periodos: [], ultimoContato: null };
+    const periodos = alterar({ marca: this.marcas.get(idJardim) ?? null, periodos: atual.periodos });
+    if (periodos !== null) this.jardins.set(idJardim, { ...atual, periodos });
   }
 
   async registrar(): Promise<void> {}
@@ -540,6 +557,7 @@ export function criarContainerDeTeste(
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
+    simularSolNaDemonstracao: new SimularSolNaDemonstracao(luz, relogio),
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined, preferencias),
     ajustarPreferencias: new AjustarPreferencias(preferencias),
     atualizarLeituras: new AtualizarLeituras(jardins, { obter: async () => leituras }),

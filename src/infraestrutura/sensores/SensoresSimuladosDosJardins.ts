@@ -5,12 +5,8 @@ import {
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { SensorSimulado } from './SensorSimulado';
 import { Relogio } from '@/dominio/portas/Relogio';
+import { forjarSol, HORA_DO_SOL_FORJADO } from '@/dominio/regras/LuzDeDemonstracao';
 import { MarcaDoContadorDeLuz, PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
-
-/** A hora em que o sol forjado começa. */
-export const HORA_DO_SOL_SIMULADO = 7;
-/** Os períodos forjados têm o tamanho de um ciclo do sensor físico. */
-const PASSO_DO_SOL_SIMULADO_MS = 5 * 60_000;
 
 /** Onde a luz forjada é gravada: o registro de luz do app, por um caminho que só o simulador usa. */
 export interface GravadorDeLuzSimulada {
@@ -62,22 +58,11 @@ export class SensoresSimuladosDosJardins implements ControleDoSensorDeDesenvolvi
   async simularSolDesdeAs7h(idJardim = 'jardim-principal'): Promise<boolean> {
     if (this.luz === undefined) return false;
     const marca = this.obterSensor(idJardim).marcaDoContador();
-    const agora = marca.medidaEm.getTime();
     const inicio = new Date(marca.medidaEm.getFullYear(), marca.medidaEm.getMonth(), marca.medidaEm.getDate(),
-      HORA_DO_SOL_SIMULADO).getTime();
-    if (agora <= inicio) return false;
+      HORA_DO_SOL_FORJADO);
+    if (marca.medidaEm.getTime() <= inicio.getTime()) return false;
 
-    const periodos: PeriodoDeLuz[] = [];
-    for (let instante = inicio; instante < agora; instante += PASSO_DO_SOL_SIMULADO_MS) {
-      const fim = Math.min(instante + PASSO_DO_SOL_SIMULADO_MS, agora);
-      periodos.push({
-        luxMinutos: (LUX_DO_SOL_FORTE * (fim - instante)) / 60_000,
-        inicio: new Date(instante),
-        fim: new Date(fim),
-        incompleta: false,
-      });
-    }
-    await this.luz.gravarLuzSimulada(idJardim, marca, periodos);
+    await this.luz.gravarLuzSimulada(idJardim, marca, forjarSol(inicio, marca.medidaEm, LUX_DO_SOL_FORTE));
     return true;
   }
 }
