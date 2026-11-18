@@ -158,12 +158,20 @@ test('colheita com data antes do plantio é recusada com uma mensagem clara', as
   expect(colheitas.salvas).toEqual([]);
 });
 
-test('excluir uma frutífera avisa que as colheitas também saem', async () => {
-  abrirTomateiro();
+test('excluir uma frutífera com colheitas avisa que as colheitas também saem', async () => {
+  abrirTomateiro({
+    colheitas: [{ id: 'c1', idPlanta: 'p1', quantidade: 5, unidade: 'unidades', colhidaEm: new Date(2026, 10, 8, 12) }],
+  });
   fireEvent.press(await screen.findByRole('button', { name: 'Excluir' }));
   expect(
     await screen.findByText('A planta sai da estante junto com o histórico de regas e de colheitas. Não dá para desfazer.'),
   ).toBeTruthy();
+});
+
+test('excluir uma frutífera sem nenhuma colheita não fala de colheitas', async () => {
+  abrirTomateiro();
+  fireEvent.press(await screen.findByRole('button', { name: 'Excluir' }));
+  expect(await screen.findByText('A planta sai da estante junto com o histórico de regas. Não dá para desfazer.')).toBeTruthy();
 });
 
 describe('voltando da edição', () => {
@@ -205,4 +213,14 @@ describe('apagar uma colheita', () => {
     expect(screen.getByLabelText('Colheita de 5 frutos em 08/11/2026.')).toBeTruthy();
     expect(colheitas.salvas.map((c) => c.id)).toEqual(['c1']);
   });
+});
+
+test('colheitas pesadas usam ponto no milhar, como o resto do app', async () => {
+  abrirTomateiro({
+    colheitas: [
+      { id: 'c1', idPlanta: 'p1', quantidade: 800, unidade: 'gramas', colhidaEm: new Date(2026, 10, 8, 12) },
+      { id: 'c2', idPlanta: 'p1', quantidade: 510, unidade: 'gramas', colhidaEm: new Date(2026, 10, 9, 12) },
+    ],
+  });
+  expect(await screen.findByText('1.310 g em 2 colheitas')).toBeTruthy();
 });

@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useMemo, useState } from 'react';
 import { Aparencia, APARENCIA_INICIAL } from '@/dominio/modelos/Aparencia';
+import { sugerirAparencia } from '@/dominio/regras/AparenciaSugerida';
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
 
 export interface EdicaoDaPlanta {
@@ -36,10 +37,11 @@ export function ProvedorDoRascunho({
   const [aparencia, definirAparencia] = useState<Aparencia>(inicial?.aparencia ?? APARENCIA_INICIAL);
   const edicao = inicial?.edicao ?? null;
 
-  // A forma começa pela espécie: quem dá frutos já aparece com frutos, e o resto parte da aparência inicial.
+  // A forma começa pela espécie: quem dá frutos já aparece com frutos parecidos com os seus, e o resto parte da
+  // aparência inicial.
   const escolherEspecie = useCallback((escolhida: EspecieVegetal) => {
     definirEspecie(escolhida);
-    definirAparencia((atual) => ({ ...atual, forma: escolhida.frutifera ? 'frutifera' : APARENCIA_INICIAL.forma }));
+    definirAparencia((atual) => sugerirAparencia(escolhida, atual));
   }, []);
   const mudarAparencia = useCallback(
     (parcial: Partial<Aparencia>) => definirAparencia((atual) => ({ ...atual, ...parcial })),

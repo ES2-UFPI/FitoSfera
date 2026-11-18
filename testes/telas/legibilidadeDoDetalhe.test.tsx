@@ -40,7 +40,10 @@ test('o leitor de tela percorre planta, condições, luz de hoje, cuidados, rega
   ]);
   expect(screen.getAllByRole('button').map((botao) => botao.props.accessibilityLabel)).toEqual([
     'Voltar',
+    // A planta do teste não tem data de plantio: o cartão de colheita oferece informá-la.
+    'Informar data do plantio',
     'Registrar rega',
+    'Regou em outro dia?',
     'Ver todas as regas',
     'Registrar colheita',
     'Comparar com outras plantas',

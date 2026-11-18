@@ -138,7 +138,7 @@ export function TelaCompararRendimento({ idInicial }: { idInicial?: string }) {
               })}
             </View>
 
-            <Resultados resultado={resultado} />
+            <Resultados resultado={resultado} dias={dias} unidade={unidade} />
           </>
         )}
       </ScrollView>
@@ -146,7 +146,15 @@ export function TelaCompararRendimento({ idInicial }: { idInicial?: string }) {
   );
 }
 
-function Resultados({ resultado }: { resultado: Resultado }) {
+function Resultados({
+  resultado,
+  dias,
+  unidade,
+}: {
+  resultado: Resultado;
+  dias: Periodo;
+  unidade: UnidadeDeColheita;
+}) {
   if (resultado.tipo === 'poucas') {
     return <Text style={[TEXTO.corpo, estilos.aviso]}>{TEXTOS.rendimento.escolhaMaisUma}</Text>;
   }
@@ -161,6 +169,18 @@ function Resultados({ resultado }: { resultado: Resultado }) {
     );
   }
   const maior = resultado.comparacao.plantas[0]?.rendimento.quantidadeTotal ?? 0;
+  // Sem nenhuma colheita, um "1º lugar" com zero frutos não diz nada: melhor explicar e sugerir outro período.
+  if (maior === 0) {
+    return (
+      <MensagemDeVazio
+        titulo={TEXTOS.rendimento.semColheitasNoPeriodo(
+          TEXTOS.rendimento.medidasNaFrase[unidade],
+          TEXTOS.rendimento.periodosNaFrase[dias],
+        )}
+        texto={dias === PERIODOS[PERIODOS.length - 1] ? undefined : TEXTOS.rendimento.tenteUmPeriodoMaior}
+      />
+    );
+  }
   return (
     <View style={estilos.grupo} accessibilityLiveRegion="polite">
       <Text style={TEXTO.rotulo}>{TEXTOS.rendimento.rotuloDoResultado}</Text>

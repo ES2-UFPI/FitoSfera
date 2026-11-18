@@ -1,7 +1,7 @@
 import { MotivoDaFalhaDoPareamento, SensorEncontrado } from '@/aplicacao/portas/PareamentoDoSensor';
 import { ProblemaDaConexao } from '@/dominio/modelos/EstadoDaConexao';
 import { Leitura } from '@/dominio/modelos/Leitura';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 
 /** O que aconteceu, em linguagem simples, e o que a pessoa pode fazer: uma mensagem por motivo, nenhuma genérica. */
 export const MENSAGEM_DA_FALHA: Record<MotivoDaFalhaDoPareamento, { titulo: string; acao: string }> =
@@ -31,6 +31,6 @@ function numero(valor: number, casas: number): string {
 
 export function resumirLeitura(leitura: Leitura): string {
   const luz =
-    leitura.luminosidadeLux === null ? TEXTOS.sensor.semLeituraDeLuz : TEXTOS.sensor.luxMedidos(leitura.luminosidadeLux);
+    leitura.luminosidadeLux === null ? TEXTOS.sensor.semLeituraDeLuz : TEXTOS.sensor.luxMedidos(formatarNumero(leitura.luminosidadeLux));
   return TEXTOS.sensor.resumoDaLeitura(numero(leitura.temperaturaCelsius, 1), numero(leitura.umidadePercentual, 0), luz);
 }

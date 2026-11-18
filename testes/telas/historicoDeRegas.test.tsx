@@ -141,7 +141,7 @@ describe('desfazer a rega', () => {
     expect(regas.salvas.map((r) => r.id)).toEqual(['antiga']);
   });
 
-  test('o botão some depois de alguns segundos, e a confirmação fica', async () => {
+  test('o botão e a confirmação somem depois de alguns segundos: o histórico já mostra a rega', async () => {
     jest.useFakeTimers();
     try {
       renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
@@ -150,10 +150,65 @@ describe('desfazer a rega', () => {
 
       act(() => jest.advanceTimersByTime(8_000));
       expect(screen.queryByRole('button', { name: 'Desfazer a rega registrada agora' })).toBeNull();
-      expect(screen.getByText('✓ Rega registrada agora.')).toBeTruthy();
+      expect(screen.queryByText('✓ Rega registrada agora.')).toBeNull();
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  test('"Rega desfeita." também some depois de alguns segundos', async () => {
+    jest.useFakeTimers();
+    try {
+      renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+      fireEvent.press(await screen.findByRole('button', { name: 'Registrar rega' }));
+      fireEvent.press(await screen.findByRole('button', { name: 'Desfazer a rega registrada agora' }));
+      expect(await screen.findByText('Rega desfeita.')).toBeTruthy();
+
+      act(() => jest.advanceTimersByTime(4_000));
+      expect(screen.queryByText('Rega desfeita.')).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});
+
+describe('rega de outro dia', () => {
+  test('o link abre a data já com hoje, e registrar um dia passado grava ao meio-dia daquele dia', async () => {
+    const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Regou em outro dia?' }));
+    const campo = screen.getByLabelText('Data da rega');
+    expect(campo.props.value).toBe('20/10/2026');
+
+    fireEvent.changeText(campo, '18102026');
+    expect(screen.getByLabelText('Data da rega').props.value).toBe('18/10/2026');
+    fireEvent.press(screen.getByRole('button', { name: 'Registrar' }));
+
+    expect(await screen.findByText('✓ Rega de 18/10/2026 registrada.')).toBeTruthy();
+    expect(regas.salvas.map((r) => r.regadaEm)).toEqual([new Date(2026, 9, 18, 12)]);
+    expect(screen.queryByLabelText('Data da rega')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Desfazer a rega de 18/10/2026' })).toBeTruthy();
+  });
+
+  test('recusa um dia que ainda não chegou, sem gravar', async () => {
+    const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Regou em outro dia?' }));
+    fireEvent.changeText(screen.getByLabelText('Data da rega'), '21102026');
+    fireEvent.press(screen.getByRole('button', { name: 'Registrar' }));
+
+    expect(await screen.findByText('A rega não pode ser num dia que ainda não chegou.')).toBeTruthy();
+    expect(regas.salvas).toEqual([]);
+  });
+
+  test('cancelar fecha o campo sem registrar', async () => {
+    const { regas } = renderizarApp({ plantas: [plantaDeTeste()], url: '/planta/p1', agora });
+
+    fireEvent.press(await screen.findByRole('button', { name: 'Regou em outro dia?' }));
+    fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.queryByLabelText('Data da rega')).toBeNull();
+    expect(regas.salvas).toEqual([]);
   });
 });
 

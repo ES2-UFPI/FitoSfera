@@ -10,6 +10,7 @@ import {
 import { Leitura } from '@/dominio/modelos/Leitura';
 import { MENSAGEM_DA_FALHA } from '@/apresentacao/sensor/textosDoSensor';
 import { DURACAO_DA_BUSCA_MS } from '@/apresentacao/telas/TelaParearSensor';
+import { SensorFixo } from '../apoio/fakes';
 import { renderizarApp } from './apoio/renderizarApp';
 
 const LEITURA: Leitura = {
@@ -100,7 +101,7 @@ describe('tela de pareamento', () => {
     fireEvent.press(screen.getByRole('button', { name: 'FitoSfera, final 9C10, sinal forte' }));
 
     expect(await screen.findByText('✓ Sensor pareado')).toBeTruthy();
-    expect(screen.getByText('Primeira leitura: 25,1 °C · 58% de umidade · 1000 lux.')).toBeTruthy();
+    expect(screen.getByText('Primeira leitura: 25,1 °C · 58% de umidade · 1.000 lux.')).toBeTruthy();
     expect(pareamento.passos).toEqual(['permissao', 'busca', 'fim-da-busca', 'parear:AA:BB:CC:DD:9C:10']);
   });
 
@@ -203,6 +204,22 @@ describe('tela de pareamento', () => {
     }
   });
 
+  test('com o sensor já conectado, explica por que ele não aparece na busca', async () => {
+    jest.useFakeTimers();
+    try {
+      renderizarApp({ url: '/sensor', pareamentoDoSensor: new PareamentoFalso(), sensor: new SensorFixo(LEITURA) });
+      await screen.findByText('Procurando sensores por perto…');
+
+      await act(() => jest.advanceTimersByTimeAsync(DURACAO_DA_BUSCA_MS));
+
+      expect(screen.getByText('Nenhum sensor novo encontrado.')).toBeTruthy();
+      expect(screen.getByText(/já conectado a este celular não aparece na busca/)).toBeTruthy();
+      expect(screen.queryByText(/Confira se ele está ligado/)).toBeNull();
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   test('sem Bluetooth nesta versão do app, explica o que instalar', async () => {
     renderizarApp({ url: '/sensor' });
     expect(await screen.findByText(/Instale o FitoSfera completo/)).toBeTruthy();
@@ -228,7 +245,7 @@ describe('sensor nos ajustes', () => {
 
     fireEvent.press(screen.getByRole('button', { name: 'Esquecer sensor' }));
     // Pergunta antes: esquecer tira as leituras dos jardins que usam o sensor.
-    expect(await screen.findByRole('header', { name: 'Esquecer FitoSfera · 9C10?' })).toBeTruthy();
+    expect(await screen.findByRole('header', { name: 'Esquecer FitoSfera · final 9C10?' })).toBeTruthy();
     expect(pareamento.pareado).not.toBeNull();
     fireEvent.press(screen.getByRole('button', { name: 'Sim, esquecer' }));
 

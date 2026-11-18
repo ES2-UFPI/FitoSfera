@@ -5,4 +5,6 @@ export interface RepositorioDeJardins {
   obterSelecionado(): Promise<string>;
   salvar(jardim: Jardim): Promise<void>;
   selecionar(id: string): Promise<void>;
+  /** Tira o jardim da lista; se era o selecionado, o principal passa a ser. O principal não sai. */
+  remover(id: string): Promise<void>;
 }

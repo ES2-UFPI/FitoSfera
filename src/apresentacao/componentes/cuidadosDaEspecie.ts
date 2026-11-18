@@ -1,5 +1,5 @@
 import { EspecieVegetal } from '@/dominio/modelos/EspecieVegetal';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 
 interface Faixa {
   readonly minimo: number;
@@ -27,10 +27,8 @@ export function textoDaLuz(luzDiaria: Faixa): string {
   return TEXTOS.cuidados.luz.baixa;
 }
 
-const comVirgula = (valor: number) => String(valor).replace('.', ',');
-
 export function textoDaTemperatura(temperatura: Faixa): string {
-  return TEXTOS.cuidados.temperatura(comVirgula(temperatura.minimo), comVirgula(temperatura.maximo));
+  return TEXTOS.cuidados.temperatura(formatarNumero(temperatura.minimo), formatarNumero(temperatura.maximo));
 }
 
 export type IconeDoCuidado = 'rega' | 'luz' | 'temperatura';
@@ -50,8 +48,8 @@ export function cuidadosDaEspecie(especie: EspecieVegetal): CuidadosDaEspecie {
   const luz = textoDaLuz(faixas.luzDiaria);
   const temperatura = textoDaTemperatura(faixas.temperatura);
   const temperaturaFalada = TEXTOS.cuidados.temperaturaFalada(
-    comVirgula(faixas.temperatura.minimo),
-    comVirgula(faixas.temperatura.maximo),
+    formatarNumero(faixas.temperatura.minimo),
+    formatarNumero(faixas.temperatura.maximo),
   );
   return {
     itens: [

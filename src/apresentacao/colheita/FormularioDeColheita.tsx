@@ -2,11 +2,12 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ColheitaInvalida, MotivoDaColheitaInvalida } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistroDeColheita, UnidadeDeColheita, UNIDADES_DE_COLHEITA } from '@/dominio/modelos/RegistroDeColheita';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { formatarData } from '../formatarData';
 import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
+import { mascararData } from '../mascaraDeData';
 import { escreverDia, lerDia, lerQuantidade } from './entradaDaColheita';
 import { Cartao } from '../componentes/Cartao';
 
@@ -22,11 +23,11 @@ const TEXTO_DA_UNIDADE: Record<UnidadeDeColheita, string> = {
   gramas: TEXTOS.colheita.gramas,
 };
 
-/** "12 frutos" ou "250,5 g", como a confirmação mostra. */
+/** "12 frutos", "250,5 g" ou "1.310 g", como a confirmação mostra. */
 export function descreverQuantidade({ quantidade, unidade }: Pick<RegistroDeColheita, 'quantidade' | 'unidade'>) {
   return unidade === 'unidades'
     ? TEXTOS.colheita.frutos(quantidade)
-    : TEXTOS.colheita.emGramas(String(quantidade).replace('.', ','));
+    : TEXTOS.colheita.emGramas(formatarNumero(quantidade));
 }
 
 /**
@@ -133,12 +134,12 @@ export function FormularioDeColheita({
         <Text style={TEXTO.rotulo}>{TEXTOS.colheita.data.toUpperCase()}</Text>
         <TextInput
           value={dia}
-          onChangeText={definirDia}
+          onChangeText={(texto) => definirDia(mascararData(texto))}
           accessibilityLabel={TEXTOS.colheita.data}
           accessibilityHint={TEXTOS.colheita.ajudaDaData}
           placeholder={TEXTOS.colheita.formatoDaData}
           placeholderTextColor={CORES.abaInativa}
-          keyboardType="numbers-and-punctuation"
+          keyboardType="number-pad"
           maxLength={10}
           style={[estilos.entrada, erroNaData && estilos.entradaComErro]}
         />

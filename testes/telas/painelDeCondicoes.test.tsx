@@ -26,7 +26,7 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
   expect(screen.getByText('Última leitura às 14:05')).toBeTruthy();
   expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
   expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
-  expect(screen.getByText('Ideal: 500–1000 lux')).toBeTruthy();
+  expect(screen.getByText('Ideal: 500–1.000 lux')).toBeTruthy();
   expect(
     screen.getByLabelText('Umidade: 58 por cento. Faixa ideal: 60 a 80 por cento. Abaixo do ideal.'),
   ).toBeTruthy();
@@ -35,7 +35,7 @@ test('mostra valores e faixas recomendadas com suas unidades', () => {
       'Temperatura: 24,5 graus Celsius. Faixa ideal: 18,5 a 26,5 graus Celsius. Dentro do ideal.',
     ),
   ).toBeTruthy();
-  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 500 a 1000 lux. Dentro do ideal.')).toBeTruthy();
+  expect(screen.getByLabelText('Luz: 720 lux. Faixa ideal: 500 a 1.000 lux. Dentro do ideal.')).toBeTruthy();
   expect(screen.getByTestId('icone-umidade')).toBeTruthy();
   expect(screen.getByTestId('icone-temperatura')).toBeTruthy();
   expect(screen.getByTestId('icone-luz')).toBeTruthy();
@@ -92,7 +92,7 @@ test('sem leitura, mostra as faixas ideais da espécie sem inventar valores', ()
   expect(screen.getByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
   expect(screen.getByText('Ideal: 60–80%')).toBeTruthy();
   expect(screen.getByText('Ideal: 18,5–26,5 °C')).toBeTruthy();
-  expect(screen.getByText('Ideal: 500–1000 lux')).toBeTruthy();
+  expect(screen.getByText('Ideal: 500–1.000 lux')).toBeTruthy();
   expect(screen.getAllByText('sem dados')).toHaveLength(3);
   expect(
     screen.getByLabelText('Umidade: sem dados recentes. Faixa ideal: 60 a 80 por cento.'),

@@ -174,7 +174,15 @@ function Pareamento({ pareamento }: { pareamento: PareamentoDoSensor }) {
               </Pressable>
             ))}
             {!etapa.buscando && encontrados.size === 0 ? (
-              <MensagemDeVazio titulo={TEXTOS.pareamento.nenhumEncontrado} />
+              // O sensor só aceita uma conexão: conectado a este celular, ele para de anunciar e some da busca.
+              conexao?.estado === 'conectado' ? (
+                <MensagemDeVazio
+                  titulo={TEXTOS.pareamento.nenhumNovoEncontrado}
+                  texto={TEXTOS.pareamento.conectadoNaoApareceNaBusca}
+                />
+              ) : (
+                <MensagemDeVazio titulo={TEXTOS.pareamento.nenhumEncontrado} />
+              )
             ) : null}
             {!etapa.buscando ? (
               // Achou sensores: escolher um deles é o principal. Não achou nenhum: procurar de novo passa a ser.

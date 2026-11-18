@@ -49,6 +49,8 @@ test('planta antiga, sem data de cadastro e sem regas, não quebra', async () =>
   expect(historico).toEqual({
     cadastradaEm: null,
     diasNoJardim: null,
+    plantadaEm: null,
+    diasDesdeOPlantio: null,
     ultimaRega: null,
     diasDesdeAUltimaRega: null,
     regasRecentes: [],

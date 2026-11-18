@@ -45,6 +45,16 @@ export class GerenciarJardins {
     return this.jardins.selecionar(id);
   }
 
+  async renomear(id: string, nome: string): Promise<Jardim> {
+    const limpo = nome.trim();
+    if (!limpo) throw new Error(TEXTOS.jardins.informeONome);
+    const jardim = (await this.jardins.listar()).find((item) => item.id === id);
+    if (!jardim) throw new Error(TEXTOS.jardins.jardimNaoEncontrado);
+    const renomeado = { ...jardim, nome: limpo };
+    await this.jardins.salvar(renomeado);
+    return renomeado;
+  }
+
   async associar(idJardim: string, idSensor: string): Promise<void> {
     if (!idSensor || (this.sensores && !(await this.sensores.listarPareados()).some((item) => item.id === idSensor)))
       throw new Error(TEXTOS.jardins.sensorNaoPareado);

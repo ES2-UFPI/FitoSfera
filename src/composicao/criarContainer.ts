@@ -7,6 +7,7 @@ import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
+import { ExcluirJardim } from '@/aplicacao/casos-de-uso/ExcluirJardim';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
@@ -73,6 +74,7 @@ export function criarContainer(): Container {
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
   const obterLuzDoDia = new ObterLuzDoDia(luz, relogio, especies);
+  const excluirPlanta = new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas);
 
   return {
     gerenciarJardins: new GerenciarJardins(jardins, gerador,
@@ -84,7 +86,8 @@ export function criarContainer(): Container {
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas),
+    excluirPlanta,
+    excluirJardim: new ExcluirJardim(jardins, plantas, excluirPlanta),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     apagarRegistros: new ApagarRegistros(regas, colheitas),

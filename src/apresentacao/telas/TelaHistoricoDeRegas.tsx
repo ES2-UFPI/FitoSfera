@@ -29,7 +29,7 @@ export function resumirQuantidade(quantidade: number): string {
 
 /** As regas anteriores de uma planta, da mais recente para a mais antiga. Aberta pelo detalhe. */
 export function TelaHistoricoDeRegas({ id }: { id: string }) {
-  const { container, idJardimSelecionado } = useAplicativo();
+  const { container, idJardimSelecionado, abrirJardimDaPlanta } = useAplicativo();
   const margens = useSafeAreaInsets();
   const [estado, definirEstado] = useState<Estado>({ tipo: 'carregando' });
   const [paraApagar, definirParaApagar] = useState<RegaDoHistorico | null>(null);
@@ -43,7 +43,9 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
         container.obterPlanta.executar(id, idJardimSelecionado),
         container.listarRegas.executar(id),
       ]).then(
-        ([item, regas]) => {
+        async ([item, regas]) => {
+          if (!atual) return;
+          if (item === null && (await abrirJardimDaPlanta(id).catch(() => false))) return;
           if (!atual) return;
           definirEstado(
             item === null ? { tipo: 'sem-planta' } : { tipo: 'pronto', apelido: item.planta.apelido, regas },
@@ -57,7 +59,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
       return () => {
         atual = false;
       };
-    }, [container, id, idJardimSelecionado]),
+    }, [container, id, idJardimSelecionado, abrirJardimDaPlanta]),
   );
 
   function pedirParaApagar(rega: RegaDoHistorico) {

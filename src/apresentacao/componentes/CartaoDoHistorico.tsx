@@ -31,6 +31,33 @@ export function descreverTempoNoJardim(dias: number): string {
   return TEXTOS.historico.diasNoJardim(dias);
 }
 
+function descreverTempoDesdeOPlantio(dias: number): string {
+  return dias === 0 ? TEXTOS.historico.plantadaHoje : TEXTOS.historico.diasDesdeOPlantio(dias);
+}
+
+/**
+ * Com a data do plantio informada, ela vem no lugar do cadastro: uma muda plantada há meses e cadastrada hoje não
+ * "chegou hoje", e as colheitas anteriores ao cadastro deixam de parecer impossíveis.
+ */
+function LinhaDaIdade({ historico }: { historico: HistoricoDaPlanta }) {
+  if (historico.plantadaEm !== null) {
+    return (
+      <Linha
+        rotulo={TEXTOS.historico.plantadaEm}
+        valor={formatarData(historico.plantadaEm) ?? TEXTOS.historico.dataDesconhecida}
+        detalhe={historico.diasDesdeOPlantio !== null ? descreverTempoDesdeOPlantio(historico.diasDesdeOPlantio) : undefined}
+      />
+    );
+  }
+  return (
+    <Linha
+      rotulo={TEXTOS.historico.noJardimDesde}
+      valor={historico.cadastradaEm ? formatarData(historico.cadastradaEm) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.dataDesconhecida}
+      detalhe={historico.diasNoJardim !== null ? descreverTempoNoJardim(historico.diasNoJardim) : undefined}
+    />
+  );
+}
+
 function Linha({ rotulo, valor, detalhe }: { rotulo: string; valor: string; detalhe?: string }) {
   return (
     <View style={estilos.linha} accessible accessibilityLabel={`${rotulo}: ${valor}${detalhe ? `, ${detalhe}` : ''}.`}>
@@ -68,11 +95,7 @@ export function CartaoDoHistorico({
 
       {estado !== undefined && estado !== 'falhou' ? (
         <>
-          <Linha
-            rotulo={TEXTOS.historico.noJardimDesde}
-            valor={estado.cadastradaEm ? formatarData(estado.cadastradaEm) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.dataDesconhecida}
-            detalhe={estado.diasNoJardim !== null ? descreverTempoNoJardim(estado.diasNoJardim) : undefined}
-          />
+          <LinhaDaIdade historico={estado} />
           <Linha
             rotulo={TEXTOS.historico.ultimaRega}
             valor={

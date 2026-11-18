@@ -3,15 +3,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SensorPareado } from '@/aplicacao/portas/PareamentoDoSensor';
+import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { TEXTOS } from '@/textos';
 import { BotaoFlutuante } from '../componentes/BotaoFlutuante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { CabecalhoDoJardim } from '../componentes/CabecalhoDoJardim';
 import { Cartao } from '../componentes/Cartao';
+import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { SetaDoDropdown } from '../componentes/SetaDoDropdown';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { Estante } from '../estante/Estante';
+import { finalDoEndereco } from '../sensor/textosDoSensor';
 import { EstadoVazio } from './EstadoVazio';
 import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, LARGURA_DO_MODAL, RAIO, TEXTO } from '../tema';
 
@@ -36,6 +39,13 @@ export function TelaJardim() {
   const [atualizandoLeituras, definirAtualizandoLeituras] = useState(false);
   const [erroDaAtualizacao, definirErroDaAtualizacao] = useState(false);
   const temporizadorDoErro = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // O jardim aberto para renomear, dentro do seletor; null mostra a lista.
+  const [jardimEmEdicao, definirJardimEmEdicao] = useState<Jardim | null>(null);
+  const [nomeEditado, definirNomeEditado] = useState('');
+  const [erroDaEdicao, definirErroDaEdicao] = useState(false);
+  // A exclusão pergunta num diálogo próprio, com o seletor fechado: dois modais abertos se atrapalham.
+  const [jardimParaExcluir, definirJardimParaExcluir] = useState<Jardim | null>(null);
+  const [exclusaoDoJardim, definirExclusaoDoJardim] = useState<'confirmando' | 'excluindo' | 'erro'>('confirmando');
   const margens = useSafeAreaInsets();
   const navegador = useRouter();
 
@@ -80,9 +90,9 @@ export function TelaJardim() {
     return () => { ativo = false; };
   }, [container, seletorAberto]);
 
-  function textoDaQuantidade(idJardim: string, selecionado: boolean) {
+  function textoDaQuantidade(idJardim: string) {
     // O jardim aberto usa a estante, que é a lista mais nova; os outros, a contagem lida ao abrir o seletor.
-    const quantidade = selecionado ? lista.length : plantasPorJardim.get(idJardim) ?? 0;
+    const quantidade = quantidadeDePlantas(idJardim);
     return quantidade === 0 ? TEXTOS.jardim.nenhumaPlantaNoJardim : TEXTOS.jardim.quantidadeDePlantas(quantidade);
   }
 
@@ -103,6 +113,53 @@ export function TelaJardim() {
     } catch {
       definirErroDoJardim(true);
     }
+  }
+
+  function fecharSeletor() {
+    definirSeletorAberto(false);
+    definirJardimEmEdicao(null);
+  }
+
+  function editarJardim(jardim: Jardim) {
+    definirJardimEmEdicao(jardim);
+    definirNomeEditado(jardim.nome);
+    definirErroDaEdicao(false);
+  }
+
+  async function salvarNomeDoJardim() {
+    if (jardimEmEdicao === null) return;
+    try {
+      await container.gerenciarJardins.renomear(jardimEmEdicao.id, nomeEditado);
+      await recarregarJardins();
+      definirJardimEmEdicao(null);
+    } catch {
+      definirErroDaEdicao(true);
+    }
+  }
+
+  function pedirExclusaoDoJardim() {
+    if (jardimEmEdicao === null) return;
+    definirJardimParaExcluir(jardimEmEdicao);
+    definirExclusaoDoJardim('confirmando');
+    fecharSeletor();
+  }
+
+  async function excluirJardim() {
+    if (jardimParaExcluir === null) return;
+    definirExclusaoDoJardim('excluindo');
+    try {
+      await container.excluirJardim.executar(jardimParaExcluir.id);
+      await recarregarJardins();
+      await recarregarJardim();
+      definirJardimParaExcluir(null);
+    } catch (falha) {
+      console.warn('Não deu para excluir o jardim.', falha);
+      definirExclusaoDoJardim('erro');
+    }
+  }
+
+  function quantidadeDePlantas(idJardim: string) {
+    return idJardim === idJardimSelecionado ? lista.length : plantasPorJardim.get(idJardim) ?? 0;
   }
 
   async function criar() {
@@ -199,7 +256,7 @@ export function TelaJardim() {
                         key={sensor.id}
                         titulo={(sensor.id === jardimAtual?.idSensor ? TEXTOS.jardim.sensorEmUsoNoJardim : TEXTOS.jardim.usarSensor)(
                       sensor.nome,
-                      sensor.id.slice(-5),
+                      finalDoEndereco(sensor.id),
                     )}
                         variante="secundaria"
                         largo
@@ -234,23 +291,51 @@ export function TelaJardim() {
           </>
         ) : null}
         {plantas !== null && plantas.length === 0 ? <EstadoVazio aoComecar={abrirCadastro} /> : null}
-      <Modal visible={seletorAberto} transparent animationType="fade" onRequestClose={() => definirSeletorAberto(false)}>
-        <Pressable style={estilos.fundoDoModal} onPress={() => definirSeletorAberto(false)} accessible={false}>
+      <Modal visible={seletorAberto} transparent animationType="fade" onRequestClose={fecharSeletor}>
+        <Pressable style={estilos.fundoDoModal} onPress={fecharSeletor} accessible={false}>
           <Pressable style={estilos.modal} accessibilityViewIsModal onPress={() => undefined}>
+            {jardimEmEdicao !== null ? (
+              <>
+                <Text style={TEXTO.subtitulo} accessibilityRole="header">{TEXTOS.jardim.editarJardim}</Text>
+                <Text style={TEXTO.rotulo}>{TEXTOS.jardim.rotuloDoNomeDoJardim}</Text>
+                <TextInput accessibilityLabel={TEXTOS.jardim.nomeDoJardim} value={nomeEditado} onChangeText={definirNomeEditado}
+                  placeholderTextColor={CORES.textoApoio} style={estilos.entrada} />
+                {erroDaEdicao ? (
+                  <Text style={estilos.erroDoSensor} accessibilityRole="alert">{TEXTOS.jardim.falhaAoRenomear}</Text>
+                ) : null}
+                <View style={estilos.acoesDoModal}>
+                  <BotaoPrincipal titulo={TEXTOS.comum.cancelar} variante="secundaria" aoTocar={() => definirJardimEmEdicao(null)} />
+                  <BotaoPrincipal titulo={TEXTOS.jardim.salvarNome} aoTocar={() => void salvarNomeDoJardim()}
+                    desabilitado={!nomeEditado.trim()} />
+                </View>
+                {/* Excluir fica à parte e em vermelho, longe do Salvar: é o único que não volta atrás. */}
+                {jardimEmEdicao.id !== JARDIM_PRINCIPAL.id ? (
+                  <BotaoPrincipal titulo={TEXTOS.jardim.excluirJardim} variante="perigoDiscreto" largo
+                    aoTocar={pedirExclusaoDoJardim} />
+                ) : null}
+              </>
+            ) : (
+              <>
             <Text style={TEXTO.subtitulo} accessibilityRole="header">{TEXTOS.jardim.seusJardins}</Text>
             <Text style={TEXTO.apoio}>{TEXTOS.jardim.escolhaOJardim}</Text>
             <ScrollView style={estilos.listaDeJardins} showsVerticalScrollIndicator={false}>
               {jardins.map((jardim) => {
                 const selecionado = jardim.id === idJardimSelecionado;
                 return (
-                  <Pressable key={jardim.id} accessibilityRole="button" accessibilityState={{ selected: selecionado }}
-                    onPress={() => void trocarJardim(jardim.id)} style={[estilos.opcaoDeJardim, selecionado && estilos.jardimSelecionado]}>
-                    <View style={estilos.detalheDaOpcao}>
-                      <Text style={estilos.nomeDaOpcao}>{jardim.nome}</Text>
-                      <Text style={TEXTO.apoio}>{textoDaQuantidade(jardim.id, selecionado)}</Text>
-                    </View>
-                    {selecionado ? <Text style={estilos.seloAtual}>{TEXTOS.jardim.seloAtual}</Text> : null}
-                  </Pressable>
+                  <View key={jardim.id} style={[estilos.opcaoDeJardim, selecionado && estilos.jardimSelecionado]}>
+                    <Pressable accessibilityRole="button" accessibilityState={{ selected: selecionado }}
+                      onPress={() => void trocarJardim(jardim.id)} style={estilos.escolhaDoJardim}>
+                      <View style={estilos.detalheDaOpcao}>
+                        <Text style={estilos.nomeDaOpcao}>{jardim.nome}</Text>
+                        <Text style={TEXTO.apoio}>{textoDaQuantidade(jardim.id)}</Text>
+                      </View>
+                      {selecionado ? <Text style={estilos.seloAtual}>{TEXTOS.jardim.seloAtual}</Text> : null}
+                    </Pressable>
+                    <Pressable accessibilityRole="button" accessibilityLabel={TEXTOS.jardim.editarOJardim(jardim.nome)}
+                      onPress={() => editarJardim(jardim)} hitSlop={ESPACO.pequeno} style={estilos.botaoDeEditar}>
+                      <Text style={estilos.textoDeEditar}>{TEXTOS.jardim.editar}</Text>
+                    </Pressable>
+                  </View>
                 );
               })}
             </ScrollView>
@@ -259,12 +344,26 @@ export function TelaJardim() {
               placeholder={TEXTOS.jardim.exemploDeNome} placeholderTextColor={CORES.textoApoio} style={estilos.entrada} />
             {erroDoJardim ? <Text style={estilos.erroDoSensor} accessibilityRole="alert">{TEXTOS.jardim.falhaAoTrocarJardim}</Text> : null}
             <View style={estilos.acoesDoModal}>
-              <BotaoPrincipal titulo={TEXTOS.comum.cancelar} variante="secundaria" aoTocar={() => definirSeletorAberto(false)} />
+              <BotaoPrincipal titulo={TEXTOS.comum.cancelar} variante="secundaria" aoTocar={fecharSeletor} />
               <BotaoPrincipal titulo={TEXTOS.jardim.criarJardim} aoTocar={() => void criar()} desabilitado={!novoNome.trim()} />
             </View>
+              </>
+            )}
           </Pressable>
         </Pressable>
       </Modal>
+      <DialogoDeConfirmacao
+        titulo={TEXTOS.jardim.excluirOJardim(jardimParaExcluir?.nome ?? '')}
+        explicacao={TEXTOS.jardim.explicacaoDaExclusao(jardimParaExcluir ? quantidadeDePlantas(jardimParaExcluir.id) : 0)}
+        tituloDoBotao={TEXTOS.jardim.excluir}
+        tituloEmAndamento={TEXTOS.jardim.excluindo}
+        mensagemDeErro={TEXTOS.jardim.falhaAoExcluir}
+        visivel={jardimParaExcluir !== null}
+        emAndamento={exclusaoDoJardim === 'excluindo'}
+        erro={exclusaoDoJardim === 'erro'}
+        aoConfirmar={() => void excluirJardim()}
+        aoCancelar={() => definirJardimParaExcluir(null)}
+      />
       {erroDaAtualizacao ? (
         <View testID="aviso-de-atualizacao" style={estilos.avisoDaAtualizacao} accessibilityRole="alert" accessible>
           <Text style={estilos.textoDoAvisoDaAtualizacao}>{TEXTOS.jardim.falhaAoAtualizarLeituras}</Text>
@@ -329,8 +428,10 @@ const estilos = StyleSheet.create({
     gap: ESPACO.medio, borderRadius: RAIO.grande, backgroundColor: CORES.superficie },
   listaDeJardins: { flexGrow: 0, maxHeight: 250 },
   opcaoDeJardim: { minHeight: ALVO_DE_TOQUE + 8, flexDirection: 'row', alignItems: 'center', marginBottom: ESPACO.pequeno,
-    padding: ESPACO.medio, borderWidth: 1, borderColor: CORES.bordaSuave, borderRadius: RAIO.medio,
-    backgroundColor: CORES.fundoTopo },
+    borderWidth: 1, borderColor: CORES.bordaSuave, borderRadius: RAIO.medio, backgroundColor: CORES.fundoTopo },
+  escolhaDoJardim: { flex: 1, flexDirection: 'row', alignItems: 'center', padding: ESPACO.medio },
+  botaoDeEditar: { minHeight: ALVO_DE_TOQUE, justifyContent: 'center', paddingHorizontal: ESPACO.medio },
+  textoDeEditar: { ...TEXTO.apoio, fontFamily: FONTES.forte, color: CORES.acao, textDecorationLine: 'underline' },
   jardimSelecionado: { borderColor: CORES.acao, backgroundColor: CORES.papel },
   detalheDaOpcao: { flex: 1, gap: ESPACO.minimo },
   nomeDaOpcao: { ...TEXTO.corpo, color: CORES.texto, fontFamily: FONTES.forte },

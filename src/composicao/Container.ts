@@ -5,6 +5,7 @@ import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
+import { ExcluirJardim } from '@/aplicacao/casos-de-uso/ExcluirJardim';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
@@ -37,6 +38,7 @@ export interface Container {
   readonly cadastrarPlanta: CadastrarPlanta;
   readonly editarPlanta: EditarPlanta;
   readonly excluirPlanta: ExcluirPlanta;
+  readonly excluirJardim: ExcluirJardim;
   readonly registrarRega: RegistrarRega;
   readonly registrarColheita: RegistrarColheita;
   readonly apagarRegistros: ApagarRegistros;

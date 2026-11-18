@@ -102,15 +102,25 @@ export class RegistrarColheita {
   }
 
   private validarData(dia: PedidoDeColheita['dia']): Date {
-    const agora = this.relogio.agora();
-    if (dia === undefined) return agora;
-    if (dia === 'ilegivel' || !existeNoCalendario(dia)) throw new ColheitaInvalida('data-invalida');
-    const hoje = this.hoje();
-    if (dia.dia === hoje.dia && dia.mes === hoje.mes && dia.ano === hoje.ano) return agora;
-    const colhidaEm = new Date(dia.ano, dia.mes - 1, dia.dia, HORA_DE_UM_DIA_PASSADO);
-    if (colhidaEm.getTime() > agora.getTime()) throw new ColheitaInvalida('data-no-futuro');
+    const colhidaEm = instanteDoDia(dia, this.relogio.agora());
+    if (colhidaEm === 'data-invalida' || colhidaEm === 'data-no-futuro') throw new ColheitaInvalida(colhidaEm);
     return colhidaEm;
   }
+}
+
+/**
+ * O instante que vai para o registro de um dia informado: hoje (ou sem dia) é agora; um dia passado, o meio-dia.
+ * A colheita e a rega com data usam a mesma regra.
+ */
+export function instanteDoDia(
+  dia: DiaDoCalendario | 'ilegivel' | undefined,
+  agora: Date,
+): Date | 'data-invalida' | 'data-no-futuro' {
+  if (dia === undefined) return agora;
+  if (dia === 'ilegivel' || !existeNoCalendario(dia)) return 'data-invalida';
+  if (dia.dia === agora.getDate() && dia.mes === agora.getMonth() + 1 && dia.ano === agora.getFullYear()) return agora;
+  const instante = new Date(dia.ano, dia.mes - 1, dia.dia, HORA_DE_UM_DIA_PASSADO);
+  return instante.getTime() > agora.getTime() ? 'data-no-futuro' : instante;
 }
 
 function validarUnidade(unidade: string): UnidadeDeColheita {

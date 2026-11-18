@@ -12,6 +12,11 @@ interface ValorDoAplicativo {
   readonly jardins: readonly Jardim[];
   readonly idJardimSelecionado: string;
   selecionarJardim(id: string): Promise<void>;
+  /**
+   * Para um link ou uma notificação de planta de outro jardim: abre o jardim dela. Devolve true quando trocou de
+   * jardim (a tela recarrega sozinha com a nova seleção) e false quando a planta não existe ou já está neste.
+   */
+  abrirJardimDaPlanta(idPlanta: string): Promise<boolean>;
   criarJardim(nome: string): Promise<void>;
   recarregarJardins(): Promise<void>;
   recarregarJardim(): Promise<void>;
@@ -82,6 +87,13 @@ export function ProvedorDoAplicativo({
     definirSelecionado(id);
   }, [container]);
 
+  const abrirJardimDaPlanta = useCallback(async (idPlanta: string) => {
+    const planta = await container.obterPlanta.executar(idPlanta);
+    if (planta === null || planta.planta.idJardim === selecaoAtual.current) return false;
+    await selecionarJardim(planta.planta.idJardim);
+    return true;
+  }, [container, selecionarJardim]);
+
   const criarJardim = useCallback(async (nome: string) => {
     const jardim = await container.gerenciarJardins.criar(nome);
     await recarregarJardins();
@@ -116,10 +128,10 @@ export function ProvedorDoAplicativo({
   }, [recarregarJardim]);
 
   const valor = useMemo(() => ({
-    container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim,
+    container, plantas, jardins, idJardimSelecionado, selecionarJardim, abrirJardimDaPlanta, criarJardim,
     recarregarJardins, recarregarJardim, avisarEdicaoSalva, consumirEdicaoSalva,
     modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao,
-  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim, recarregarJardins, recarregarJardim,
+  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, abrirJardimDaPlanta, criarJardim, recarregarJardins, recarregarJardim,
     avisarEdicaoSalva, consumirEdicaoSalva, modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao]);
   return <ContextoDoAplicativo.Provider value={valor}>{children}</ContextoDoAplicativo.Provider>;
 }
