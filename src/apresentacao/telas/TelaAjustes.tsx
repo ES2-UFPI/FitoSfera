@@ -7,7 +7,7 @@ import {
   LUX_DO_SOL_FORTE,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 import { formatarData } from '../formatarData';
 import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
@@ -283,7 +283,7 @@ function CartaoDoSensorDeDesenvolvimento({
       {controle.simularSolDesdeAs7h !== undefined ? (
         <View style={estilos.relogioSimulado}>
           <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.luzDoDia}</Text>
-          <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDaLuzDoDia(LUX_DO_SOL_FORTE.toLocaleString('pt-BR'))}</Text>
+          <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDaLuzDoDia(formatarNumero(LUX_DO_SOL_FORTE))}</Text>
           <BotaoPrincipal
             titulo={TEXTOS.simulador.simularSol}
             variante="secundaria"

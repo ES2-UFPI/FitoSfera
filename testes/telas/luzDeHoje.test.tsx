@@ -1,3 +1,4 @@
+import { ID_JARDIM_PRINCIPAL } from '@/dominio/modelos/Planta';
 import { screen } from 'expo-router/testing-library';
 import { act } from 'react';
 import { Leitura } from '@/dominio/modelos/Leitura';
@@ -98,10 +99,22 @@ test('dados incompletos, mas a meta já foi alcançada: aí dá para mostrar a p
 });
 
 test('sem nenhuma medida de luz do sensor: diz isso, sem porcentagem', async () => {
-  abrirDetalhe({ periodos: [], ultimoContato: null });
+  abrirDetalhe(
+    { periodos: [], ultimoContato: null },
+    { jardins: [{ id: ID_JARDIM_PRINCIPAL, nome: 'Jardim principal', idSensor: 'AA:BB:CC:DD:9C:10' }] },
+  );
 
   expect(await screen.findByText('Ainda não chegou nenhuma medida de luz do sensor.')).toBeTruthy();
   expect(screen.queryByText(/^\d+%$/)).toBeNull();
+});
+
+test('num jardim sem sensor, diz que falta o sensor em vez de esperar por uma medida', async () => {
+  abrirDetalhe({ periodos: [], ultimoContato: null });
+
+  expect(
+    await screen.findByText('Este jardim não tem sensor. Associe um na tela do jardim para medir a luz que a planta recebe.'),
+  ).toBeTruthy();
+  expect(screen.queryByText('Ainda não chegou nenhuma medida de luz do sensor.')).toBeNull();
 });
 
 test('planta sem meta de luz não mostra o cartão', async () => {

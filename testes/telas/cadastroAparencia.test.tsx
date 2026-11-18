@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { especieDeTeste, ESPECIES_DE_TESTE } from '../apoio/especiesDeTeste';
 import { renderizarApp } from './apoio/renderizarApp';
 
 async function irAtePasso2(especie: string) {
@@ -21,6 +22,7 @@ const responderProducao = (resposta: 'Sim' | 'Não') =>
       name: resposta === 'Sim' ? 'Sim, já está produzindo' : 'Não, ainda não está produzindo',
     }),
   );
+const naoSeiQuandoFoiPlantada = () => fireEvent.press(screen.getByRole('radio', { name: 'Não sei quando foi plantada' }));
 const marcado = (rotulo: string) => screen.getByRole('radio', { name: rotulo }).props.accessibilityState.checked;
 
 const selecionado = (rotulo: string) => screen.getByRole('button', { name: rotulo }).props.accessibilityState.selected;
@@ -30,6 +32,19 @@ test('uma planta que dá frutos já começa com a forma Frutífera e os frutos �
   await irAtePasso2('Tomate');
   expect(selecionado('Forma: Frutífera')).toBe(true);
   expect(screen.getByText('FRUTOS')).toBeTruthy();
+});
+
+test('o morango começa rasteiro, com frutos vermelhos, e não com cara de tomate', async () => {
+  const morango = {
+    ...especieDeTeste({ id: 'morango', nomeComum: 'Morango', nomeCientifico: 'Fragaria ananassa', nomesAlternativos: [] }),
+    frutifera: true,
+  };
+  renderizarApp({ url: '/cadastro', especies: [...ESPECIES_DE_TESTE, morango] });
+  fireEvent.press(await screen.findByRole('button', { name: 'Morango' }));
+  await screen.findByText('Como vai ser a sua planta?');
+
+  expect(selecionado('Forma: Rasteira')).toBe(true);
+  expect(selecionado('Frutos: Vermelho')).toBe(true);
 });
 
 test('o passo 2 começa na aparência inicial e esconde o destaque para Erva', async () => {
@@ -56,7 +71,6 @@ test('fluxo completo salva a aparência escolhida e volta ao jardim com a planta
   fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
 
   fireEvent.changeText(await screen.findByLabelText('Apelido da planta'), 'Tomatinho');
-  responderProducao('Não');
   fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
 
   await waitFor(() => expect(plantas.salvas).toHaveLength(1));
@@ -79,7 +93,6 @@ test('o apelido começa com o nome comum da espécie', async () => {
 
 test('apelido vazio ou com 31 caracteres desabilita o botão; com 30 habilita', async () => {
   await irAtePasso3('Tomate');
-  responderProducao('Não');
   const campo = screen.getByLabelText('Apelido da planta');
   fireEvent.changeText(campo, '   ');
   expect(desabilitado('Colocar na estante')).toBe(true);
@@ -91,7 +104,6 @@ test('apelido vazio ou com 31 caracteres desabilita o botão; com 30 habilita', 
 
 test('toque duplo em "Colocar na estante" salva uma planta só', async () => {
   const { plantas } = await irAtePasso3('Tomate');
-  responderProducao('Não');
   const botao = screen.getByRole('button', { name: 'Colocar na estante' });
   fireEvent.press(botao);
   fireEvent.press(botao);
@@ -102,7 +114,7 @@ test('toque duplo em "Colocar na estante" salva uma planta só', async () => {
 test('uma frutífera pode informar uma data anterior de plantio', async () => {
   const { plantas } = await irAtePasso3('Tomate');
   fireEvent.press(screen.getByRole('radio', { name: 'Informar data aproximada do plantio' }));
-  fireEvent.changeText(screen.getByLabelText('Data aproximada do plantio'), '12/10/2026');
+  fireEvent.changeText(screen.getByLabelText('Data aproximada do plantio'), '12102026');
   responderProducao('Não');
   fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
 
@@ -120,8 +132,31 @@ test('não permite data de plantio inválida ou futura', async () => {
 });
 
 describe('a pergunta "Esta planta já está produzindo?"', () => {
+  test('não aparece para uma muda plantada hoje, que é gravada como ainda não produzindo', async () => {
+    const { plantas } = await irAtePasso3('Tomate');
+    expect(marcado('Vou começar com uma muda hoje')).toBe(true);
+    expect(screen.queryByText('Esta planta já está produzindo?')).toBeNull();
+    expect(desabilitado('Colocar na estante')).toBe(false);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
+    await waitFor(() => expect(plantas.salvas).toHaveLength(1));
+    expect(plantas.salvas[0]).toMatchObject({ colheitaIniciada: false, floracaoIniciadaEm: null });
+  });
+
+  test('voltar para a muda de hoje esconde a pergunta e esquece o "Sim"', async () => {
+    await irAtePasso3('Tomate');
+    naoSeiQuandoFoiPlantada();
+    responderProducao('Sim');
+    expect(screen.getByLabelText('Quando começou a floração atual?')).toBeTruthy();
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Vou começar com uma muda hoje' }));
+    expect(screen.queryByText('Esta planta já está produzindo?')).toBeNull();
+    expect(screen.queryByLabelText('Quando começou a floração atual?')).toBeNull();
+  });
+
   test('é uma pergunta à parte, sem resposta marcada, e o botão espera a resposta', async () => {
     await irAtePasso3('Tomate');
+    naoSeiQuandoFoiPlantada();
     expect(screen.getByText('Esta planta já está produzindo?')).toBeTruthy();
     expect(marcado('Sim, já está produzindo')).toBe(false);
     expect(marcado('Não, ainda não está produzindo')).toBe(false);
@@ -135,19 +170,21 @@ describe('a pergunta "Esta planta já está produzindo?"', () => {
 
   test('Sim e Não se excluem, e não mexem na resposta sobre o plantio', async () => {
     await irAtePasso3('Tomate');
+    naoSeiQuandoFoiPlantada();
     responderProducao('Sim');
-    expect(marcado('Vou começar com uma muda hoje')).toBe(true);
+    expect(marcado('Não sei quando foi plantada')).toBe(true);
     expect(marcado('Sim, já está produzindo')).toBe(true);
 
     responderProducao('Não');
     expect(marcado('Sim, já está produzindo')).toBe(false);
     expect(marcado('Não, ainda não está produzindo')).toBe(true);
-    expect(marcado('Vou começar com uma muda hoje')).toBe(true);
+    expect(marcado('Não sei quando foi plantada')).toBe(true);
     expect(screen.queryByLabelText('Quando começou a floração atual?')).toBeNull();
   });
 
   test('Não grava a planta como ainda não produzindo', async () => {
     const { plantas } = await irAtePasso3('Tomate');
+    naoSeiQuandoFoiPlantada();
     responderProducao('Não');
     fireEvent.press(screen.getByRole('button', { name: 'Colocar na estante' }));
     await waitFor(() => expect(plantas.salvas).toHaveLength(1));
@@ -198,6 +235,7 @@ test('floração antes do plantio é recusada com uma mensagem clara', async () 
 
 test('no cadastro, a ajuda da floração não fala de histórico', async () => {
   await irAtePasso3('Tomate');
+  naoSeiQuandoFoiPlantada();
   responderProducao('Sim');
   expect(screen.getByText('A previsão da próxima colheita usa esta data.')).toBeTruthy();
 });

@@ -11,6 +11,7 @@ import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
 import { escreverDataDePlantio, lerDataDePlantio } from '../../colheita/entradaDePlantio';
+import { mascararData } from '../../mascaraDeData';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 
 const ESPERA_DA_CONFIRMACAO = 1200
@@ -39,7 +40,9 @@ export function TelaBatizar() {
   );
   // No cadastro a pergunta começa sem resposta (null) e precisa ser respondida; na edição, vem a da planta.
   const [respostaDaProducao, definirRespostaDaProducao] = useState<boolean | null>(edicao ? edicao.colheitaIniciada : null);
-  const colheitaIniciada = respostaDaProducao === true;
+  // Uma muda plantada hoje ainda não produz: a pergunta nem aparece, e a resposta é "não".
+  const mudaDeHoje = modoDoPlantio === 'hoje';
+  const colheitaIniciada = !mudaDeHoje && respostaDaProducao === true;
   const [inicioDaFloracao, definirInicioDaFloracao] = useState(() =>
     edicao?.floracaoIniciadaEm ? escreverDataDePlantio(edicao.floracaoIniciadaEm) : '',
   );
@@ -71,7 +74,7 @@ export function TelaBatizar() {
     floracaoInformada.getTime() < new Date(plantio.getFullYear(), plantio.getMonth(), plantio.getDate()).getTime();
   const dataDeFloracaoValida =
     !colheitaIniciada || inicioDaFloracao.trim() === '' || (floracaoInformada !== 'invalida' && !floracaoAntesDoPlantio);
-  const producaoRespondida = !especie?.frutifera || respostaDaProducao !== null;
+  const producaoRespondida = !especie?.frutifera || mudaDeHoje || respostaDaProducao !== null;
   const emAndamento = estado.tipo === 'salvando' || estado.tipo === 'sucesso';
   const podeSalvar = valido && dataDoPlantioValida && dataDeFloracaoValida && producaoRespondida;
 
@@ -182,11 +185,12 @@ export function TelaBatizar() {
                 <View style={[estilos.campo, estilos.campoDentroDaPergunta, !dataDoPlantioValida && estilos.campoComErro]}>
                   <TextInput
                     value={dataDoPlantio}
-                    onChangeText={definirDataDoPlantio}
+                    onChangeText={(texto) => definirDataDoPlantio(mascararData(texto))}
                     accessibilityLabel={TEXTOS.cadastro.dataDoPlantio}
                     placeholder={TEXTOS.cadastro.formatoDaDataDoPlantio}
                     placeholderTextColor={CORES.abaInativa}
-                    keyboardType="numbers-and-punctuation"
+                    keyboardType="number-pad"
+                    maxLength={10}
                     editable={!emAndamento}
                     style={estilos.entrada}
                   />
@@ -199,7 +203,7 @@ export function TelaBatizar() {
               ) : null}
             </View>
           ) : null}
-          {especie?.frutifera ? (
+          {especie?.frutifera && !mudaDeHoje ? (
             <View style={estilos.plantio}>
               <Text style={TEXTO.rotulo}>{TEXTOS.cadastro.jaEstaProduzindo}</Text>
               <View accessibilityRole="radiogroup" style={estilos.opcoesDaProducao}>
@@ -229,11 +233,12 @@ export function TelaBatizar() {
                   <View style={[estilos.campo, estilos.campoDentroDaPergunta, !dataDeFloracaoValida && estilos.campoComErro]}>
                     <TextInput
                       value={inicioDaFloracao}
-                      onChangeText={definirInicioDaFloracao}
+                      onChangeText={(texto) => definirInicioDaFloracao(mascararData(texto))}
                       accessibilityLabel={TEXTOS.cadastro.inicioDaFloracao}
                       placeholder={TEXTOS.cadastro.formatoDaDataDoPlantio}
                       placeholderTextColor={CORES.abaInativa}
-                      keyboardType="numbers-and-punctuation"
+                      keyboardType="number-pad"
+                      maxLength={10}
                       editable={!emAndamento}
                       style={estilos.entrada}
                     />

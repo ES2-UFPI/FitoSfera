@@ -25,7 +25,14 @@ function fraseDoRitmo(luz: LuzDoDia): string {
  * Quanto da luz de hoje a planta já recebeu. Com dados faltando, a porcentagem só aparece se a meta já foi
  * alcançada: abaixo dela, um número baixo pareceria falta de luz quando, na verdade, é falta de dados.
  */
-export function CartaoDaLuzDeHoje({ luz }: { luz: LuzDoDia | undefined }) {
+export function CartaoDaLuzDeHoje({
+  luz,
+  jardimSemSensor = false,
+}: {
+  luz: LuzDoDia | undefined;
+  /** O jardim não tem sensor associado: sem medida, o cartão diz isso em vez de esperar por uma. */
+  jardimSemSensor?: boolean;
+}) {
   if (luz === undefined || luz.progresso === null) return null;
   const porcento = Math.round(luz.progresso * 100);
   const semMedida = luz.conhecidaAte === null;
@@ -51,7 +58,9 @@ export function CartaoDaLuzDeHoje({ luz }: { luz: LuzDoDia | undefined }) {
         </View>
       ) : null}
 
-      {semMedida ? <Text style={TEXTO.corpo}>{TEXTOS.luzDeHoje.semMedida}</Text> : null}
+      {semMedida ? (
+        <Text style={TEXTO.corpo}>{jardimSemSensor ? TEXTOS.luzDeHoje.semSensor : TEXTOS.luzDeHoje.semMedida}</Text>
+      ) : null}
 
       {luz.incompleta && !semMedida ? (
         <View style={estilos.aviso} accessible>

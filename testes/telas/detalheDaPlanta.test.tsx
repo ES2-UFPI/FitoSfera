@@ -108,7 +108,7 @@ test('puxar para atualizar mantém os últimos valores e os marca como desatuali
   expect(await screen.findByText('Estes valores foram medidos há mais de meia hora e podem não ser os de agora.')).toBeTruthy();
   expect(screen.getByText('61')).toBeTruthy();
   expect(screen.getByText('25')).toBeTruthy();
-  expect(screen.getByText('9000')).toBeTruthy();
+  expect(screen.getByText('9.000')).toBeTruthy();
   expect(screen.getByLabelText(/^Umidade: 61 por cento\./)).toBeTruthy();
   aviso.mockRestore();
 });
@@ -171,6 +171,16 @@ describe('histórico da planta', () => {
   test('planta cadastrada hoje diz que chegou hoje', async () => {
     renderizarApp({ plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 20, 7, 0) })], url: '/planta/p1', agora });
     expect(await screen.findByLabelText('No jardim desde: 20/10/2026, chegou hoje.')).toBeTruthy();
+  });
+
+  test('com a data do plantio informada, mostra o plantio no lugar do cadastro', async () => {
+    renderizarApp({
+      plantas: [plantaDeTeste({ cadastradaEm: new Date(2026, 9, 20, 7, 0), plantadaEm: new Date(2026, 8, 20) })],
+      url: '/planta/p1',
+      agora,
+    });
+    expect(await screen.findByLabelText('Plantada em: 20/09/2026, há 30 dias.')).toBeTruthy();
+    expect(screen.queryByText('NO JARDIM DESDE')).toBeNull();
   });
 
   test('planta antiga, sem data de cadastro, mostra "data desconhecida"', async () => {

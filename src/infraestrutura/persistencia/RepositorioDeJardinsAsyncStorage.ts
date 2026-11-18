@@ -34,6 +34,15 @@ export class RepositorioDeJardinsAsyncStorage implements RepositorioDeJardins {
     await this.gravar({ ...estado, selecionado: id });
   }
 
+  async remover(id: string): Promise<void> {
+    if (id === JARDIM_PRINCIPAL.id) throw new Error('O jardim principal não pode ser removido.');
+    const estado = await this.ler();
+    await this.gravar({
+      jardins: estado.jardins.filter((jardim) => jardim.id !== id),
+      selecionado: estado.selecionado === id ? JARDIM_PRINCIPAL.id : estado.selecionado,
+    });
+  }
+
   private async ler(): Promise<EstadoDosJardins> {
     const bruto = await this.armazenamento.getItem(CHAVES.jardins);
     if (bruto !== null) {

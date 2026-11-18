@@ -135,7 +135,7 @@ test('forçar um cenário de desvio envia a notificação correspondente', async
     }),
   );
   expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima do ideal');
-  expect(notificador.entregues[0].corpo).toContain('A luz está em 100000 lux, acima do ideal');
+  expect(notificador.entregues[0].corpo).toContain('A luz está em 100.000 lux, acima do ideal');
 });
 
 test('permite montar uma combinação personalizada', async () => {

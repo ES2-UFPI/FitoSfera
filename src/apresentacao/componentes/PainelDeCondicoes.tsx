@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { compararMedicaoComFaixa, SituacaoDaMedicao } from '@/dominio/regras/AvaliacaoDaLeitura';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 import { CORES_DA_LOGO, CORES_DOS_DESTAQUES } from '../ilustracao/paletas';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { Cartao } from './Cartao';
@@ -30,7 +30,12 @@ export interface FaixasRecomendadasDoPainel {
 export type EstadoDoPainel =
   | { readonly tipo: 'carregando' }
   | { readonly tipo: 'indisponivel' }
-  | { readonly tipo: 'sem-leitura'; readonly faixasRecomendadas?: FaixasRecomendadasDoPainel }
+  | {
+      readonly tipo: 'sem-leitura';
+      readonly faixasRecomendadas?: FaixasRecomendadasDoPainel;
+      /** É noite agora: as faixas são as da noite e a luz não tem meta. */
+      readonly noite?: boolean;
+    }
   | {
       readonly tipo: 'leitura';
       readonly leitura: LeituraDoPainel;
@@ -49,9 +54,6 @@ interface Props {
   readonly origem?: ReactNode;
 }
 
-function formatarNumero(valor: number): string {
-  return String(valor).replace('.', ',');
-}
 
 const APRESENTACAO_DA_SITUACAO: Record<SituacaoDaMedicao, { simbolo: string; texto: string; cor: string }> = {
   abaixo: { simbolo: '▼', texto: TEXTOS.condicoes.abaixoDoIdeal, cor: CORES.statusAtencao },
@@ -245,7 +247,7 @@ export function PainelDeCondicoes({ estado, origem }: Props) {
           </Text>
           {estado.faixasRecomendadas ? (
             <>
-              <Indicadores leitura={null} faixas={estado.faixasRecomendadas} />
+              <Indicadores leitura={null} faixas={estado.faixasRecomendadas} noite={estado.noite} />
               <Text style={TEXTO.apoio}>{TEXTOS.condicoes.explicacaoDoLux}</Text>
             </>
           ) : null}

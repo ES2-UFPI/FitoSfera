@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { ResultadoDaDemonstracao, SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
 import { LUX_DO_SOL_FORTE } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
 import { Cartao } from '../componentes/Cartao';
 import { useAplicativo } from '../contextos/ContextoDoAplicativo';
@@ -50,7 +50,7 @@ export function CartaoDaDemonstracao({
       <Text style={TEXTO.subtitulo} accessibilityRole="header">
         {TEXTOS.demonstracao.titulo}
       </Text>
-      <Text style={TEXTO.apoio}>{TEXTOS.demonstracao.explicacao(LUX_DO_SOL_FORTE.toLocaleString('pt-BR'))}</Text>
+      <Text style={TEXTO.apoio}>{TEXTOS.demonstracao.explicacao(formatarNumero(LUX_DO_SOL_FORTE))}</Text>
       <BotaoPrincipal
         titulo={estado === 'preenchendo' ? TEXTOS.demonstracao.simulando : TEXTOS.demonstracao.simularSol}
         variante="secundaria"

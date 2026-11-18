@@ -5,6 +5,7 @@ import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
+import { ExcluirJardim } from '@/aplicacao/casos-de-uso/ExcluirJardim';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
@@ -102,6 +103,11 @@ export class RepositorioDeJardinsEmMemoria implements RepositorioDeJardins {
   async selecionar(id: string): Promise<void> {
     if (!this.jardins.some((item) => item.id === id)) throw new Error('Jardim não encontrado.');
     this.selecionado = id;
+  }
+  async remover(id: string): Promise<void> {
+    if (id === JARDIM_PRINCIPAL.id) throw new Error('O jardim principal não pode ser removido.');
+    this.jardins = this.jardins.filter((item) => item.id !== id);
+    if (this.selecionado === id) this.selecionado = JARDIM_PRINCIPAL.id;
   }
 }
 
@@ -527,6 +533,7 @@ export function criarContainerDeTeste(
   const jardins = new RepositorioDeJardinsEmMemoria(opcoes.jardins);
   const luz = new RegistroDeLuzEmMemoria();
   if (opcoes.luz) luz.definir(opcoes.luz.periodos, opcoes.luz.ultimoContato);
+  const excluirPlanta = new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria(), notificador, colheitas);
   const container: Container = {
     gerenciarJardins: new GerenciarJardins(jardins, gerador, undefined, plantas),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
@@ -536,13 +543,8 @@ export function criarContainerDeTeste(
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(
-      plantas,
-      regas,
-      new ExclusoesPendentesEmMemoria(),
-      notificador,
-      colheitas,
-    ),
+    excluirPlanta,
+    excluirJardim: new ExcluirJardim(jardins, plantas, excluirPlanta),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     apagarRegistros: new ApagarRegistros(regas, colheitas),
