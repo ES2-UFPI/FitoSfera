@@ -3,7 +3,7 @@ import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaCone
 import { TEXTOS } from '@/textos';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
-import { formatarData } from '../formatarData';
+import { dataLegivel } from '../formatarData';
 
 const APRESENTACAO: Record<EstadoDaConexao, { texto: string; cor: string }> = {
   conectado: { texto: TEXTOS.conexao.conectado, cor: CORES.statusOk },
@@ -23,7 +23,7 @@ function mesmoDia(a: Date, b: Date): boolean {
 
 export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora: Date): string {
   if (ultimaComunicacao === null) return TEXTOS.conexao.semComunicacao;
-  const horario = formatarData(ultimaComunicacao, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
+  const horario = dataLegivel(ultimaComunicacao, { comHora: true });
   const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / 60_000));
   const decorrido = minutos < 1
     ? TEXTOS.conexao.haMenosDeUmMinuto

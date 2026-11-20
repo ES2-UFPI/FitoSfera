@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ColheitasDaPlanta, DIAS_DO_INDICADOR_DE_RENDIMENTO } from '@/aplicacao/casos-de-uso/ObterColheitasDaPlanta';
 import { RegistroDeColheita, UNIDADES_DE_COLHEITA } from '@/dominio/modelos/RegistroDeColheita';
 import { TEXTOS } from '@/textos';
-import { formatarData } from '../formatarData';
+import { dataLegivel } from '../formatarData';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { Cartao } from '../componentes/Cartao';
@@ -81,7 +81,7 @@ export function CartaoDasColheitas({
           <View style={estilos.lista}>
             <Text style={TEXTO.rotulo}>{TEXTOS.colheitas.rotuloDaLista}</Text>
             {estado.registros.map((registro) => {
-              const data = formatarData(registro.colhidaEm) ?? TEXTOS.historico.dataDesconhecida;
+              const data = dataLegivel(registro.colhidaEm);
               const quantidade = descreverQuantidade(registro);
               return (
                 <View key={registro.id} style={estilos.item}>
