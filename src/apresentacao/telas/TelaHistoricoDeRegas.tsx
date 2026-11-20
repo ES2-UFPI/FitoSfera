@@ -7,7 +7,7 @@ import { TEXTOS } from '@/textos';
 import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
-import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
+import { descreverQuandoRegou } from '../componentes/textosDoHistorico';
 import { dataLegivel } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
