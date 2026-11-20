@@ -10,7 +10,7 @@ import { BotaoPrincipal } from '../../componentes/BotaoPrincipal';
 import { FundoAconchegante } from '../../componentes/FundoAconchegante';
 import { useAplicativo } from '../../contextos/ContextoDoAplicativo';
 import { useRascunho } from '../../contextos/RascunhoDoCadastro';
-import { escreverDataDePlantio, lerDataDePlantio } from '../../colheita/entradaDePlantio';
+import { formatarDataLocal, lerDataLocalNaoFutura } from '../../colheita/entradaDeDataLocal';
 import { mascararData } from '../../mascaraDeData';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../../tema';
 
@@ -36,7 +36,7 @@ export function TelaBatizar() {
     edicao ? (edicao.plantadaEm ? 'data' : 'desconhecida') : 'hoje',
   );
   const [dataDoPlantio, definirDataDoPlantio] = useState(() =>
-    edicao?.plantadaEm ? escreverDataDePlantio(edicao.plantadaEm) : escreverDataDePlantio(container.relogio.agora()),
+    edicao?.plantadaEm ? formatarDataLocal(edicao.plantadaEm) : formatarDataLocal(container.relogio.agora()),
   );
   // No cadastro a pergunta começa sem resposta (null) e precisa ser respondida; na edição, vem a da planta.
   const [respostaDaProducao, definirRespostaDaProducao] = useState<boolean | null>(edicao ? edicao.colheitaIniciada : null);
@@ -44,7 +44,7 @@ export function TelaBatizar() {
   const mudaDeHoje = modoDoPlantio === 'hoje';
   const colheitaIniciada = !mudaDeHoje && respostaDaProducao === true;
   const [inicioDaFloracao, definirInicioDaFloracao] = useState(() =>
-    edicao?.floracaoIniciadaEm ? escreverDataDePlantio(edicao.floracaoIniciadaEm) : '',
+    edicao?.floracaoIniciadaEm ? formatarDataLocal(edicao.floracaoIniciadaEm) : '',
   );
   const [estado, definirEstado] = useState<EstadodoCadastro>({ tipo: 'ocioso' });
   // O estado só atualiza no próximo render; a ref barra o segundo toque que chega no mesmo instante.
@@ -61,9 +61,9 @@ export function TelaBatizar() {
 
   const tamanho = Array.from(apelido.trim()).length;
   const valido = tamanho > 0 && tamanho <= LIMITE_DO_APELIDO;
-  const dataInformada = lerDataDePlantio(dataDoPlantio, container.relogio.agora());
+  const dataInformada = lerDataLocalNaoFutura(dataDoPlantio, container.relogio.agora());
   const dataDoPlantioValida = !especie?.frutifera || modoDoPlantio !== 'data' || dataInformada !== 'invalida';
-  const floracaoInformada = lerDataDePlantio(inicioDaFloracao, container.relogio.agora());
+  const floracaoInformada = lerDataLocalNaoFutura(inicioDaFloracao, container.relogio.agora());
   const plantio =
     modoDoPlantio === 'hoje' ? container.relogio.agora() : modoDoPlantio === 'data' && dataInformada instanceof Date ? dataInformada : null;
   // Só o dia conta: o plantio "hoje" leva a hora de agora, e a floração digitada é meia-noite.

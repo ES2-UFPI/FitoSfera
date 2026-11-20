@@ -1,5 +1,5 @@
 /** Lê DD/MM/AAAA como data local, recusando datas inexistentes e futuras. */
-export function lerDataDePlantio(texto: string, hoje: Date): Date | null | 'invalida' {
+export function lerDataLocalNaoFutura(texto: string, hoje: Date): Date | null | 'invalida' {
   const partes = texto.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (partes === null) return 'invalida';
   const dia = Number(partes[1]);
@@ -12,6 +12,6 @@ export function lerDataDePlantio(texto: string, hoje: Date): Date | null | 'inva
   return data;
 }
 
-export function escreverDataDePlantio(data: Date): string {
+export function formatarDataLocal(data: Date): string {
   return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
 }
