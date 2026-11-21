@@ -34,6 +34,7 @@ export const TEXTOS = {
     naoDeuParaAbrirAPlanta: 'Não deu para abrir esta planta agora.',
     tenteEmInstantes: 'Volte e tente de novo em instantes.',
     especieDesconhecida: 'Espécie desconhecida',
+    dataDesconhecida: 'data desconhecida',
     jardimPrincipal: 'Jardim principal',
   },
 
@@ -453,7 +454,6 @@ export const TEXTOS = {
     plantadaEm: 'Plantada em',
     plantadaHoje: 'plantada hoje',
     diasDesdeOPlantio: (dias: number) => `há ${plural(dias, 'dia', 'dias')}`,
-    dataDesconhecida: 'data desconhecida',
     chegouHoje: 'chegou hoje',
     diasNoJardim: (dias: number) => `há ${plural(dias, 'dia', 'dias')} no jardim`,
     ultimaRega: 'Última rega',

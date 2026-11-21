@@ -20,7 +20,7 @@ import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHis
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
 import { descreverQuantidade } from '../colheita/FormularioDeColheita';
-import { formatarData } from '../formatarData';
+import { dataLegivel, formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { SeloDeStatus } from '../componentes/SeloDeStatus';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
@@ -620,7 +620,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             titulo={
               colheitaParaApagar
                 ? TEXTOS.apagarRegistro.tituloDaColheita(
-                    formatarData(colheitaParaApagar.colhidaEm) ?? TEXTOS.historico.dataDesconhecida,
+                    dataLegivel(colheitaParaApagar.colhidaEm),
                     descreverQuantidade(colheitaParaApagar),
                   )
                 : ''
