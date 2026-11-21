@@ -8,7 +8,7 @@ import {
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
 import { formatarNumero, TEXTOS } from '@/textos';
-import { formatarData } from '../formatarData';
+import { dataLegivel } from '../formatarData';
 import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
@@ -269,7 +269,7 @@ function CartaoDoSensorDeDesenvolvimento({
       <View style={estilos.relogioSimulado}>
         <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.relogio}</Text>
         <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
-          {formatarData(horarioSimulado, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}
+          {dataLegivel(horarioSimulado, { comHora: true })}
         </Text>
         <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDoRelogio}</Text>
         <View style={estilos.opcoesDeTempo}>

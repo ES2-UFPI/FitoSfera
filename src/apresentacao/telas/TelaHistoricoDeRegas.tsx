@@ -7,8 +7,8 @@ import { TEXTOS } from '@/textos';
 import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
-import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
-import { formatarData } from '../formatarData';
+import { descreverQuandoRegou } from '../componentes/textosDoHistorico';
+import { dataLegivel } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
@@ -84,7 +84,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
   }
 
   const quandoParaApagar = paraApagar
-    ? formatarData(paraApagar.rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida
+    ? dataLegivel(paraApagar.rega.regadaEm, { comHora: true })
     : '';
 
   return (
@@ -120,7 +120,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
             <Text style={TEXTO.rotulo}>{resumirQuantidade(estado.regas.length).toUpperCase()}</Text>
             {estado.regas.map((item) => {
               const { rega, diasAtras } = item;
-              const quando = formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
+              const quando = dataLegivel(rega.regadaEm, { comHora: true });
               return (
                 <View key={rega.id} style={estilos.item}>
                   {/* A descrição é um elemento só para o leitor de tela; o botão fica fora dela para ser alcançável. */}
