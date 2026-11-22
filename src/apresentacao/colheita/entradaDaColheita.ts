@@ -1,4 +1,4 @@
-import { DiaDoCalendario } from '@/aplicacao/casos-de-uso/RegistrarColheita';
+import { DiaDoCalendario } from '@/dominio/regras/DiaDoCalendario';
 
 /**
  * Lê a quantidade como a pessoa escreve: com vírgula ou ponto, e com espaços em volta. Campo vazio vira null, para

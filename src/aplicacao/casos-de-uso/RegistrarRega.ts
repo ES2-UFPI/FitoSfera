@@ -2,7 +2,7 @@ import { Rega } from '@/dominio/modelos/Rega';
 import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador';
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeRegas } from '@/dominio/portas/RepositorioDeRegas';
-import { DiaDoCalendario, instanteDoDia } from './RegistrarColheita';
+import { DiaDoCalendario, diaDoCalendario, instanteDoDia } from '@/dominio/regras/DiaDoCalendario';
 
 /** Cada motivo vira uma mensagem própria no campo da data. */
 export class RegaInvalida extends Error {
@@ -25,8 +25,7 @@ export class RegistrarRega {
 
   /** O dia que o campo mostra preenchido: hoje. */
   hoje(): DiaDoCalendario {
-    const agora = this.relogio.agora();
-    return { dia: agora.getDate(), mes: agora.getMonth() + 1, ano: agora.getFullYear() };
+    return diaDoCalendario(this.relogio.agora());
   }
 
   async executar(idPlanta: string, dia?: DiaDoCalendario | 'ilegivel'): Promise<Rega> {
