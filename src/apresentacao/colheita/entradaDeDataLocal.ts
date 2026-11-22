@@ -1,3 +1,5 @@
+import { escreverDia } from './entradaDaColheita';
+
 /** Lê DD/MM/AAAA como data local, recusando datas inexistentes e futuras. */
 export function lerDataLocalNaoFutura(texto: string, hoje: Date): Date | null | 'invalida' {
   const partes = texto.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -13,5 +15,5 @@ export function lerDataLocalNaoFutura(texto: string, hoje: Date): Date | null | 
 }
 
 export function formatarDataLocal(data: Date): string {
-  return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
+  return escreverDia({ dia: data.getDate(), mes: data.getMonth() + 1, ano: data.getFullYear() });
 }
