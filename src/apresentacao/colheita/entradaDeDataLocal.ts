@@ -1,3 +1,4 @@
+import { diaDoCalendario } from '@/dominio/regras/DiaDoCalendario';
 import { escreverDia } from './entradaDaColheita';
 
 /** Lê DD/MM/AAAA como data local, recusando datas inexistentes e futuras. */
@@ -15,5 +16,5 @@ export function lerDataLocalNaoFutura(texto: string, hoje: Date): Date | null | 
 }
 
 export function formatarDataLocal(data: Date): string {
-  return escreverDia({ dia: data.getDate(), mes: data.getMonth() + 1, ano: data.getFullYear() });
+  return escreverDia(diaDoCalendario(data));
 }

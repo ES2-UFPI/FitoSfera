@@ -71,26 +71,42 @@ export function calcularLuzDoDia({
   const fimDoDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1);
 
   let luxMinutos = 0;
-  let incompleta = conhecidaAte === null || agora.getTime() - conhecidaAte.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+  let incompleta = perdeuContato(conhecidaAte, agora);
   for (const periodo of periodos) {
     const fracao = fracaoNoDia(periodo, inicioDoDia, fimDoDia);
     if (fracao === 0) continue;
     luxMinutos += periodo.luxMinutos * fracao;
-    if (periodoEscondeLuz(periodo) || (fracao < 1 && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR))
-      incompleta = true;
+    if (periodoDeixaODiaIncompleto(periodo, fracao)) incompleta = true;
   }
 
   const dli = luxMinutosParaDli(luxMinutos);
   const projecaoDli = projetar(dli, conhecidaAte, inicioDoDia);
+  // Só uma meta com mínimo positivo serve de base para o progresso e para a situação da luz de agora.
+  const metaComMinimo = meta === null || meta.minimo <= 0 ? null : meta;
   return {
     dli,
     conhecidaAte,
     incompleta,
-    progresso: meta === null || meta.minimo <= 0 ? null : dli / meta.minimo,
+    progresso: metaComMinimo === null ? null : dli / metaComMinimo.minimo,
     projecaoDli,
-    situacaoAtual: meta === null || meta.minimo <= 0 ? null : compararMedicaoComFaixa(dli, meta),
+    situacaoAtual: metaComMinimo === null ? null : compararMedicaoComFaixa(dli, metaComMinimo),
     situacaoProjetada: meta === null || projecaoDli === null ? null : compararMedicaoComFaixa(projecaoDli, meta),
   };
+}
+
+/** Sem contato com o sensor há mais tempo que a tolerância, a luz desde então é desconhecida. */
+function perdeuContato(conhecidaAte: Date | null, agora: Date): boolean {
+  return conhecidaAte === null || agora.getTime() - conhecidaAte.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+}
+
+/**
+ * Um período deixa o dia incompleto quando esconde luz (o sensor reiniciou e ficou muito tempo sem contar) ou quando
+ * atravessa a meia-noite cobrindo horas de sol demais para dividir a luz entre os dias.
+ */
+function periodoDeixaODiaIncompleto(periodo: PeriodoDeLuz, fracaoNoDia: number): boolean {
+  if (periodoEscondeLuz(periodo)) return true;
+  const atravessaAMeiaNoite = fracaoNoDia < 1;
+  return atravessaAMeiaNoite && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR;
 }
 
 /** A parte do período que caiu no dia, pelo tempo. */
