@@ -111,8 +111,20 @@ test('pesado em gramas compara só as colheitas pesadas', async () => {
   );
 });
 
+test('sem nenhuma colheita no período, explica em vez de montar um ranking de zeros', async () => {
+  renderizarApp({ plantas, url: '/rendimento?planta=p1', agora, colheitas: [colheita('p1', 4, diasAtras(60))] });
+  fireEvent.press(await screen.findByRole('checkbox', { name: 'Cereja, Tomate' }));
+
+  expect(await screen.findByText('Nenhuma das plantas escolhidas teve colheita contada nos últimos 30 dias.')).toBeTruthy();
+  expect(screen.getByText('Tente um período maior.')).toBeTruthy();
+  expect(screen.queryAllByLabelText(/^\dº lugar:/)).toHaveLength(0);
+
+  fireEvent.press(screen.getByRole('radio', { name: 'Últimos 3 meses' }));
+  await waitFor(() => expect(resultados()).toHaveLength(2));
+});
+
 test('desmarcar uma planta volta a pedir mais uma', async () => {
-  renderizarApp({ plantas, url: '/rendimento?planta=p1', agora });
+  renderizarApp({ plantas, url: '/rendimento?planta=p1', agora, colheitas: [colheita('p1', 4, diasAtras(2))] });
   fireEvent.press(await screen.findByRole('checkbox', { name: 'Cereja, Tomate' }));
   await waitFor(() => expect(resultados()).toHaveLength(2));
 

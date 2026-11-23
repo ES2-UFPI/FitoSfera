@@ -3,6 +3,7 @@
 #include <DHT.h>
 #include <BH1750.h>
 #include <NimBLEDevice.h>
+#include <esp_system.h>
 
 #define PINO_DHT      18
 #define TIPO_DHT      DHT11
@@ -222,6 +223,24 @@ void imprimirCampo(float valor, int casas) {
   else              Serial.print(valor, casas);
 }
 
+// Por que o ESP32 reiniciou da última vez. Um reinício leva cerca de um segundo e
+// passa despercebido, mas muda o id de reinício e zera o contador de luz
+const char* motivoDoReinicio() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:   return "ligado na energia";
+    case ESP_RST_EXT:       return "pino de reset";
+    case ESP_RST_SW:        return "pedido pelo codigo";
+    case ESP_RST_PANIC:     return "travamento do codigo (panic)";
+    case ESP_RST_INT_WDT:   return "watchdog de interrupcao";
+    case ESP_RST_TASK_WDT:  return "watchdog de tarefa";
+    case ESP_RST_WDT:       return "outro watchdog";
+    case ESP_RST_DEEPSLEEP: return "saiu do deep sleep";
+    case ESP_RST_BROWNOUT:  return "queda de tensao (brownout)";
+    case ESP_RST_SDIO:      return "SDIO";
+    default:                return "desconhecido";
+  }
+}
+
 void setup() {
   // 80 MHz é o mínimo com BLE
   setCpuFrequencyMhz(80);
@@ -231,6 +250,7 @@ void setup() {
   idReinicio = (uint16_t)(esp_random() & 0xFFFF);
 
   Serial.println();
+  Serial.printf("# reinicio: %s\n", motivoDoReinicio());
   listarDispositivosI2C();
 
   dht.begin();

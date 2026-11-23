@@ -14,6 +14,7 @@ export function BlocoDeColheita({
   colheitaIniciada = false,
   ultimaColheitaEm = null,
   aoInformarFloracao,
+  aoInformarPlantio,
 }: {
   estimativa: EstimativaDeColheita;
   estagio: EstagioDeDesenvolvimento | null;
@@ -22,6 +23,8 @@ export function BlocoDeColheita({
   ultimaColheitaEm?: Date | null;
   /** Abre o lugar onde a pessoa informa o início da floração. */
   aoInformarFloracao?: () => void;
+  /** Abre o lugar onde a pessoa informa a data do plantio. */
+  aoInformarPlantio?: () => void;
 }) {
   // Já produzindo, sem a data da floração: não dá para prever a próxima leva, mas dá para dizer o que se sabe.
   const emColheitaSemFloracao =
@@ -33,6 +36,9 @@ export function BlocoDeColheita({
     : emColheitaSemFloracao
       ? TEXTOS.detalhe.emColheita
       : TEXTOS.detalhe.estimativaIndisponivel;
+  // Sem o motivo, "indisponível" parece defeito; com ele, a pessoa sabe o que fazer.
+  const semPlantio = !estimativa.disponivel && estimativa.motivo === 'sem-data-de-plantio';
+  const semCicloMedio = !estimativa.disponivel && estimativa.motivo === 'sem-tempo-medio';
   const nomeDoEstagio = estagio?.nome ?? (emColheitaSemFloracao ? TEXTOS.detalhe.estagioDeColheita : null);
   const ultimaColheita = colheitaIniciada && ultimaColheitaEm !== null ? formatarData(ultimaColheitaEm) : null;
 
@@ -66,6 +72,20 @@ export function BlocoDeColheita({
           ) : null}
         </>
       ) : null}
+      {semPlantio ? (
+        <>
+          <Text style={TEXTO.apoio}>{TEXTOS.detalhe.informeDataDoPlantio}</Text>
+          {aoInformarPlantio ? (
+            <BotaoPrincipal
+              titulo={TEXTOS.detalhe.informarDataDoPlantio}
+              variante="secundaria"
+              aoTocar={aoInformarPlantio}
+              largo
+            />
+          ) : null}
+        </>
+      ) : null}
+      {semCicloMedio ? <Text style={TEXTO.apoio}>{TEXTOS.detalhe.especieSemCicloMedio}</Text> : null}
       {estimativa.disponivel && !estimativa.ajustada ? (
         <Text style={TEXTO.apoio}>
           {colheitaIniciada ? TEXTOS.detalhe.estimativaSemAjusteDaFloracao : TEXTOS.detalhe.estimativaSemAjusteAmbiental}

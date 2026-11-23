@@ -20,11 +20,13 @@ import { CartaoDoHistorico, EstadoDoHistorico } from '../componentes/CartaoDoHis
 import { ConfirmacaoDeExclusao } from '../componentes/ConfirmacaoDeExclusao';
 import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
 import { descreverQuantidade } from '../colheita/FormularioDeColheita';
-import { formatarData } from '../formatarData';
+import { dataLegivel, formatarData } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { SeloDeStatus } from '../componentes/SeloDeStatus';
 import { IndicadorDeConexao } from '../componentes/IndicadorDeConexao';
 import { IconeRegador } from '../componentes/IconeRegador';
+import { RegaEmOutroDia } from '../componentes/RegaEmOutroDia';
+import { escreverDia, lerDia } from '../colheita/entradaDaColheita';
 import {
   EstadoDoPainel,
   FaixasRecomendadasDoPainel,
@@ -38,12 +40,12 @@ import { CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema
 
 /**
  * As faixas que o painel mostra, pelas do período da leitura (a mesma regra dos avisos e do selo da estante).
- * Sem leitura não há hora para escolher, então ficam as do dia.
+ * Sem leitura, vale a hora de agora: à noite, a faixa de luz do dia não faz sentido.
  */
-function faixasDoPainel(item: PlantaNoJardim, medidaEm: Date | null): FaixasRecomendadasDoPainel | undefined {
+function faixasDoPainel(item: PlantaNoJardim, momento: Date): FaixasRecomendadasDoPainel | undefined {
   const faixas = item.planta.faixasRecomendadas;
   if (faixas === null) return undefined;
-  const doPeriodo = medidaEm === null ? faixas : faixasDoPeriodo(faixas, medidaEm);
+  const doPeriodo = faixasDoPeriodo(faixas, momento);
   return {
     umidadePercentual: doPeriodo.umidadeDoAr,
     temperaturaCelsius: doPeriodo.temperatura,
@@ -51,7 +53,7 @@ function faixasDoPainel(item: PlantaNoJardim, medidaEm: Date | null): FaixasReco
   };
 }
 
-function estadoDoPainel(item: PlantaNoJardim, atualizando = false, offline = false): EstadoDoPainel {
+function estadoDoPainel(item: PlantaNoJardim, agora: Date, atualizando = false, offline = false): EstadoDoPainel {
   if (item.ultimaLeitura !== null) {
     return {
       tipo: 'leitura',
@@ -63,7 +65,7 @@ function estadoDoPainel(item: PlantaNoJardim, atualizando = false, offline = fal
       atualizando,
     };
   }
-  return { tipo: 'sem-leitura', faixasRecomendadas: faixasDoPainel(item, null) };
+  return { tipo: 'sem-leitura', faixasRecomendadas: faixasDoPainel(item, agora), noite: ehNoite(agora) };
 }
 
 /** Quanto tempo a confirmação de edição fica no topo do detalhe. */
@@ -72,7 +74,8 @@ const TEMPO_DA_FAIXA_DE_EDICAO_MS = 4_000;
 const PRAZO_PARA_DESFAZER_A_REGA_MS = 8_000;
 
 export function TelaDetalheDaPlanta({ id }: { id: string }) {
-  const { container, recarregarJardim, idJardimSelecionado, consumirEdicaoSalva } = useAplicativo();
+  const { container, recarregarJardim, idJardimSelecionado, consumirEdicaoSalva, jardins, abrirJardimDaPlanta } =
+    useAplicativo();
   const navegador = useRouter();
   const margens = useSafeAreaInsets();
   const conexao = useConexaoDoSensor();
@@ -82,6 +85,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   >('ocioso');
   // A rega que o "Desfazer" apaga; null quando o prazo para desfazer acabou.
   const [regaDesfazivel, definirRegaDesfazivel] = useState<string | null>(null);
+  // O dia da última rega registrada, quando foi em outro dia; null quando foi agora.
+  const [diaDaRegaRegistrada, definirDiaDaRegaRegistrada] = useState<string | null>(null);
   const [atualizandoLeitura, definirAtualizandoLeitura] = useState(false);
   const [historico, definirHistorico] = useState<EstadoDoHistorico>(undefined);
   const [colheitas, definirColheitas] = useState<EstadoDasColheitas>(undefined);
@@ -117,6 +122,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
     definirEstadoDaRega('registrando');
     try {
       const [rega] = await Promise.all([container.registrarRega.executar(item.planta.id), animacao]);
+      definirDiaDaRegaRegistrada(null);
       definirEstadoDaRega('sucesso');
       definirRegaDesfazivel(rega.id);
       void carregarHistorico(item.planta);
@@ -126,6 +132,17 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
     } finally {
       registroEmAndamento.current = false;
     }
+  }
+
+  /** A rega esquecida: a data inválida volta como erro para o próprio campo mostrar. */
+  async function registrarRegaEmOutroDia(texto: string) {
+    if (!item || item === 'falhou') return;
+    const rega = await container.registrarRega.executar(item.planta.id, lerDia(texto));
+    const deHoje = rega.regadaEm.getTime() === container.relogio.agora().getTime();
+    definirDiaDaRegaRegistrada(deHoje ? null : formatarData(rega.regadaEm));
+    definirEstadoDaRega('sucesso');
+    definirRegaDesfazivel(rega.id);
+    void carregarHistorico(item.planta);
   }
 
   async function desfazerRega() {
@@ -143,11 +160,20 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
   }
 
   // O "Desfazer" é para o toque duplo de agora, não para corrigir o histórico: some depois de alguns segundos.
+  // Passado o prazo, a confirmação sai junto: o histórico logo abaixo já mostra a rega.
   useEffect(() => {
     if (regaDesfazivel === null) return;
-    const temporizador = setTimeout(() => definirRegaDesfazivel(null), PRAZO_PARA_DESFAZER_A_REGA_MS);
+    const temporizador = setTimeout(() => {
+      definirRegaDesfazivel(null);
+      definirEstadoDaRega((estado) => (estado === 'sucesso' ? 'ocioso' : estado));
+    }, PRAZO_PARA_DESFAZER_A_REGA_MS);
     return () => clearTimeout(temporizador);
   }, [regaDesfazivel]);
+  useEffect(() => {
+    if (estadoDaRega !== 'desfeita') return;
+    const temporizador = setTimeout(() => definirEstadoDaRega('ocioso'), TEMPO_DA_FAIXA_DE_EDICAO_MS);
+    return () => clearTimeout(temporizador);
+  }, [estadoDaRega]);
 
   function carregarHistorico(planta: PlantaNoJardim['planta']): Promise<void> {
     return container.obterHistorico.executar(planta).then(definirHistorico, (falha) => {
@@ -305,7 +331,10 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
     useCallback(() => {
       let atual = true;
       container.obterPlanta.executar(id, idJardimSelecionado).then(
-        (encontrado) => {
+        async (encontrado) => {
+          if (!atual) return;
+          // A planta é de outro jardim (link ou notificação): abre o jardim dela, e a nova seleção recarrega a tela.
+          if (encontrado === null && (await abrirJardimDaPlanta(id).catch(() => false))) return;
           if (!atual) return;
           definirItem(encontrado);
           // Uma rega apagada no histórico completo muda a "última rega" deste cartão.
@@ -319,7 +348,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
       return () => {
         atual = false;
       };
-    }, [container, id, idJardimSelecionado]),
+    }, [container, id, idJardimSelecionado, abrirJardimDaPlanta]),
   );
 
   useEffect(() => {
@@ -433,6 +462,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
           <PainelDeCondicoes
             estado={estadoDoPainel(
               item,
+              container.relogio.agora(),
               atualizandoLeitura,
               conexao !== null && conexao.estado !== 'conectado' && conexao.estado !== 'conectando',
             )}
@@ -443,7 +473,10 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               />
             )}
           />
-          <CartaoDaLuzDeHoje luz={luzDeHoje} />
+          <CartaoDaLuzDeHoje
+            luz={luzDeHoje}
+            jardimSemSensor={jardins.find((jardim) => jardim.id === item.planta.idJardim)?.idSensor == null}
+          />
           <CartaoDaDificuldade especie={item.especie} />
           {item.especie?.frutifera ? (
             <BlocoDeColheita
@@ -459,6 +492,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
                 colheitas !== undefined && colheitas !== 'falhou' ? colheitas.registros[0]?.colhidaEm ?? null : null
               }
               aoInformarFloracao={() => navegador.push({ pathname: '/editar/[id]/apelido', params: { id } })}
+              aoInformarPlantio={() => navegador.push({ pathname: '/editar/[id]/apelido', params: { id } })}
             />
           ) : null}
           <CartaoDoHistorico
@@ -495,16 +529,26 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
               variante="rega"
               largo
             />
+            <RegaEmOutroDia
+              diaInicial={escreverDia(container.registrarRega.hoje())}
+              aoRegistrar={registrarRegaEmOutroDia}
+            />
             {/* Na falha ao desfazer, a linha continua: a mensagem pede para tentar de novo, então o botão precisa estar lá. */}
             {estadoDaRega === 'sucesso' || estadoDaRega === 'desfazendo' || estadoDaRega === 'erroAoDesfazer' ? (
               <View style={estilos.linhaDaConfirmacao}>
                 <Text style={[TEXTO.corpo, estilos.confirmacao]} accessibilityLiveRegion="polite">
-                  {TEXTOS.detalhe.regaRegistrada}
+                  {diaDaRegaRegistrada === null
+                    ? TEXTOS.detalhe.regaRegistrada
+                    : TEXTOS.detalhe.regaRegistradaNoDia(diaDaRegaRegistrada)}
                 </Text>
                 {regaDesfazivel !== null ? (
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={TEXTOS.detalhe.desfazerRega}
+                    accessibilityLabel={
+                      diaDaRegaRegistrada === null
+                        ? TEXTOS.detalhe.desfazerRega
+                        : TEXTOS.detalhe.desfazerRegaDoDia(diaDaRegaRegistrada)
+                    }
                     accessibilityState={{ disabled: estadoDaRega === 'desfazendo' }}
                     disabled={estadoDaRega === 'desfazendo'}
                     onPress={() => void desfazerRega()}
@@ -576,7 +620,7 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
             titulo={
               colheitaParaApagar
                 ? TEXTOS.apagarRegistro.tituloDaColheita(
-                    formatarData(colheitaParaApagar.colhidaEm) ?? TEXTOS.historico.dataDesconhecida,
+                    dataLegivel(colheitaParaApagar.colhidaEm),
                     descreverQuantidade(colheitaParaApagar),
                   )
                 : ''
@@ -593,7 +637,8 @@ export function TelaDetalheDaPlanta({ id }: { id: string }) {
           />
           <ConfirmacaoDeExclusao
             apelido={item.planta.apelido}
-            comColheitas={item.especie?.frutifera ?? false}
+            // Só fala das colheitas quando há alguma para perder.
+            comColheitas={colheitas !== undefined && colheitas !== 'falhou' && colheitas.registros.length > 0}
             visivel={exclusao !== 'fechada'}
             excluindo={exclusao === 'excluindo'}
             erro={exclusao === 'erro'}

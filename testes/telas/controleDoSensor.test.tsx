@@ -135,7 +135,7 @@ test('forçar um cenário de desvio envia a notificação correspondente', async
     }),
   );
   expect(notificador.entregues[0].corpo).toContain('A temperatura está em 40 °C, acima do ideal');
-  expect(notificador.entregues[0].corpo).toContain('A luz está em 100000 lux, acima do ideal');
+  expect(notificador.entregues[0].corpo).toContain('A luz está em 100.000 lux, acima do ideal');
 });
 
 test('permite montar uma combinação personalizada', async () => {
@@ -215,4 +215,57 @@ test('o cenário desconectado não é escondido por valores demonstrativos', asy
 
   expect(await screen.findByText('Nenhuma leitura disponível ainda.')).toBeTruthy();
   expect(screen.queryByText('VALORES DE EXEMPLO')).toBeNull();
+});
+
+describe('simular sol desde as 7h', () => {
+  class ControleComSol extends ControleFixo {
+    pedidos: string[] = [];
+    preenche = true;
+
+    async simularSolDesdeAs7h(idJardim = 'jardim-principal') {
+      this.pedidos.push(idJardim);
+      return this.preenche;
+    }
+  }
+
+  test('com o simulador em uso no jardim, o botão preenche a luz do dia', async () => {
+    const controle = new ControleComSol();
+    renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+    fireEvent.press(await screen.findByRole('button', { name: 'Usar o simulador neste jardim' }));
+    await screen.findByText('Simulador em uso em Jardim principal');
+
+    fireEvent.press(screen.getByRole('button', { name: 'Simular sol desde as 7h' }));
+
+    expect(await screen.findByText('Pronto: a luz de hoje foi preenchida desde as 7h.')).toBeTruthy();
+    expect(controle.pedidos).toEqual(['jardim-principal']);
+    expect(screen.getByText(/sol forte \(40\.000 lux\) desde as 7h/)).toBeTruthy();
+  });
+
+  test('antes das 7h, explica que não há luz para preencher', async () => {
+    const controle = new ControleComSol();
+    controle.preenche = false;
+    renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+    fireEvent.press(await screen.findByRole('button', { name: 'Usar o simulador neste jardim' }));
+    await screen.findByText('Simulador em uso em Jardim principal');
+
+    fireEvent.press(screen.getByRole('button', { name: 'Simular sol desde as 7h' }));
+
+    expect(await screen.findByText(/Ainda não são 7h no relógio da simulação/)).toBeTruthy();
+  });
+
+  test('sem o simulador em uso no jardim, o botão fica desabilitado e diz o porquê', async () => {
+    const controle = new ControleComSol();
+    renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: controle });
+
+    const botao = await screen.findByRole('button', { name: 'Simular sol desde as 7h' });
+    expect(botao.props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByText('Use o simulador neste jardim para preencher a luz do dia.')).toBeTruthy();
+  });
+
+  test('o controle que não sabe preencher a luz não mostra o botão', async () => {
+    renderizarApp({ url: '/ajustes', controleDoSensorDeDesenvolvimento: new ControleFixo() });
+
+    expect(await screen.findByText('VALORES SIMULADOS')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Simular sol desde as 7h' })).toBeNull();
+  });
 });

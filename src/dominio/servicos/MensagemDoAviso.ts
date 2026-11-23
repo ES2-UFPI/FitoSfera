@@ -1,4 +1,4 @@
-import { TEXTOS } from '@/textos';
+import { formatarNumero, TEXTOS } from '@/textos';
 import { Desvio, Grandeza, SentidoDoDesvio } from '../regras/DesvioDaLeitura';
 
 /** O texto de uma notificação de desvio. */
@@ -65,7 +65,7 @@ function descreverDesvio(desvio: Desvio): string {
 
 /** Uma casa decimal basta para a pessoa, e com vírgula, como se escreve em português. */
 function comUnidade(valor: number, unidade: string): string {
-  return `${String(Math.round(valor * 10) / 10).replace('.', ',')}${unidade}`;
+  return `${formatarNumero(Math.round(valor * 10) / 10)}${unidade}`;
 }
 
 /**

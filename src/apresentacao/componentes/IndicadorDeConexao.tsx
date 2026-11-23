@@ -3,7 +3,7 @@ import { ConexaoDoSensor, EstadoDaConexao } from '@/dominio/modelos/EstadoDaCone
 import { TEXTOS } from '@/textos';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { MENSAGEM_DO_PROBLEMA } from '../sensor/textosDoSensor';
-import { formatarData } from '../formatarData';
+import { dataLegivel } from '../formatarData';
 
 const APRESENTACAO: Record<EstadoDaConexao, { texto: string; cor: string }> = {
   conectado: { texto: TEXTOS.conexao.conectado, cor: CORES.statusOk },
@@ -17,21 +17,25 @@ function frase(texto: string): string {
   return /[.…]$/.test(texto) ? texto : `${texto}.`;
 }
 
+const MS_POR_MINUTO = 60_000;
+const MINUTOS_POR_HORA = 60;
+const MINUTOS_POR_DIA = 24 * MINUTOS_POR_HORA;
+
 function mesmoDia(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
 export function descreverUltimaComunicacao(ultimaComunicacao: Date | null, agora: Date): string {
   if (ultimaComunicacao === null) return TEXTOS.conexao.semComunicacao;
-  const horario = formatarData(ultimaComunicacao, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
-  const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / 60_000));
+  const horario = dataLegivel(ultimaComunicacao, { comHora: true });
+  const minutos = Math.max(0, Math.floor((agora.getTime() - ultimaComunicacao.getTime()) / MS_POR_MINUTO));
   const decorrido = minutos < 1
     ? TEXTOS.conexao.haMenosDeUmMinuto
-    : minutos < 60
+    : minutos < MINUTOS_POR_HORA
       ? TEXTOS.conexao.haMinutos(minutos)
-      : minutos < 1_440
-        ? TEXTOS.conexao.haHoras(Math.floor(minutos / 60))
-        : TEXTOS.conexao.haDias(Math.floor(minutos / 1_440));
+      : minutos < MINUTOS_POR_DIA
+        ? TEXTOS.conexao.haHoras(Math.floor(minutos / MINUTOS_POR_HORA))
+        : TEXTOS.conexao.haDias(Math.floor(minutos / MINUTOS_POR_DIA));
   const quando = mesmoDia(ultimaComunicacao, agora)
     ? horario.slice(horario.indexOf('às'))
     : `em ${horario}`;

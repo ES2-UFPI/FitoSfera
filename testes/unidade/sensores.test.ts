@@ -26,6 +26,84 @@ describe('SensorIndisponivel', () => {
   });
 });
 
+describe('contador de luz do SensorSimulado', () => {
+  const as10h = new Date(2026, 10, 16, 10, 0);
+  const minutosDepois = (minutos: number) => new Date(as10h.getTime() + minutos * 60_000);
+  const contador = async (sensor: SensorSimulado) => (await sensor.lerLeituraAtual())?.contadorDeLuz?.luzAcumuladaLuxMinutos ?? NaN;
+  const comLuzBaixa = (relogio: RelogioParado) => {
+    const sensor = new SensorSimulado(relogio);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, luminosidade: 'baixo' });
+    return sensor;
+  };
+
+  test('a leitura leva o contador, como a do sensor físico, com o id de um aparelho sempre ligado', async () => {
+    const leitura = await new SensorSimulado(new RelogioParado(as10h)).lerLeituraAtual();
+    expect(leitura?.contadorDeLuz).toEqual({
+      idReinicio: 1,
+      luzAcumuladaLuxMinutos: expect.any(Number),
+      segundosSemConfirmacao: 0,
+      ultimaComunicacaoEm: as10h,
+    });
+  });
+
+  test('reabrir o app dá o mesmo contador: o aparelho simulado não reinicia', async () => {
+    const primeiro = await new SensorSimulado(new RelogioParado(as10h)).lerLeituraAtual();
+    const reaberto = await new SensorSimulado(new RelogioParado(as10h)).lerLeituraAtual();
+    expect(reaberto?.contadorDeLuz).toEqual(primeiro?.contadorDeLuz);
+  });
+
+  test('no automático, soma a luz da curva do dia, mesmo sem medição no meio', async () => {
+    const relogio = new RelogioParado(new Date(2026, 10, 16, 6, 0));
+    const sensor = new SensorSimulado(relogio);
+    const noNascer = await contador(sensor);
+    relogio.avancar(12 * 3_600_000);
+
+    // A curva de um dia inteiro: 23.000 lux no pico, das 6h às 18h.
+    expect((await contador(sensor)) - noNascer).toBeCloseTo(23000 * (24 / Math.PI) * 60, -1);
+  });
+
+  test('à noite, o contador não muda', async () => {
+    const relogio = new RelogioParado(new Date(2026, 10, 16, 20, 0));
+    const sensor = new SensorSimulado(relogio);
+    const antes = await contador(sensor);
+    relogio.avancar(3 * 3_600_000);
+    expect(await contador(sensor)).toBe(antes);
+  });
+
+  test('com a luz forçada, soma o nível forçado entre uma medição e outra', async () => {
+    const relogio = new RelogioParado(as10h);
+    const sensor = comLuzBaixa(relogio);
+    const antes = await contador(sensor);
+    relogio.avancar(5 * 60_000);
+    await contador(sensor);
+    relogio.avancar(5 * 60_000);
+
+    expect((await contador(sensor)) - antes).toBe(500 * 10);
+  });
+
+  test('continua somando desconectado, como o sensor físico com o celular longe', async () => {
+    const relogio = new RelogioParado(as10h);
+    const sensor = comLuzBaixa(relogio);
+    const antes = await contador(sensor);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, luminosidade: 'baixo', desconectado: true });
+    relogio.avancar(5 * 60_000);
+    expect(await sensor.lerLeituraAtual()).toBeNull();
+    relogio.avancar(5 * 60_000);
+    sensor.definirConfiguracao({ ...CONFIGURACAO_AUTOMATICA, luminosidade: 'baixo' });
+
+    expect((await contador(sensor)) - antes).toBe(500 * 10);
+  });
+
+  test('a marca do contador é o valor de agora, no relógio da simulação', async () => {
+    const relogio = new RelogioParado(as10h);
+    const sensor = comLuzBaixa(relogio);
+    const antes = await contador(sensor);
+    relogio.avancar(4 * 60_000);
+
+    expect(sensor.marcaDoContador()).toEqual({ idReinicio: 1, luzAcumuladaLuxMinutos: antes + 2000, medidaEm: minutosDepois(4) });
+  });
+});
+
 describe('SensorSimulado', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
@@ -126,12 +204,12 @@ describe('SensorSimulado', () => {
       desconectado: false,
     });
 
-    expect(await sensor.lerLeituraAtual()).toEqual({
+    expect(await sensor.lerLeituraAtual()).toEqual(expect.objectContaining({
       umidadePercentual: 10,
       temperaturaCelsius: 40,
       luminosidadeLux: 100000,
       medidaEm: instante,
-    });
+    }));
   });
 
   test('desconectado não tem leitura nem avisa no intervalo', async () => {

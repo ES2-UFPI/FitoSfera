@@ -6,6 +6,16 @@
  * recebem só números e textos prontos.
  */
 
+/**
+ * Números no padrão brasileiro: vírgula nos decimais e ponto nos milhares ("15.000", "25,5"). Escrito à mão para
+ * o app inteiro usar a mesma forma, sem depender do `toLocaleString` de cada aparelho.
+ */
+export function formatarNumero(valor: number): string {
+  const [inteira, decimal] = String(Math.abs(valor)).split('.');
+  const comPontos = inteira.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${valor < 0 ? '-' : ''}${comPontos}${decimal === undefined ? '' : `,${decimal}`}`;
+}
+
 function plural(quantidade: number, singular: string, plural: string): string {
   return `${quantidade} ${quantidade === 1 ? singular : plural}`;
 }
@@ -24,6 +34,7 @@ export const TEXTOS = {
     naoDeuParaAbrirAPlanta: 'Não deu para abrir esta planta agora.',
     tenteEmInstantes: 'Volte e tente de novo em instantes.',
     especieDesconhecida: 'Espécie desconhecida',
+    dataDesconhecida: 'data desconhecida',
     jardimPrincipal: 'Jardim principal',
   },
 
@@ -72,8 +83,8 @@ export const TEXTOS = {
     sensorEmUso: 'Sensor FitoSfera em uso',
     nenhumSensor: 'Nenhum sensor neste jardim',
     explicacaoDoSensor: 'As leituras deste sensor aparecem somente nas plantas deste jardim.',
-    usarSensor: (nome: string, final: string) => `Usar ${nome} · ${final}`,
-    sensorEmUsoNoJardim: (nome: string, final: string) => `Em uso: ${nome} · ${final}`,
+    usarSensor: (nome: string, final: string) => `Usar ${nome} · final ${final}`,
+    sensorEmUsoNoJardim: (nome: string, final: string) => `Em uso: ${nome} · final ${final}`,
     parearNovoSensor: 'Parear novo sensor',
     pararDeUsarSensor: 'Parar de usar o sensor neste jardim',
     falhaAoCarregarSensores: 'Não deu para carregar os sensores pareados.',
@@ -86,6 +97,22 @@ export const TEXTOS = {
     nomeDoNovoJardim: 'Nome do novo jardim',
     exemploDeNome: 'Ex.: Varanda',
     criarJardim: 'Criar jardim',
+    editar: 'Editar',
+    editarOJardim: (nome: string) => `Editar o jardim ${nome}`,
+    editarJardim: 'Editar jardim',
+    rotuloDoNomeDoJardim: 'NOME DO JARDIM',
+    nomeDoJardim: 'Nome do jardim',
+    salvarNome: 'Salvar',
+    falhaAoRenomear: 'Não deu para salvar o nome. Confira se ele não está vazio e tente novamente.',
+    excluirJardim: 'Excluir jardim',
+    excluirOJardim: (nome: string) => `Excluir ${nome}?`,
+    explicacaoDaExclusao: (plantas: number) =>
+      plantas === 0
+        ? 'O jardim sai da lista. Não dá para desfazer.'
+        : `O jardim sai junto com ${plantas === 1 ? 'a planta dele' : `as ${plantas} plantas dele`}, com as regas e as colheitas. Não dá para desfazer.`,
+    excluir: 'Excluir',
+    excluindo: 'Excluindo…',
+    falhaAoExcluir: 'Não deu para excluir o jardim. Tente novamente.',
     falhaAoTrocarJardim: 'Não deu para criar ou abrir o jardim. Confira o nome e tente novamente.',
     falhaAoAtualizarLeituras: 'Não foi possível atualizar as leituras. Os últimos dados continuam disponíveis.',
     novaPlanta: 'Nova planta',
@@ -155,7 +182,7 @@ export const TEXTOS = {
     formas: {
       frutifera: { nome: 'Frutífera', rotuloDestaque: 'Frutos' },
       erva: { nome: 'Erva', rotuloDestaque: null },
-      flor: { nome: 'Flor aberta', rotuloDestaque: 'Flores' },
+      flor: { nome: 'Flor', rotuloDestaque: 'Flores' },
       espiga: { nome: 'Espiga', rotuloDestaque: 'Flores' },
       rasteira: { nome: 'Rasteira', rotuloDestaque: 'Frutos' },
       pendente: { nome: 'Pendente', rotuloDestaque: null },
@@ -209,13 +236,25 @@ export const TEXTOS = {
     ultimaColheitaEm: (data: string) => `Última colheita em ${data}`,
     estagioDeColheita: 'colheita',
     informarInicioDaFloracao: 'Informar início da floração',
+    informeDataDoPlantio: 'Para prever a colheita, informe quando esta planta foi plantada.',
+    informarDataDoPlantio: 'Informar data do plantio',
+    especieSemCicloMedio: 'Esta espécie ainda não tem o tempo médio até a colheita no catálogo.',
     cuidadosDaEspecie: 'Cuidados desta espécie',
     registrarRega: 'Registrar rega',
     registrandoRega: 'Registrando rega…',
     regaRegistrada: '✓ Rega registrada agora.',
+    regaRegistradaNoDia: (data: string) => `✓ Rega de ${data} registrada.`,
+    regouEmOutroDia: 'Regou em outro dia?',
+    dataDaRega: 'Data da rega',
+    registrarRegaNoDia: 'Registrar',
+    regaInvalida: {
+      'data-invalida': 'Informe uma data válida, no formato DD/MM/AAAA.',
+      'data-no-futuro': 'A rega não pode ser num dia que ainda não chegou.',
+    },
     alteracoesSalvas: '✓ Alterações salvas',
     desfazer: 'Desfazer',
     desfazerRega: 'Desfazer a rega registrada agora',
+    desfazerRegaDoDia: (data: string) => `Desfazer a rega de ${data}`,
     desfazendoRega: 'Desfazendo…',
     regaDesfeita: 'Rega desfeita.',
     falhaAoDesfazerRega: 'Não deu para desfazer a rega. Tente de novo.',
@@ -317,6 +356,16 @@ export const TEXTOS = {
     calculando: 'Calculando o rendimento…',
     falha: 'Não deu para calcular o rendimento agora. Tente de novo.',
     rotuloDoResultado: 'DO MAIOR PARA O MENOR',
+    periodosNaFrase: {
+      7: 'nos últimos 7 dias',
+      30: 'nos últimos 30 dias',
+      90: 'nos últimos 3 meses',
+      365: 'no último ano',
+    },
+    medidasNaFrase: { unidades: 'contada', gramas: 'pesada em gramas' },
+    semColheitasNoPeriodo: (medida: string, periodo: string) =>
+      `Nenhuma das plantas escolhidas teve colheita ${medida} ${periodo}.`,
+    tenteUmPeriodoMaior: 'Tente um período maior.',
     posicao: (posicao: number) => `${posicao}º`,
     colheitas: (quantidade: number) => (quantidade === 0 ? 'nenhuma colheita no período' : `em ${plural(quantidade, 'colheita', 'colheitas')}`),
     linhaDoResultado: (posicao: number, apelido: string, total: string, colheitas: string) =>
@@ -340,7 +389,7 @@ export const TEXTOS = {
     porCento: 'por cento',
     grausCelsius: 'graus Celsius',
     lux: 'lux',
-    explicacaoDoLux: 'Lux mede quanta luz chega à planta: um cômodo bem iluminado tem uns 500 lux; sol forte, mais de 20 000.',
+    explicacaoDoLux: 'Lux mede quanta luz chega à planta: um cômodo bem iluminado tem uns 500 lux; sol forte, mais de 20.000.',
     semDados: 'sem dados',
     semDadosRecentes: 'sem dados recentes',
     ideal: (faixa: string) => `Ideal: ${faixa}`,
@@ -382,11 +431,17 @@ export const TEXTOS = {
       ideal: 'No ritmo de hoje, a planta deve receber a luz de que precisa.',
       acima: 'No ritmo de hoje, a planta deve receber mais luz do que o recomendado.',
     },
+    jaRecebeu: {
+      ideal: 'A planta já recebeu a luz de que precisa hoje.',
+      vaiPassar: 'A planta já recebeu a luz de que precisa. No ritmo de hoje, deve passar do recomendado.',
+      acima: 'A planta já recebeu mais luz do que o recomendado hoje.',
+    },
     cedoParaSaber: 'Ainda é cedo para saber como o dia vai terminar.',
     incompletos: 'Dados de hoje incompletos',
     parteNaoContada: 'O sensor ficou um tempo sem falar com o app, então parte da luz de hoje não foi contada.',
     metaJaAlcancada: 'Mesmo com dados faltando, a planta já recebeu a luz mínima de hoje.',
     semMedida: 'Ainda não chegou nenhuma medida de luz do sensor.',
+    semSensor: 'Este jardim não tem sensor. Associe um na tela do jardim para medir a luz que a planta recebe.',
     falado: (porcento: number, frase: string) =>
       `Luz de hoje: ${porcento} por cento da luz de que a planta precisa. ${frase}`,
   },
@@ -396,7 +451,9 @@ export const TEXTOS = {
     buscando: 'Buscando o histórico da planta…',
     falha: 'Não deu para ler o histórico agora.',
     noJardimDesde: 'No jardim desde',
-    dataDesconhecida: 'data desconhecida',
+    plantadaEm: 'Plantada em',
+    plantadaHoje: 'plantada hoje',
+    diasDesdeOPlantio: (dias: number) => `há ${plural(dias, 'dia', 'dias')}`,
     chegouHoje: 'chegou hoje',
     diasNoJardim: (dias: number) => `há ${plural(dias, 'dia', 'dias')} no jardim`,
     ultimaRega: 'Última rega',
@@ -448,10 +505,10 @@ export const TEXTOS = {
     buscandoPareado: 'Buscando o sensor pareado…',
     nenhumPareado: 'Nenhum sensor pareado. Pareie o FitoSfera para as leituras virem do lugar onde a planta está.',
     pareadoCom: (nome: string, final: string) => `Pareado com ${nome}, final ${final}.`,
-    esquecer: (nome: string, final: string) => `Esquecer ${nome} · ${final}`,
+    esquecer: (nome: string, final: string) => `Esquecer ${nome} · final ${final}`,
     trocar: 'Trocar sensor',
     esquecerSensor: 'Esquecer sensor',
-    tituloDoEsquecer: (nome: string, final: string) => `Esquecer ${nome} · ${final}?`,
+    tituloDoEsquecer: (nome: string, final: string) => `Esquecer ${nome} · final ${final}?`,
     explicacaoDoEsquecer: 'Os jardins que usam este sensor ficam sem leituras até você parear de novo.',
     confirmarEsquecer: 'Sim, esquecer',
     esquecendo: 'Esquecendo…',
@@ -465,7 +522,7 @@ export const TEXTOS = {
     semLeituraDeLuz: 'sem leitura de luz',
     resumoDaLeitura: (temperatura: string, umidade: string, luz: string) =>
       `${temperatura} °C · ${umidade}% de umidade · ${luz}`,
-    luxMedidos: (lux: number) => `${lux} lux`,
+    luxMedidos: (lux: string) => `${lux} lux`,
   },
 
   pareamento: {
@@ -480,6 +537,9 @@ export const TEXTOS = {
     sensorNaLista: (nome: string, final: string, sinal: string) => `${nome}, final ${final}, ${sinal}`,
     finalDoSensor: (nome: string, final: string) => `${nome} · final ${final}`,
     nenhumEncontrado: 'Nenhum sensor encontrado. Confira se ele está ligado e perto do celular.',
+    nenhumNovoEncontrado: 'Nenhum sensor novo encontrado.',
+    conectadoNaoApareceNaBusca:
+      'O sensor já conectado a este celular não aparece na busca. Para parear outro, ligue o novo sensor perto do celular.',
     procurarDeNovo: 'Procurar de novo',
     conectando: (nome: string, final: string) => `Conectando a ${nome} · final ${final}… Pode levar até 20 segundos.`,
     pareado: '✓ Sensor pareado',
@@ -528,6 +588,7 @@ export const TEXTOS = {
     informeONome: 'Informe o nome do jardim.',
     sensorNaoPareado: 'Este sensor ainda não foi pareado.',
     jardimNaoEncontrado: 'Jardim não encontrado.',
+    principalNaoSai: 'O jardim principal não pode ser excluído.',
   },
 
   lembretes: {
@@ -558,6 +619,21 @@ export const TEXTOS = {
     titulo: 'Ajustes',
   },
 
+  demonstracao: {
+    titulo: 'Modo de demonstração',
+    explicacao: (lux: string) =>
+      `A luz das 7h até o sensor ligar é inventada (${lux} lux), só para apresentar o app. Dali em diante vale a luz medida pelo sensor.`,
+    simularSol: 'Simular sol desde as 7h',
+    simulando: 'Preenchendo a luz…',
+    preenchido: 'Pronto: a luz de hoje começa às 7h.',
+    jaPreenchido: 'A luz de hoje já está preenchida desde as 7h.',
+    semLeituraHoje: 'Ligue o sensor e espere a primeira leitura de hoje.',
+    antesDas7h: 'Ainda não são 7h: não há luz para preencher.',
+    semSensorNoJardim: 'Associe o sensor a este jardim para usar a demonstração.',
+    falha: 'Não deu para preencher a luz. Tente de novo.',
+    desligar: 'Desligar o modo',
+  },
+
   simulador: {
     titulo: (jardim: string) => `Sensor simulado · ${jardim}`,
     selo: 'VALORES SIMULADOS',
@@ -580,6 +656,13 @@ export const TEXTOS = {
     voltarAoHorarioAtual: 'Voltar ao horário atual',
     explicacaoDoRelogio:
       'Avance o tempo para ver as leituras mudarem e testar dados antigos. Isso não altera o horário do app.',
+    luzDoDia: 'Luz acumulada do dia',
+    explicacaoDaLuzDoDia: (lux: string) =>
+      `Preenche a luz de hoje com sol forte (${lux} lux) desde as 7h, para testar o cartão "Luz de hoje" e o aviso de falta de luz. Depois disso, o simulador continua somando a luz.`,
+    simularSol: 'Simular sol desde as 7h',
+    solSimulado: 'Pronto: a luz de hoje foi preenchida desde as 7h.',
+    antesDoSol: 'Ainda não são 7h no relógio da simulação: não há luz para preencher.',
+    usarParaSimularSol: 'Use o simulador neste jardim para preencher a luz do dia.',
     oQueEAutomatico: 'O que significa automático?',
     explicacaoDoAutomatico:
       'A condição muda sozinha ao longo do dia, como num dia de verdade. Você pode deixar uma medida automática e escolher só as outras.',

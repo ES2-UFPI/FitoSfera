@@ -7,8 +7,8 @@ import { TEXTOS } from '@/textos';
 import { BotaoDeApagar } from '../componentes/BotaoDeApagar';
 import { BotaoVoltar } from '../componentes/BotaoVoltar';
 import { DialogoDeConfirmacao } from '../componentes/DialogoDeConfirmacao';
-import { descreverQuandoRegou } from '../componentes/CartaoDoHistorico';
-import { formatarData } from '../formatarData';
+import { descreverQuandoRegou } from '../componentes/textosDoHistorico';
+import { dataLegivel } from '../formatarData';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { IconeRegador } from '../componentes/IconeRegador';
 import { MensagemDeVazio } from '../componentes/MensagemDeVazio';
@@ -29,7 +29,7 @@ export function resumirQuantidade(quantidade: number): string {
 
 /** As regas anteriores de uma planta, da mais recente para a mais antiga. Aberta pelo detalhe. */
 export function TelaHistoricoDeRegas({ id }: { id: string }) {
-  const { container, idJardimSelecionado } = useAplicativo();
+  const { container, idJardimSelecionado, abrirJardimDaPlanta } = useAplicativo();
   const margens = useSafeAreaInsets();
   const [estado, definirEstado] = useState<Estado>({ tipo: 'carregando' });
   const [paraApagar, definirParaApagar] = useState<RegaDoHistorico | null>(null);
@@ -43,7 +43,9 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
         container.obterPlanta.executar(id, idJardimSelecionado),
         container.listarRegas.executar(id),
       ]).then(
-        ([item, regas]) => {
+        async ([item, regas]) => {
+          if (!atual) return;
+          if (item === null && (await abrirJardimDaPlanta(id).catch(() => false))) return;
           if (!atual) return;
           definirEstado(
             item === null ? { tipo: 'sem-planta' } : { tipo: 'pronto', apelido: item.planta.apelido, regas },
@@ -57,7 +59,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
       return () => {
         atual = false;
       };
-    }, [container, id, idJardimSelecionado]),
+    }, [container, id, idJardimSelecionado, abrirJardimDaPlanta]),
   );
 
   function pedirParaApagar(rega: RegaDoHistorico) {
@@ -82,7 +84,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
   }
 
   const quandoParaApagar = paraApagar
-    ? formatarData(paraApagar.rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida
+    ? dataLegivel(paraApagar.rega.regadaEm, { comHora: true })
     : '';
 
   return (
@@ -118,7 +120,7 @@ export function TelaHistoricoDeRegas({ id }: { id: string }) {
             <Text style={TEXTO.rotulo}>{resumirQuantidade(estado.regas.length).toUpperCase()}</Text>
             {estado.regas.map((item) => {
               const { rega, diasAtras } = item;
-              const quando = formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida;
+              const quando = dataLegivel(rega.regadaEm, { comHora: true });
               return (
                 <View key={rega.id} style={estilos.item}>
                   {/* A descrição é um elemento só para o leitor de tela; o botão fica fora dela para ser alcançável. */}

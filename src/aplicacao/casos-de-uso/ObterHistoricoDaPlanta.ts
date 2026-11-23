@@ -12,6 +12,9 @@ export interface HistoricoDaPlanta {
   /** Null para plantas antigas, gravadas antes de o app registrar a data de cadastro. */
   readonly cadastradaEm: Date | null;
   readonly diasNoJardim: number | null;
+  /** A data aproximada do plantio, quando a pessoa informou. Diz mais da planta que o dia do cadastro. */
+  readonly plantadaEm: Date | null;
+  readonly diasDesdeOPlantio: number | null;
   /** Null quando a planta ainda não foi regada. */
   readonly ultimaRega: Rega | null;
   /** Dias desde a última rega: 0 para hoje, 1 para ontem. Null quando não houve nenhuma. */
@@ -37,6 +40,8 @@ export class ObterHistoricoDaPlanta {
     return {
       cadastradaEm: planta.cadastradaEm,
       diasNoJardim: diasNoJardim(planta.cadastradaEm, agora),
+      plantadaEm: planta.plantadaEm,
+      diasDesdeOPlantio: planta.plantadaEm === null ? null : diasDesde(planta.plantadaEm, agora),
       ultimaRega,
       diasDesdeAUltimaRega: ultimaRega === null ? null : diasDesde(ultimaRega.regadaEm, agora),
       regasRecentes,

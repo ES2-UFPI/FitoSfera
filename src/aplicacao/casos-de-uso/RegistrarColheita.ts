@@ -3,13 +3,7 @@ import { GeradorDeIdentificador } from '@/dominio/portas/GeradorDeIdentificador'
 import { Relogio } from '@/dominio/portas/Relogio';
 import { RepositorioDeColheitas } from '@/dominio/portas/RepositorioDeColheitas';
 import { RepositorioDePlantas } from '@/dominio/portas/RepositorioDePlantas';
-
-/** Um dia do calendário, como a pessoa escreve no formulário; o mês vai de 1 a 12. */
-export interface DiaDoCalendario {
-  readonly dia: number;
-  readonly mes: number;
-  readonly ano: number;
-}
+import { DiaDoCalendario, diaDoCalendario, instanteDoDia } from '@/dominio/regras/DiaDoCalendario';
 
 /** Cada motivo vira uma mensagem própria no formulário. */
 export type MotivoDaColheitaInvalida =
@@ -43,9 +37,6 @@ export interface PedidoDeColheita {
   readonly dia?: DiaDoCalendario | 'ilegivel';
 }
 
-/** Ao meio-dia, um dia passado não muda de data ao ser mostrado em outro fuso. */
-const HORA_DE_UM_DIA_PASSADO = 12;
-
 /**
  * Grava uma colheita da planta depois de validar a quantidade (maior que zero), a unidade e a data. Colhida hoje,
  * ela leva a hora de agora; num dia anterior, o meio-dia, já que a pessoa só informou o dia. Quem colhe já está
@@ -61,8 +52,7 @@ export class RegistrarColheita {
 
   /** O dia que o formulário mostra preenchido: hoje. */
   hoje(): DiaDoCalendario {
-    const agora = this.relogio.agora();
-    return { dia: agora.getDate(), mes: agora.getMonth() + 1, ano: agora.getFullYear() };
+    return diaDoCalendario(this.relogio.agora());
   }
 
   async executar(pedido: PedidoDeColheita): Promise<RegistroDeColheita> {
@@ -102,13 +92,8 @@ export class RegistrarColheita {
   }
 
   private validarData(dia: PedidoDeColheita['dia']): Date {
-    const agora = this.relogio.agora();
-    if (dia === undefined) return agora;
-    if (dia === 'ilegivel' || !existeNoCalendario(dia)) throw new ColheitaInvalida('data-invalida');
-    const hoje = this.hoje();
-    if (dia.dia === hoje.dia && dia.mes === hoje.mes && dia.ano === hoje.ano) return agora;
-    const colhidaEm = new Date(dia.ano, dia.mes - 1, dia.dia, HORA_DE_UM_DIA_PASSADO);
-    if (colhidaEm.getTime() > agora.getTime()) throw new ColheitaInvalida('data-no-futuro');
+    const colhidaEm = instanteDoDia(dia, this.relogio.agora());
+    if (colhidaEm === 'data-invalida' || colhidaEm === 'data-no-futuro') throw new ColheitaInvalida(colhidaEm);
     return colhidaEm;
   }
 }
@@ -128,11 +113,4 @@ function validarQuantidade(quantidade: number | null, unidade: UnidadeDeColheita
 
 function inicioDoDia(data: Date): number {
   return new Date(data.getFullYear(), data.getMonth(), data.getDate()).getTime();
-}
-
-/** 31/02 ou 00/13 não existem: o Date "corrigiria" para outro dia, e a comparação pega isso. */
-function existeNoCalendario({ dia, mes, ano }: DiaDoCalendario): boolean {
-  if (![dia, mes, ano].every(Number.isInteger) || ano < 1000) return false;
-  const data = new Date(ano, mes - 1, dia);
-  return data.getFullYear() === ano && data.getMonth() === mes - 1 && data.getDate() === dia;
 }

@@ -1,34 +1,40 @@
 import { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { HistoricoDaPlanta } from '@/aplicacao/casos-de-uso/ObterHistoricoDaPlanta';
-import { SituacaoDaRega } from '@/dominio/regras/ProximaRega';
 import { TEXTOS } from '@/textos';
-import { formatarData } from '../formatarData';
+import { dataLegivel } from '../formatarData';
 import { CORES, ESPACO, FONTES, RAIO, TEXTO } from '../tema';
 import { Cartao } from './Cartao';
+import {
+  descreverProximaRega,
+  descreverQuandoRegou,
+  descreverTempoDesdeOPlantio,
+  descreverTempoNoJardim,
+} from './textosDoHistorico';
 
 export type EstadoDoHistorico = HistoricoDaPlanta | undefined | 'falhou';
 
-/** O quando de uma rega, em tempo relativo: "hoje", "ontem" ou "há N dias". */
-export function descreverQuandoRegou(diasAtras: number): string {
-  if (diasAtras === 0) return TEXTOS.historico.hoje;
-  if (diasAtras === 1) return TEXTOS.historico.ontem;
-  return TEXTOS.historico.haDias(diasAtras);
-}
-
-/** Quando a próxima rega vence, em tempo relativo. Undefined quando não há prazo para anunciar. */
-export function descreverProximaRega({ proximaEm, diasAteAProxima }: SituacaoDaRega): string | undefined {
-  if (proximaEm === null || diasAteAProxima === null) return undefined;
-  if (diasAteAProxima < 0) {
-    return TEXTOS.historico.atrasada(-diasAteAProxima);
+/**
+ * Com a data do plantio informada, ela vem no lugar do cadastro: uma muda plantada há meses e cadastrada hoje não
+ * "chegou hoje", e as colheitas anteriores ao cadastro deixam de parecer impossíveis.
+ */
+function LinhaDaIdade({ historico }: { historico: HistoricoDaPlanta }) {
+  if (historico.plantadaEm !== null) {
+    return (
+      <Linha
+        rotulo={TEXTOS.historico.plantadaEm}
+        valor={dataLegivel(historico.plantadaEm)}
+        detalhe={historico.diasDesdeOPlantio !== null ? descreverTempoDesdeOPlantio(historico.diasDesdeOPlantio) : undefined}
+      />
+    );
   }
-  if (diasAteAProxima === 0) return TEXTOS.historico.eHoje;
-  return diasAteAProxima === 1 ? TEXTOS.historico.eAmanha : TEXTOS.historico.emDias(diasAteAProxima);
-}
-
-export function descreverTempoNoJardim(dias: number): string {
-  if (dias === 0) return TEXTOS.historico.chegouHoje;
-  return TEXTOS.historico.diasNoJardim(dias);
+  return (
+    <Linha
+      rotulo={TEXTOS.historico.noJardimDesde}
+      valor={historico.cadastradaEm ? dataLegivel(historico.cadastradaEm) : TEXTOS.comum.dataDesconhecida}
+      detalhe={historico.diasNoJardim !== null ? descreverTempoNoJardim(historico.diasNoJardim) : undefined}
+    />
+  );
 }
 
 function Linha({ rotulo, valor, detalhe }: { rotulo: string; valor: string; detalhe?: string }) {
@@ -68,15 +74,11 @@ export function CartaoDoHistorico({
 
       {estado !== undefined && estado !== 'falhou' ? (
         <>
-          <Linha
-            rotulo={TEXTOS.historico.noJardimDesde}
-            valor={estado.cadastradaEm ? formatarData(estado.cadastradaEm) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.dataDesconhecida}
-            detalhe={estado.diasNoJardim !== null ? descreverTempoNoJardim(estado.diasNoJardim) : undefined}
-          />
+          <LinhaDaIdade historico={estado} />
           <Linha
             rotulo={TEXTOS.historico.ultimaRega}
             valor={
-              estado.ultimaRega ? formatarData(estado.ultimaRega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida : TEXTOS.historico.nenhumaRega
+              estado.ultimaRega ? dataLegivel(estado.ultimaRega.regadaEm, { comHora: true }) : TEXTOS.historico.nenhumaRega
             }
             detalhe={
               estado.diasDesdeAUltimaRega !== null
@@ -88,7 +90,7 @@ export function CartaoDoHistorico({
             rotulo={TEXTOS.historico.proximaRega}
             valor={
               estado.proximaRega.proximaEm
-                ? formatarData(estado.proximaRega.proximaEm) ?? TEXTOS.historico.dataDesconhecida
+                ? dataLegivel(estado.proximaRega.proximaEm)
                 : TEXTOS.historico.semPrevisao
             }
             detalhe={descreverProximaRega(estado.proximaRega)}
@@ -99,7 +101,7 @@ export function CartaoDoHistorico({
               {estado.regasRecentes.map((rega) => (
                 <View key={rega.id} style={estilos.itemDaLista}>
                   <View style={estilos.marcador} />
-                  <Text style={TEXTO.corpo}>{formatarData(rega.regadaEm, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}</Text>
+                  <Text style={TEXTO.corpo}>{dataLegivel(rega.regadaEm, { comHora: true })}</Text>
                 </View>
               ))}
             </View>

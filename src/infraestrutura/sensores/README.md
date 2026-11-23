@@ -46,6 +46,37 @@ automáticos, baixos ou altos de umidade, temperatura e luminosidade. As condiç
 atalho para clima quente, seco e ensolarado e uma opção de desconexão. Esses controles nunca aparecem na
 configuração padrão de produção.
 
+**Luz acumulada no simulador:** como o sensor físico, o simulado manda em cada leitura um contador de luz
+(lux × minutos), e o app soma a luz do dia pelo mesmo caminho. O simulador se comporta como um aparelho sempre ligado:
+o id de reinício é fixo, e o contador é a luz da curva automática somada desde 1º de janeiro de 2026, calculada pela
+hora. Por isso reabrir o app dá o mesmo contador, sem marcar o dia como incompleto, e um trecho sem medição conta a
+luz da curva. Com a luz forçada em baixa ou alta, o contador soma o nível forçado entre medições de até 15 minutos de
+distância, também desconectado; essa diferença vale só até o app fechar.
+
+Para ter um dia inteiro de luz na hora, o botão **Simular sol desde as 7h** (aba Ajustes, com o simulador em uso no
+jardim) grava períodos de 5 minutos com sol forte de 40.000 lux (`LUX_DO_SOL_FORTE`) das 7h até agora, e o contador
+do simulador continua somando dali.
+
+**Modo de demonstração com o sensor físico:** serve para apresentar o app quando o sensor só foi ligado na hora da
+apresentação, depois das 7h. Vinte toques seguidos no botão **Ajustes** da barra de abas, com no máximo 1,5 s entre
+um e outro, mostram o cartão "Modo de demonstração" no fim dos Ajustes. Nada avisa a contagem. O modo fica só na
+memória: fechar o app desliga, e "Desligar o modo" também.
+
+O botão **Simular sol desde as 7h** do cartão
+([`SimularSolNaDemonstracao`](../../aplicacao/casos-de-uso/SimularSolNaDemonstracao.ts)) forja sol de 40.000 lux das 7h
+até o ponto em que a luz medida pelo sensor começa hoje, e mantém essa luz medida. A regra está em
+[`LuzDeDemonstracao.ts`](../../dominio/regras/LuzDeDemonstracao.ts):
+
+- A luz medida é a sequência de períodos completos e encadeados que termina na marca do contador. Ela para no
+  reinício do sensor, num buraco ou às 7h.
+- A marca não muda, então o próximo pacote do sensor continua a conta normalmente.
+- Os períodos incompletos de hoje, como o do reinício ao ligar o sensor, saem, para o cartão "Luz de hoje" não marcar
+  o dia como incompleto.
+- Sem nenhuma leitura do sensor hoje, ou antes das 7h, nada é gravado. Apertar de novo não forja duas vezes.
+
+O cartão só existe no app com o sensor Bluetooth (`EXPO_PUBLIC_SENSOR=bluetooth` ou o build de produção). O botão
+fica desligado quando o jardim selecionado não tem um sensor físico associado.
+
 ## Sensor físico por Bluetooth
 
 **Biblioteca:** [`react-native-ble-plx`](https://github.com/dotintent/react-native-ble-plx). É a biblioteca BLE
@@ -84,7 +115,7 @@ sem confirmação e, calculada a partir deles, a data e a hora da última comuni
 passa o contador ao `RegistroDeLuzRecebida`, que compara com o último valor salvo do jardim e guarda a diferença. O
 primeiro contador recebido e um reinício do sensor não contam luz, porque o valor não diz nada sobre o período, e o
 reinício deixa um período marcado como incompleto. Um pacote repetido não soma nada, e um pacote atrasado, com contador
-menor, é ignorado. O sensor simulado e o pacote de 8 bytes não têm contador e não geram luz recebida.
+menor, é ignorado. O pacote de 8 bytes não tem contador e não gera luz recebida.
 
 **Luz do dia:** a regra [`LuzDoDia`](../../dominio/regras/LuzDoDia.ts) soma os períodos que caem no dia, da meia-noite
 local até agora, e converte lux × minutos em DLI (mol/m²), a unidade da meta `luzDiaria` do catálogo. A conversão usa

@@ -5,6 +5,7 @@ import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
+import { ExcluirJardim } from '@/aplicacao/casos-de-uso/ExcluirJardim';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
@@ -16,6 +17,8 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
+import { LuzRegistrada, RegistroDaLuzDeDemonstracao } from '@/aplicacao/portas/RegistroDaLuzDeDemonstracao';
 import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { ControleDoSensorDeDesenvolvimento } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
@@ -45,7 +48,7 @@ import { RepositorioDeColheitas } from '@/dominio/portas/RepositorioDeColheitas'
 import { RepositorioDeJardins } from '@/dominio/portas/RepositorioDeJardins';
 import { RegistroDeExclusoesPendentes } from '@/dominio/portas/RegistroDeExclusoesPendentes';
 import { RegistroDeLuzRecebida } from '@/dominio/portas/RegistroDeLuzRecebida';
-import { PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
+import { MarcaDoContadorDeLuz, PeriodoDeLuz } from '@/dominio/regras/LuzRecebida';
 import { CacheDeLeituras } from '@/dominio/portas/CacheDeLeituras';
 import { ObterLeiturasRecentes } from '@/aplicacao/casos-de-uso/ObterLeiturasRecentes';
 import { EstimadorDeColheitaPorCondicoes } from '@/dominio/regras/EstimadorDeColheitaPorCondicoes';
@@ -100,6 +103,11 @@ export class RepositorioDeJardinsEmMemoria implements RepositorioDeJardins {
   async selecionar(id: string): Promise<void> {
     if (!this.jardins.some((item) => item.id === id)) throw new Error('Jardim não encontrado.');
     this.selecionado = id;
+  }
+  async remover(id: string): Promise<void> {
+    if (id === JARDIM_PRINCIPAL.id) throw new Error('O jardim principal não pode ser removido.');
+    this.jardins = this.jardins.filter((item) => item.id !== id);
+    if (this.selecionado === id) this.selecionado = JARDIM_PRINCIPAL.id;
   }
 }
 
@@ -175,11 +183,26 @@ export class ExclusoesPendentesEmMemoria implements RegistroDeExclusoesPendentes
 
 /** Simula o armazenamento do aparelho recusando a leitura. */
 /** A luz de cada jardim, já contabilizada: o teste diz o que o sensor somou, sem passar por contadores. */
-export class RegistroDeLuzEmMemoria implements RegistroDeLuzRecebida {
+export class RegistroDeLuzEmMemoria implements RegistroDeLuzRecebida, RegistroDaLuzDeDemonstracao {
   private readonly jardins = new Map<string, { periodos: readonly PeriodoDeLuz[]; ultimoContato: Date | null }>();
+  private readonly marcas = new Map<string, MarcaDoContadorDeLuz>();
 
   definir(periodos: readonly PeriodoDeLuz[], ultimoContato: Date | null, idJardim = ID_JARDIM_PRINCIPAL): void {
     this.jardins.set(idJardim, { periodos, ultimoContato });
+  }
+
+  /** A marca do contador do sensor, que o modo de demonstração lê e nunca troca. */
+  definirMarca(marca: MarcaDoContadorDeLuz, idJardim = ID_JARDIM_PRINCIPAL): void {
+    this.marcas.set(idJardim, marca);
+  }
+
+  async alterarPeriodos(
+    idJardim: string,
+    alterar: (registro: LuzRegistrada) => readonly PeriodoDeLuz[] | null,
+  ): Promise<void> {
+    const atual = this.jardins.get(idJardim) ?? { periodos: [], ultimoContato: null };
+    const periodos = alterar({ marca: this.marcas.get(idJardim) ?? null, periodos: atual.periodos });
+    if (periodos !== null) this.jardins.set(idJardim, { ...atual, periodos });
   }
 
   async registrar(): Promise<void> {}
@@ -510,6 +533,7 @@ export function criarContainerDeTeste(
   const jardins = new RepositorioDeJardinsEmMemoria(opcoes.jardins);
   const luz = new RegistroDeLuzEmMemoria();
   if (opcoes.luz) luz.definir(opcoes.luz.periodos, opcoes.luz.ultimoContato);
+  const excluirPlanta = new ExcluirPlanta(plantas, regas, new ExclusoesPendentesEmMemoria(), notificador, colheitas);
   const container: Container = {
     gerenciarJardins: new GerenciarJardins(jardins, gerador, undefined, plantas),
     listarJardim: new ListarJardimVirtual(plantas, especies, leituras, relogio),
@@ -519,13 +543,8 @@ export function criarContainerDeTeste(
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(
-      plantas,
-      regas,
-      new ExclusoesPendentesEmMemoria(),
-      notificador,
-      colheitas,
-    ),
+    excluirPlanta,
+    excluirJardim: new ExcluirJardim(jardins, plantas, excluirPlanta),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     apagarRegistros: new ApagarRegistros(regas, colheitas),
@@ -540,6 +559,7 @@ export function criarContainerDeTeste(
     controleDoSensorDeDesenvolvimento: opcoes.controleDoSensorDeDesenvolvimento ?? null,
     toquesNaNotificacao: toques,
     pareamentoDoSensor: opcoes.pareamentoDoSensor ?? null,
+    simularSolNaDemonstracao: new SimularSolNaDemonstracao(luz, relogio),
     avaliarLeitura: new AvaliarLeitura(plantas, leituras, notificador, avisos, relogio, undefined, preferencias),
     ajustarPreferencias: new AjustarPreferencias(preferencias),
     atualizarLeituras: new AtualizarLeituras(jardins, { obter: async () => leituras }),

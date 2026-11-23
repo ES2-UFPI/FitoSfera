@@ -61,3 +61,29 @@ test('conta as plantas de cada jardim, sem precisar abrir um por um', async () =
   expect(contagem.get('sala')).toBe(1);
   expect(contagem.get('varanda')).toBeUndefined();
 });
+
+describe('renomear e remover', () => {
+  test('renomear guarda o nome aparado e recusa nome vazio', async () => {
+    const jardins = new RepositorioDeJardinsAsyncStorage(new ArmazenamentoEmMemoria());
+    const uso = new GerenciarJardins(jardins, new GeradorSequencial());
+    const varanda = await uso.criar('Varanda');
+
+    await uso.renomear(varanda.id, '  Quintal ');
+    expect((await jardins.listar()).find((jardim) => jardim.id === varanda.id)?.nome).toBe('Quintal');
+    await expect(uso.renomear(varanda.id, '   ')).rejects.toThrow('Informe o nome do jardim.');
+  });
+
+  test('remover o jardim selecionado volta a seleção para o principal, que não sai', async () => {
+    const armazenamento = new ArmazenamentoEmMemoria();
+    const jardins = new RepositorioDeJardinsAsyncStorage(armazenamento);
+    const uso = new GerenciarJardins(jardins, new GeradorSequencial());
+    const varanda = await uso.criar('Varanda');
+    await uso.selecionar(varanda.id);
+
+    await jardins.remover(varanda.id);
+    const reaberto = new RepositorioDeJardinsAsyncStorage(armazenamento);
+    expect((await reaberto.listar()).map((jardim) => jardim.id)).toEqual([JARDIM_PRINCIPAL.id]);
+    expect(await reaberto.obterSelecionado()).toBe(JARDIM_PRINCIPAL.id);
+    await expect(jardins.remover(JARDIM_PRINCIPAL.id)).rejects.toThrow();
+  });
+});

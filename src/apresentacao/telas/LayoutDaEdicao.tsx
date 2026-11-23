@@ -11,13 +11,14 @@ import { CORES, ESPACO, TEXTO } from '../tema';
 
 /** Abre os passos de aparência e apelido do cadastro já preenchidos com a planta. */
 export function LayoutDaEdicao({ id }: { id: string }) {
-  const { container, idJardimSelecionado } = useAplicativo();
+  const { container, idJardimSelecionado, abrirJardimDaPlanta } = useAplicativo();
   const [item, definirItem] = useState<PlantaNoJardim | null | undefined | 'falhou'>(undefined);
 
   useEffect(() => {
     let atual = true;
     container.obterPlanta.executar(id, idJardimSelecionado).then(
-      (encontrado) => {
+      async (encontrado) => {
+        if (encontrado === null && atual && (await abrirJardimDaPlanta(id).catch(() => false))) return;
         if (atual) definirItem(encontrado);
       },
       (falha) => {
@@ -28,7 +29,7 @@ export function LayoutDaEdicao({ id }: { id: string }) {
     return () => {
       atual = false;
     };
-  }, [container, id, idJardimSelecionado]);
+  }, [container, id, idJardimSelecionado, abrirJardimDaPlanta]);
 
   if (item === undefined) return <FundoAconchegante />;
 

@@ -15,6 +15,6 @@ export interface Leitura {
   /** Null quando o sensor de luz não respondeu, mas temperatura e umidade chegaram. */
   readonly luminosidadeLux: number | null;
   readonly medidaEm: Date;
-  /** Ausente no sensor simulado e no pacote antigo de 8 bytes. */
+  /** Ausente no pacote antigo de 8 bytes. */
   readonly contadorDeLuz?: ContadorDeLuzDoSensor;
 }

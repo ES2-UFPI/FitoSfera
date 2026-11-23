@@ -15,6 +15,15 @@ export const UMOL_POR_SEGUNDO_POR_LUX = 0.0185;
  */
 export const TOLERANCIA_SEM_CONTATO_MS = 20 * 60_000;
 
+/**
+ * Um período incompleto (o sensor reiniciou no meio) só perde a luz que o sensor contou antes de reiniciar e não
+ * chegou a enviar. Num reinício rápido isso é um minuto de luz, no máximo: não vale marcar o dia inteiro como
+ * incompleto. Só um período incompleto mais longo que a tolerância sem contato esconde luz de verdade.
+ */
+export function periodoEscondeLuz(periodo: PeriodoDeLuz): boolean {
+  return periodo.incompleta && periodo.fim.getTime() - periodo.inicio.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+}
+
 /** Um período sem contato que atravessa a meia-noite e cobre mais horas de sol que isto não dá para dividir. */
 export const HORAS_DE_SOL_PARA_DIVIDIR = 3;
 
@@ -33,6 +42,8 @@ export interface LuzDoDia {
   readonly progresso: number | null;
   /** Estimativa da luz do dia inteiro, pelo ritmo típico do sol. */
   readonly projecaoDli: number | null;
+  /** Como a luz recebida até agora já se compara com a meta: depois de "ideal", a planta já teve a luz do dia. */
+  readonly situacaoAtual: SituacaoDaMedicao | null;
   readonly situacaoProjetada: SituacaoDaMedicao | null;
 }
 
@@ -60,25 +71,42 @@ export function calcularLuzDoDia({
   const fimDoDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + 1);
 
   let luxMinutos = 0;
-  let incompleta = conhecidaAte === null || agora.getTime() - conhecidaAte.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+  let incompleta = perdeuContato(conhecidaAte, agora);
   for (const periodo of periodos) {
     const fracao = fracaoNoDia(periodo, inicioDoDia, fimDoDia);
     if (fracao === 0) continue;
     luxMinutos += periodo.luxMinutos * fracao;
-    if (periodo.incompleta || (fracao < 1 && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR))
-      incompleta = true;
+    if (periodoDeixaODiaIncompleto(periodo, fracao)) incompleta = true;
   }
 
   const dli = luxMinutosParaDli(luxMinutos);
   const projecaoDli = projetar(dli, conhecidaAte, inicioDoDia);
+  // Só uma meta com mínimo positivo serve de base para o progresso e para a situação da luz de agora.
+  const metaComMinimo = meta === null || meta.minimo <= 0 ? null : meta;
   return {
     dli,
     conhecidaAte,
     incompleta,
-    progresso: meta === null || meta.minimo <= 0 ? null : dli / meta.minimo,
+    progresso: metaComMinimo === null ? null : dli / metaComMinimo.minimo,
     projecaoDli,
+    situacaoAtual: metaComMinimo === null ? null : compararMedicaoComFaixa(dli, metaComMinimo),
     situacaoProjetada: meta === null || projecaoDli === null ? null : compararMedicaoComFaixa(projecaoDli, meta),
   };
+}
+
+/** Sem contato com o sensor há mais tempo que a tolerância, a luz desde então é desconhecida. */
+function perdeuContato(conhecidaAte: Date | null, agora: Date): boolean {
+  return conhecidaAte === null || agora.getTime() - conhecidaAte.getTime() > TOLERANCIA_SEM_CONTATO_MS;
+}
+
+/**
+ * Um período deixa o dia incompleto quando esconde luz (o sensor reiniciou e ficou muito tempo sem contar) ou quando
+ * atravessa a meia-noite cobrindo horas de sol demais para dividir a luz entre os dias.
+ */
+function periodoDeixaODiaIncompleto(periodo: PeriodoDeLuz, fracaoNoDia: number): boolean {
+  if (periodoEscondeLuz(periodo)) return true;
+  const atravessaAMeiaNoite = fracaoNoDia < 1;
+  return atravessaAMeiaNoite && horasDeSol(periodo.inicio, periodo.fim) > HORAS_DE_SOL_PARA_DIVIDIR;
 }
 
 /** A parte do período que caiu no dia, pelo tempo. */

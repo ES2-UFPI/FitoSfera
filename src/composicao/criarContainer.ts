@@ -7,6 +7,7 @@ import { AvaliarLeitura } from '@/aplicacao/casos-de-uso/AvaliarLeitura';
 import { CadastrarPlanta } from '@/aplicacao/casos-de-uso/CadastrarPlanta';
 import { CompararRendimento } from '@/aplicacao/casos-de-uso/CompararRendimento';
 import { EditarPlanta } from '@/aplicacao/casos-de-uso/EditarPlanta';
+import { ExcluirJardim } from '@/aplicacao/casos-de-uso/ExcluirJardim';
 import { ExcluirPlanta } from '@/aplicacao/casos-de-uso/ExcluirPlanta';
 import { ListarJardimVirtual } from '@/aplicacao/casos-de-uso/ListarJardimVirtual';
 import { ListarRegasDaPlanta } from '@/aplicacao/casos-de-uso/ListarRegasDaPlanta';
@@ -18,6 +19,7 @@ import { ObterLuzDoDia } from '@/aplicacao/casos-de-uso/ObterLuzDoDia';
 import { PesquisarEspecies } from '@/aplicacao/casos-de-uso/PesquisarEspecies';
 import { RegistrarColheita } from '@/aplicacao/casos-de-uso/RegistrarColheita';
 import { RegistrarRega } from '@/aplicacao/casos-de-uso/RegistrarRega';
+import { SimularSolNaDemonstracao } from '@/aplicacao/casos-de-uso/SimularSolNaDemonstracao';
 import { ApagarRegistros } from '@/aplicacao/casos-de-uso/ApagarRegistros';
 import { GerenciarJardins } from '@/aplicacao/casos-de-uso/GerenciarJardins';
 import { RepositorioDeEspeciesLocal } from '@/infraestrutura/catalogo/RepositorioDeEspeciesLocal';
@@ -67,11 +69,12 @@ export function criarContainer(): Container {
   const sensor = escolherSensor(process.env.EXPO_PUBLIC_SENSOR, relogio, __DEV__, () =>
     criarSensorBluetooth(armazenamento, relogio),
   );
-  const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio) : null;
+  const simulados = sensor instanceof SensorSimulado ? new SensoresSimuladosDosJardins(relogio, luz) : null;
   const fontes = new FontesDosJardins(jardins, sensor instanceof CentralDeSensoresBluetooth ? sensor : null, simulados, leituras, luz);
   const notificador = escolherNotificador(Platform.OS);
   const toquesNaNotificacao = escolherToquesNaNotificacao(Platform.OS);
   const obterLuzDoDia = new ObterLuzDoDia(luz, relogio, especies);
+  const excluirPlanta = new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas);
 
   return {
     gerenciarJardins: new GerenciarJardins(jardins, gerador,
@@ -83,7 +86,8 @@ export function criarContainer(): Container {
     pesquisarEspecies: new PesquisarEspecies(especies),
     cadastrarPlanta: new CadastrarPlanta(plantas, especies, gerador, relogio),
     editarPlanta: new EditarPlanta(plantas),
-    excluirPlanta: new ExcluirPlanta(plantas, regas, exclusoesPendentes, notificador, colheitas),
+    excluirPlanta,
+    excluirJardim: new ExcluirJardim(jardins, plantas, excluirPlanta),
     registrarRega: new RegistrarRega(regas, gerador, relogio),
     registrarColheita: new RegistrarColheita(colheitas, plantas, gerador, relogio),
     apagarRegistros: new ApagarRegistros(regas, colheitas),
@@ -97,6 +101,7 @@ export function criarContainer(): Container {
     obterLuzDoDia,
     controleDoSensorDeDesenvolvimento: simulados,
     pareamentoDoSensor: sensor instanceof CentralDeSensoresBluetooth ? sensor : null,
+    simularSolNaDemonstracao: sensor instanceof CentralDeSensoresBluetooth ? new SimularSolNaDemonstracao(luz, relogio) : null,
     toquesNaNotificacao,
     avaliarLeitura: new AvaliarLeitura(plantas, sensor, notificador, avisos, relogio, fontes, preferencias, {
       desviosEmAberto,

@@ -50,13 +50,13 @@ test('sensor associado a um jardim não pode ser associado ao outro', async () =
     jardins: [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }],
     pareamentoDoSensor: pareamento,
   });
-  expect(screen.queryByRole('button', { name: 'Usar FitoSfera · le-01' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Usar FitoSfera · final BE01' })).toBeNull();
   fireEvent.press(await screen.findByRole('button', { name: 'Mostrar opções do sensor' }));
-  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' }));
+  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · final BE01' }));
   fireEvent.press(screen.getByRole('button', { name: 'Trocar ou criar jardim' }));
   fireEvent.press(screen.getByRole('button', { name: 'Sala' }));
   await waitFor(() => expect(screen.queryByRole('header', { name: 'Seus jardins' })).toBeNull());
-  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · le-01' }));
+  fireEvent.press(await screen.findByRole('button', { name: 'Usar FitoSfera · final BE01' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Este sensor já está em uso em outro jardim.');
 });
 
@@ -73,4 +73,30 @@ test('o seletor mostra quantas plantas tem cada jardim, e não só o aberto', as
   expect(screen.getByText('1 planta')).toBeTruthy();
   expect(screen.getByText('Nenhuma planta ainda')).toBeTruthy();
   expect(screen.queryByText('Toque para abrir')).toBeNull();
+});
+
+describe('link ou notificação para planta de outro jardim', () => {
+  const jardins = [JARDIM_PRINCIPAL, { id: 'sala', nome: 'Sala', idSensor: null }];
+  const plantas = [
+    plantaDeTeste({ id: 'p1', apelido: 'Alecrim' }),
+    plantaDeTeste({ id: 'p2', apelido: 'Samambaia', idJardim: 'sala', idEspecie: 'jiboia' }),
+  ];
+
+  test('o detalhe abre a planta e passa a mostrar o jardim dela', async () => {
+    const { container } = renderizarApp({ jardins, plantas, url: '/planta/p2' });
+
+    expect(await screen.findByRole('header', { name: 'Samambaia' })).toBeTruthy();
+    expect(screen.queryByText('Planta não encontrada')).toBeNull();
+    expect(await container.gerenciarJardins.obterSelecionado()).toBe('sala');
+  });
+
+  test('o histórico de regas também abre', async () => {
+    renderizarApp({ jardins, plantas, url: '/historico/p2' });
+    expect(await screen.findByText('Samambaia')).toBeTruthy();
+  });
+
+  test('uma planta que não existe continua como não encontrada', async () => {
+    renderizarApp({ jardins, plantas, url: '/planta/p9' });
+    expect(await screen.findByText('Planta não encontrada')).toBeTruthy();
+  });
 });

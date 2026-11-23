@@ -4,10 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   ConfiguracaoDoSensorDeDesenvolvimento,
   ControleDoSensorDeDesenvolvimento,
+  LUX_DO_SOL_FORTE,
   NivelDoSensorDeDesenvolvimento,
 } from '@/aplicacao/portas/ControleDoSensorDeDesenvolvimento';
-import { TEXTOS } from '@/textos';
-import { formatarData } from '../formatarData';
+import { formatarNumero, TEXTOS } from '@/textos';
+import { dataLegivel } from '../formatarData';
 import { Cartao } from '../componentes/Cartao';
 import { FundoAconchegante } from '../componentes/FundoAconchegante';
 import { BotaoPrincipal } from '../componentes/BotaoPrincipal';
@@ -16,6 +17,7 @@ import { useAplicativo } from '../contextos/ContextoDoAplicativo';
 import { ALVO_DE_TOQUE, CORES, ESPACO, FONTES, LARGURA_DO_CONTEUDO, RAIO, TEXTO } from '../tema';
 import { CartaoDosLembretes } from '../lembretes/CartaoDosLembretes';
 import { CartaoDoSensorPareado } from '../sensor/CartaoDoSensorPareado';
+import { CartaoDaDemonstracao } from '../demonstracao/CartaoDaDemonstracao';
 
 type Grandeza = 'umidade' | 'temperatura' | 'luminosidade';
 type IconeDaGrandeza = ComponentType<{
@@ -110,7 +112,8 @@ function configuracaoPersonalizada(configuracao: ConfiguracaoDoSensorDeDesenvolv
 }
 
 export function TelaAjustes() {
-  const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim } = useAplicativo();
+  const { container, idJardimSelecionado, jardins, recarregarJardins, recarregarJardim, modoDeDemonstracao } =
+    useAplicativo();
   const controle = container.controleDoSensorDeDesenvolvimento;
   const pareamento = container.pareamentoDoSensor;
   // Uma ação principal por tela: sem sensor pareado, parear é o mais urgente; senão, o horário dos lembretes.
@@ -119,6 +122,7 @@ export function TelaAjustes() {
   const margens = useSafeAreaInsets();
   const jardimAtual = jardins.find((jardim) => jardim.id === idJardimSelecionado);
   const simuladorAssociado = jardimAtual?.idSensor === 'simulado' || jardimAtual?.idSensor === `simulado:${idJardimSelecionado}`;
+  const temSensorNoJardim = Boolean(jardimAtual?.idSensor) && !simuladorAssociado;
 
   async function alternarAssociacaoSimulada() {
     if (simuladorAssociado) await container.gerenciarJardins.desassociar(idJardimSelecionado);
@@ -149,6 +153,9 @@ export function TelaAjustes() {
             aoAtualizarLeituras={recarregarJardim}
           />
         ) : null}
+        {modoDeDemonstracao && container.simularSolNaDemonstracao ? (
+          <CartaoDaDemonstracao simularSol={container.simularSolNaDemonstracao} temSensorNoJardim={temSensorNoJardim} />
+        ) : null}
       </ScrollView>
     </FundoAconchegante>
   );
@@ -176,6 +183,7 @@ function CartaoDoSensorDeDesenvolvimento({
   const [menuAberto, definirMenuAberto] = useState<Grandeza | null>(null);
   const [falhaAoAssociar, definirFalhaAoAssociar] = useState(false);
   const [horarioSimulado, definirHorarioSimulado] = useState(() => controle.obterHorarioSimulado(idJardim));
+  const [resultadoDoSol, definirResultadoDoSol] = useState<string | null>(null);
 
   const controleAtivo = controle;
   const sensorLigado = !configuracao.desconectado;
@@ -206,6 +214,13 @@ function CartaoDoSensorDeDesenvolvimento({
   function voltarAoHorarioAtual() {
     definirHorarioSimulado(controleAtivo.redefinirHorarioSimulado(idJardim));
     void aoAtualizarLeituras();
+  }
+
+  async function simularSol() {
+    if (controleAtivo.simularSolDesdeAs7h === undefined) return;
+    const preenchido = await controleAtivo.simularSolDesdeAs7h(idJardim);
+    definirResultadoDoSol(preenchido ? TEXTOS.simulador.solSimulado : TEXTOS.simulador.antesDoSol);
+    if (preenchido) void aoAtualizarLeituras();
   }
 
   return (
@@ -254,7 +269,7 @@ function CartaoDoSensorDeDesenvolvimento({
       <View style={estilos.relogioSimulado}>
         <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.relogio}</Text>
         <Text style={estilos.horarioSimulado} accessibilityLiveRegion="polite">
-          {formatarData(horarioSimulado, { comHora: true }) ?? TEXTOS.historico.dataDesconhecida}
+          {dataLegivel(horarioSimulado, { comHora: true })}
         </Text>
         <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDoRelogio}</Text>
         <View style={estilos.opcoesDeTempo}>
@@ -265,6 +280,22 @@ function CartaoDoSensorDeDesenvolvimento({
         </View>
         <BotaoPrincipal titulo={TEXTOS.simulador.voltarAoHorarioAtual} variante="secundaria" aoTocar={voltarAoHorarioAtual} />
       </View>
+      {controle.simularSolDesdeAs7h !== undefined ? (
+        <View style={estilos.relogioSimulado}>
+          <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.luzDoDia}</Text>
+          <Text style={TEXTO.apoio}>{TEXTOS.simulador.explicacaoDaLuzDoDia(formatarNumero(LUX_DO_SOL_FORTE))}</Text>
+          <BotaoPrincipal
+            titulo={TEXTOS.simulador.simularSol}
+            variante="secundaria"
+            desabilitado={!simuladorAssociado}
+            aoTocar={() => void simularSol()}
+          />
+          {!simuladorAssociado ? <Text style={TEXTO.apoio}>{TEXTOS.simulador.usarParaSimularSol}</Text> : null}
+          {resultadoDoSol !== null ? (
+            <Text style={TEXTO.apoio} accessibilityLiveRegion="polite">{resultadoDoSol}</Text>
+          ) : null}
+        </View>
+      ) : null}
       <View style={estilos.explicacaoDoAutomatico}>
         <Text style={estilos.tituloDaExplicacao}>{TEXTOS.simulador.oQueEAutomatico}</Text>
         <Text style={TEXTO.apoio}>

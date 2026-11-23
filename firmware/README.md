@@ -173,6 +173,8 @@ function decodificarPacote(bytes: Uint8Array): PacoteDoSensor | null {
 
 **Periférico opcional.** Na inicialização, o firmware lista no monitor serial os endereços I2C encontrados. Se o BH1750 não responder, o firmware avisa e continua, em vez de travar.
 
+**Motivo do reinício.** A primeira linha da serial depois do boot diz por que o ESP32 reiniciou (`# reinicio: ...`). Um reinício leva cerca de um segundo e passa despercebido, mas sorteia um id de reinício novo e zera o contador de luz. `queda de tensao (brownout)` ou `ligado na energia` sem ninguém ter mexido apontam para a alimentação (cabo, mau contato, power bank desligando com carga baixa). `travamento do codigo (panic)` e os watchdogs apontam para o firmware.
+
 ---
 
 ## Metodologia de construção

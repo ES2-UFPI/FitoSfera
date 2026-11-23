@@ -153,6 +153,7 @@ describe('aviso de falta de luz', () => {
     incompleta: false,
     progresso: 0.33,
     projecaoDli: 4.3,
+    situacaoAtual: 'abaixo',
     situacaoProjetada: 'abaixo',
   };
 

@@ -3,6 +3,7 @@ import { PlantaNoJardim } from '@/aplicacao/casos-de-uso/PlantaNoJardim';
 import { Jardim, JARDIM_PRINCIPAL } from '@/dominio/modelos/Jardim';
 import { Container } from '@/composicao/Container';
 import { criarContainer } from '@/composicao/criarContainer';
+import { codigoCompleto, ContagemDoCodigo, contarToque } from '../demonstracao/codigoDaDemonstracao';
 
 interface ValorDoAplicativo {
   readonly container: Container;
@@ -11,12 +12,21 @@ interface ValorDoAplicativo {
   readonly jardins: readonly Jardim[];
   readonly idJardimSelecionado: string;
   selecionarJardim(id: string): Promise<void>;
+  /**
+   * Para um link ou uma notificação de planta de outro jardim: abre o jardim dela. Devolve true quando trocou de
+   * jardim (a tela recarrega sozinha com a nova seleção) e false quando a planta não existe ou já está neste.
+   */
+  abrirJardimDaPlanta(idPlanta: string): Promise<boolean>;
   criarJardim(nome: string): Promise<void>;
   recarregarJardins(): Promise<void>;
   recarregarJardim(): Promise<void>;
   /** A edição avisa que salvou; o detalhe da planta consome o aviso uma vez, ao voltar a aparecer. */
   avisarEdicaoSalva(idPlanta: string): void;
   consumirEdicaoSalva(idPlanta: string): boolean;
+  /** Liberado pelo código secreto; só na memória, então fechar o app desliga. */
+  readonly modoDeDemonstracao: boolean;
+  registrarToqueNaAbaAjustes(): void;
+  desligarModoDeDemonstracao(): void;
 }
 
 const ContextoDoAplicativo = createContext<ValorDoAplicativo | null>(null);
@@ -44,6 +54,18 @@ export function ProvedorDoAplicativo({
     return true;
   }, []);
 
+  const [modoDeDemonstracao, definirModoDeDemonstracao] = useState(false);
+  const contagemDoCodigo = useRef<ContagemDoCodigo | null>(null);
+  const registrarToqueNaAbaAjustes = useCallback(() => {
+    const contagem = contarToque(contagemDoCodigo.current, Date.now());
+    contagemDoCodigo.current = contagem;
+    if (codigoCompleto(contagem)) {
+      contagemDoCodigo.current = null;
+      definirModoDeDemonstracao(true);
+    }
+  }, []);
+  const desligarModoDeDemonstracao = useCallback(() => definirModoDeDemonstracao(false), []);
+
   const recarregarJardins = useCallback(async () => {
     const [lista, selecionado] = await Promise.all([
       container.gerenciarJardins.listar(), container.gerenciarJardins.obterSelecionado(),
@@ -64,6 +86,13 @@ export function ProvedorDoAplicativo({
     definirPlantas(null);
     definirSelecionado(id);
   }, [container]);
+
+  const abrirJardimDaPlanta = useCallback(async (idPlanta: string) => {
+    const planta = await container.obterPlanta.executar(idPlanta);
+    if (planta === null || planta.planta.idJardim === selecaoAtual.current) return false;
+    await selecionarJardim(planta.planta.idJardim);
+    return true;
+  }, [container, selecionarJardim]);
 
   const criarJardim = useCallback(async (nome: string) => {
     const jardim = await container.gerenciarJardins.criar(nome);
@@ -99,10 +128,11 @@ export function ProvedorDoAplicativo({
   }, [recarregarJardim]);
 
   const valor = useMemo(() => ({
-    container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim,
+    container, plantas, jardins, idJardimSelecionado, selecionarJardim, abrirJardimDaPlanta, criarJardim,
     recarregarJardins, recarregarJardim, avisarEdicaoSalva, consumirEdicaoSalva,
-  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, criarJardim, recarregarJardins, recarregarJardim,
-    avisarEdicaoSalva, consumirEdicaoSalva]);
+    modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao,
+  }), [container, plantas, jardins, idJardimSelecionado, selecionarJardim, abrirJardimDaPlanta, criarJardim, recarregarJardins, recarregarJardim,
+    avisarEdicaoSalva, consumirEdicaoSalva, modoDeDemonstracao, registrarToqueNaAbaAjustes, desligarModoDeDemonstracao]);
   return <ContextoDoAplicativo.Provider value={valor}>{children}</ContextoDoAplicativo.Provider>;
 }
 

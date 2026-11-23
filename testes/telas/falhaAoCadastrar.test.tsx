@@ -7,7 +7,6 @@ async function irAtePasso3(opcoes: { falhaAoCadastrar?: boolean } = {}) {
   await screen.findByText('Como vai ser a sua planta?');
   fireEvent.press(screen.getByRole('button', { name: 'Continuar' }));
   await screen.findByText('Como você vai chamar esta planta?');
-  fireEvent.press(screen.getByRole('radio', { name: 'Não, ainda não está produzindo' }));
   return resultado;
 }
 
